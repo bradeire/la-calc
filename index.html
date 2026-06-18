@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#111827">
+<title>LA Calculator</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --bg:#111827;--s0:#1f2937;--s1:#27384d;--s2:#374151;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.13);
+  --blue:#60a5fa;--blue-d:rgba(96,165,250,0.15);
+  --green:#4ade80;--green-d:rgba(74,222,128,0.12);
+  --amber:#fbbf24;--amber-d:rgba(251,191,36,0.12);
+  --red:#f87171;--red-d:rgba(248,113,113,0.12);
+  --purple:#a78bfa;--purple-d:rgba(167,139,250,0.13);
+  --teal:#2dd4bf;--teal-d:rgba(45,212,191,0.12);
+  --sky:#38bdf8;
+  --text:#f9fafb;--sub:#9ca3af;--sub2:#6b7280;
+  --r:14px;--rsm:9px;--font:'Inter',system-ui,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,.5),0 4px 12px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100dvh;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;gap:4px;padding:8px 10px 0;flex-shrink:0}
+.tab-btn{flex:1;background:var(--s0);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--sub);font-family:var(--font);font-size:11.5px;font-weight:600;padding:7px 4px 6px;cursor:pointer;transition:all .15s;letter-spacing:.1px}
+.tab-btn.active{background:var(--s1);border-color:var(--border2);color:var(--text)}
+.tab-page{display:none;flex-direction:column;flex:1;overflow:hidden;padding:0 10px 6px;gap:7px}
+.tab-page.active{display:flex}
+
+/* ── HEADER ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 2px 0;flex-shrink:0}
+.hdr-left{display:flex;align-items:center;gap:8px}
+.hdr-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.hdr h1{font-size:15px;font-weight:700;letter-spacing:-.3px;background:linear-gradient(90deg,#f9fafb,#9ca3af);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wt-pill{display:flex;align-items:center;gap:6px;background:var(--s0);border:1px solid var(--border2);border-radius:99px;padding:4px 10px 4px 14px;flex-shrink:0}
+.wt-pill label{font-size:11px;font-weight:500;color:var(--sub);white-space:nowrap}
+.wt-pill input{width:44px;background:none;border:none;color:var(--text);font-family:var(--font);font-size:15px;font-weight:700;text-align:right;outline:none;-moz-appearance:textfield}
+.wt-pill input::-webkit-inner-spin-button{-webkit-appearance:none}
+.wt-unit{font-size:11px;color:var(--sub);font-weight:500}
+
+/* ── CARD ── */
+.card{background:var(--s0);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow);flex-shrink:0}
+.card-title{font-size:10px;font-weight:600;color:var(--sub2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.card.grow{flex:1;min-height:0;display:flex;flex-direction:column}
+.card.grow .scroll-wrap{flex:1;overflow-y:auto}
+
+/* ── FIELDS ── */
+.f-select,.f-input{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-family:var(--font);font-size:12.5px;font-weight:500;padding:6px 8px;appearance:none;-webkit-appearance:none;outline:none;transition:border-color .15s}
+.f-select:focus,.f-input:focus{border-color:var(--blue)}
+.vol-wrap{position:relative}
+.vol-wrap input{width:100%;background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);color:var(--text);font-family:var(--font);font-size:12.5px;font-weight:500;padding:6px 22px 6px 8px;text-align:right;appearance:none;-webkit-appearance:none;outline:none;-moz-appearance:textfield;transition:border-color .15s}
+.vol-wrap input::-webkit-inner-spin-button{-webkit-appearance:none}
+.vol-wrap input:focus{border-color:var(--blue)}
+.vol-wrap .u{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sub2);pointer-events:none;font-weight:500}
+
+/* ── DRUG ROWS ── */
+.drug-list{display:flex;flex-direction:column;gap:5px}
+.drug-row{display:grid;grid-template-columns:1fr 72px 54px 28px;gap:4px;align-items:center}
+.btn-rm{background:none;border:1px solid transparent;border-radius:var(--rsm);color:var(--sub2);font-size:18px;width:28px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.btn-rm:active{background:var(--red-d);border-color:rgba(248,113,113,.25);color:var(--red)}
+.empty-hint{text-align:center;color:var(--sub2);font-size:12px;padding:6px 0;font-style:italic}
+.row-btns{display:flex;gap:6px;margin-top:7px}
+.btn-add{flex:1;background:var(--blue-d);border:1px solid rgba(96,165,250,.3);border-radius:var(--rsm);color:var(--blue);font-family:var(--font);font-size:13px;font-weight:600;padding:7px;cursor:pointer;transition:background .15s}
+.btn-add:active{background:rgba(96,165,250,.28)}
+.btn-sec{background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);color:var(--sub);font-family:var(--font);font-size:12px;font-weight:500;padding:7px 12px;cursor:pointer}
+
+/* toggle rows */
+.toggle-row{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border);margin-top:6px}
+.toggle-row span{font-size:11px;color:var(--sub);flex:1}
+.toggle-btns{display:flex;background:var(--s2);border-radius:6px;padding:2px;gap:2px}
+.tbtn{font-size:11px;font-weight:600;padding:2px 8px;border:none;border-radius:4px;cursor:pointer;font-family:var(--font);background:none;color:var(--sub);transition:all .15s;white-space:nowrap}
+.tbtn.active{background:var(--blue-d);color:var(--blue)}
+
+/* ── GAUGE ── */
+.gauge-wrap{display:flex;align-items:center;gap:12px}
+.arc-box{flex-shrink:0;position:relative;width:66px;height:66px}
+.arc-box svg{width:66px;height:66px}
+.arc-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.arc-pct{font-size:15px;font-weight:800;letter-spacing:-.5px;line-height:1}
+.arc-lbl{font-size:9px;color:var(--sub);font-weight:500}
+.gauge-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.bar-track{background:var(--s2);border-radius:99px;height:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
+.gauge-row{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.gauge-rem{font-size:12px;font-weight:600;white-space:nowrap}
+.chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:.3px;flex-shrink:0}
+.chip-safe{background:var(--green-d);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.chip-warn{background:var(--amber-d);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+.chip-over{background:var(--red-d);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.gauge-sub{font-size:10px;color:var(--amber)}
+
+/* Duration projection pill */
+.dur-proj{display:flex;align-items:center;gap:6px;background:var(--purple-d);border:1px solid rgba(167,139,250,.22);border-radius:var(--rsm);padding:5px 9px;margin-top:4px}
+.dur-proj-icon{font-size:13px;flex-shrink:0}
+.dur-proj-body{flex:1;min-width:0}
+.dur-proj-val{font-size:13px;font-weight:700;color:var(--purple);line-height:1}
+.dur-proj-sub{font-size:10px;color:var(--sub2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ── BLOCK SELECTOR ── */
+.block-row{display:flex;gap:6px;align-items:flex-start}
+.block-dur-badge{flex-shrink:0;background:var(--purple-d);border:1px solid rgba(167,139,250,.25);border-radius:var(--rsm);padding:5px 8px;text-align:center;min-width:68px}
+.block-dur-lbl{font-size:9px;font-weight:600;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:2px}
+.block-dur-val{font-size:12px;font-weight:700;color:var(--purple);line-height:1.2}
+.block-note{font-size:10.5px;color:var(--sub);margin-top:5px;line-height:1.4;padding:5px 8px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border)}
+.block-note strong{color:var(--purple);font-weight:600}
+
+/* ── ADDITIVES ── */
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.add-item{background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 7px;cursor:pointer;transition:all .15s}
+.add-name{font-size:11px;font-weight:600;color:var(--text)}
+.add-effect{font-size:10px;color:var(--teal);font-weight:500;margin-top:1px}
+.add-item.sel{border-color:rgba(45,212,191,.35);background:var(--teal-d)}
+.add-item.sel .add-name{color:var(--teal)}
+
+/* ── RESULTS TABLE ── */
+.scroll-wrap{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--s2) transparent;border-radius:var(--rsm)}
+.scroll-wrap::-webkit-scrollbar{width:3px}
+.scroll-wrap::-webkit-scrollbar-thumb{background:var(--s2);border-radius:99px}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--s1);color:var(--sub2);font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;padding:5px 8px;text-align:left;position:sticky;top:0;z-index:2}
+thead th:not(:first-child){text-align:right}
+tbody tr{border-top:1px solid var(--border)}
+tbody tr:first-child{border-top:none}
+tbody td{padding:5px 8px;vertical-align:middle}
+tbody td:not(:first-child){text-align:right}
+.dn{font-size:12px;font-weight:600;line-height:1.2}
+.dc{font-size:10px;color:var(--sub);margin-top:1px}
+.given-tag{color:var(--amber);font-weight:500}
+.mg-val{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.ml-line{display:flex;justify-content:flex-end;gap:3px;font-size:10.5px;line-height:1.55;font-variant-numeric:tabular-nums}
+.ml-v{color:var(--blue);font-weight:600}
+.ml-c{color:var(--sub2)}
+.cap24{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.c-ok{color:var(--green)}.c-warn{color:var(--amber)}.c-na{color:var(--sub2)}
+.row-faded{opacity:.3}
+
+/* ── AFOi ── */
+.afoi-total-card{background:linear-gradient(135deg,rgba(14,165,233,.12),rgba(99,102,241,.1));border:1px solid rgba(14,165,233,.25);border-radius:var(--r);padding:11px 14px;flex-shrink:0}
+.afoi-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.afoi-total-lbl{font-size:10px;color:var(--sub);font-weight:500;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.afoi-total-val{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.afoi-max-line{font-size:11px;color:var(--sub);margin-top:2px}
+.afoi-bar-wrap{margin-top:8px}
+
+.afoi-row{display:grid;grid-template-columns:1fr 80px 56px 28px;gap:4px;align-items:center}
+.route-tag{font-size:9.5px;color:var(--teal);font-weight:600;padding:1px 0}
+
+.afoi-breakdown{display:flex;flex-direction:column}
+.afoi-bd-row{display:flex;justify-content:space-between;align-items:flex-start;font-size:11px;padding:5px 0;border-top:1px solid var(--border);gap:8px}
+.afoi-bd-row:first-child{border-top:none;padding-top:0}
+.afoi-bd-name{color:var(--sub);flex:1;line-height:1.3}
+.afoi-bd-val{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+.notes-box{padding:7px 8px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border);margin-top:6px;flex-shrink:0}
+.notes-title{font-size:10px;font-weight:600;color:var(--sub2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.notes-body{font-size:11px;color:var(--sub);line-height:1.5;max-height:72px;overflow-y:auto}
+
+.footer{font-size:10px;color:var(--sub2);text-align:center;flex-shrink:0;padding-bottom:3px;line-height:1.4}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="showTab('blocks',this)">💉 Blocks</button>
+  <button class="tab-btn" onclick="showTab('afoi',this)">🫁 AFOi</button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 1 — BLOCKS
+═══════════════════════════════════════════ -->
+<div class="tab-page active" id="tab-blocks">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)">💉</div>
+      <h1>LA Dose Calculator</h1>
+    </div>
+    <div class="wt-pill">
+      <label>Wt</label>
+      <input type="number" id="wt" min="1" max="250" value="70" inputmode="decimal">
+      <span class="wt-unit">kg</span>
+    </div>
+  </div>
+
+  <!-- DRUGS GIVEN -->
+  <div class="card">
+    <div class="card-title">Drugs Given</div>
+    <div class="drug-list" id="drugList"><div class="empty-hint">Tap "+ Add Drug" to begin</div></div>
+    <div class="toggle-row" id="ropiToggleRow" style="display:none">
+      <span>Ropivacaine max dose</span>
+      <div class="toggle-btns">
+        <button class="tbtn active" id="tb225" onclick="setRopi(225)">225 mg</button>
+        <button class="tbtn" id="tb300" onclick="setRopi(300)">300 mg</button>
+      </div>
+    </div>
+    <div class="row-btns">
+      <button class="btn-add" onclick="addDrug()">+ Add Drug</button>
+      <button class="btn-sec" onclick="clearDrugs()">Clear</button>
+    </div>
+  </div>
+
+  <!-- GAUGE + DURATION PROJECTION -->
+  <div class="card">
+    <div class="gauge-wrap">
+      <div class="arc-box">
+        <svg viewBox="0 0 66 66" fill="none">
+          <circle cx="33" cy="33" r="25" stroke="rgba(255,255,255,0.06)" stroke-width="8" fill="none"/>
+          <circle cx="33" cy="33" r="25" id="arcFg"
+            stroke="var(--green)" stroke-width="8" fill="none"
+            stroke-dasharray="157.08" stroke-dashoffset="157.08"
+            stroke-linecap="round" transform="rotate(-90 33 33)"
+            style="transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1),stroke .3s"/>
+        </svg>
+        <div class="arc-center">
+          <div class="arc-pct" id="arcPct" style="color:var(--green)">0%</div>
+          <div class="arc-lbl">used</div>
+        </div>
+      </div>
+      <div class="gauge-right">
+        <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%;background:var(--green)"></div></div>
+        <div class="gauge-row">
+          <span class="gauge-rem" id="remTxt">100% remaining</span>
+          <span class="chip chip-safe" id="statusChip">SAFE</span>
+        </div>
+        <div class="gauge-sub" id="warn24"></div>
+      </div>
+    </div>
+    <!-- Dynamic duration projection (from actual drugs given) -->
+    <div class="dur-proj" id="durProj" style="display:none">
+      <div class="dur-proj-icon">⏱</div>
+      <div class="dur-proj-body">
+        <div class="dur-proj-val" id="durProjVal">—</div>
+        <div class="dur-proj-sub" id="durProjSub"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK SELECTOR + ADDITIVES -->
+  <div class="card">
+    <div class="card-title">Block &amp; Additives</div>
+    <div class="block-row">
+      <select class="f-select" id="blockSel" onchange="onBlockChange()" style="flex:1">
+        <option value="">— Select block / procedure —</option>
+        <optgroup label="Trunk — Fascial Plane">
+          <option value="esb">Erector Spinae (ESB)</option>
+          <option value="sab">Serratus Anterior (SAB)</option>
+          <option value="pecs1">PECS I</option>
+          <option value="pecs2">PECS II</option>
+          <option value="tap_lat">TAP — Lateral</option>
+          <option value="tap_sub">TAP — Subcostal</option>
+          <option value="rectus">Rectus Sheath</option>
+          <option value="ioi">Ilioinguinal / Iliohypogastric</option>
+          <option value="ql">Quadratus Lumborum (QL)</option>
+          <option value="ficb">Fascia Iliaca Compartment (FICB)</option>
+        </optgroup>
+        <optgroup label="Upper Limb">
+          <option value="interscalene">Interscalene</option>
+          <option value="supraclav">Supraclavicular</option>
+          <option value="infraclav">Infraclavicular</option>
+          <option value="axillary">Axillary</option>
+          <option value="wrist">Wrist Block</option>
+          <option value="digital_hand">Digital Nerve (hand)</option>
+        </optgroup>
+        <optgroup label="Lower Limb">
+          <option value="femoral">Femoral Nerve</option>
+          <option value="adductor">Adductor Canal</option>
+          <option value="sciatic_prox">Sciatic — Proximal</option>
+          <option value="popliteal">Popliteal Sciatic</option>
+          <option value="saphenous">Saphenous Nerve</option>
+          <option value="ankle">Ankle Block (5-nerve)</option>
+          <option value="ipack">IPACK (knee)</option>
+          <option value="digital_foot">Digital Nerve (foot)</option>
+        </optgroup>
+        <optgroup label="Ophthalmic">
+          <option value="peribulbar">Peribulbar</option>
+          <option value="retrobulbar">Retrobulbar</option>
+          <option value="subtenon">Sub-Tenon's</option>
+        </optgroup>
+        <optgroup label="Neuraxial">
+          <option value="spinal">Spinal (intrathecal)</option>
+          <option value="epidural">Epidural</option>
+          <option value="cse">CSE</option>
+        </optgroup>
+        <optgroup label="Head &amp; Neck">
+          <option value="scalp">Scalp Block</option>
+          <option value="cervical_sp">Cervical Plexus — Superficial</option>
+          <option value="greater_aur">Greater Auricular</option>
+          <option value="dental_inf">Inferior Alveolar (dental)</option>
+        </optgroup>
+      </select>
+      <div class="block-dur-badge" id="blockDurBadge">
+        <span class="block-dur-lbl">Block dur.</span>
+        <span class="block-dur-val" id="blockDurVal">—</span>
+      </div>
+    </div>
+    <div class="block-note" id="blockNote" style="display:none"></div>
+    <div class="card-title" style="margin-top:9px">Additives</div>
+    <div class="add-grid" id="addGrid"></div>
+  </div>
+
+  <!-- RESULTS TABLE -->
+  <div class="card grow">
+    <div class="card-title">Remaining Capacity</div>
+    <div class="scroll-wrap">
+      <table>
+        <thead><tr><th>Drug</th><th>Rem mg</th><th>Rem ml</th><th>24 h</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">Literature doses — verify locally · 6 h single-site injection window</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     TAB 2 — AFOi
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-afoi">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#0ea5e9,#6366f1)">🫁</div>
+      <h1>AFOi Topical LA</h1>
+    </div>
+    <div class="wt-pill">
+      <label>Wt</label>
+      <input type="number" id="afoi-wt" min="1" max="250" value="70" inputmode="decimal">
+      <span class="wt-unit">kg</span>
+    </div>
+  </div>
+
+  <!-- TOTAL GAUGE -->
+  <div class="afoi-total-card">
+    <div class="afoi-top">
+      <div>
+        <div class="afoi-total-lbl">Total Topical Lidocaine</div>
+        <div class="afoi-total-val" id="afoiTotalMg" style="color:var(--green)">0 mg</div>
+        <div class="afoi-max-line" id="afoiMaxLine">Max — mg (9 mg/kg topical)</div>
+      </div>
+      <span class="chip chip-safe" id="afoiChip">SAFE</span>
+    </div>
+    <div class="afoi-bar-wrap">
+      <div class="bar-track"><div class="bar-fill" id="afoiBar" style="width:0%;background:var(--green)"></div></div>
+    </div>
+  </div>
+
+  <!-- Bioavailability toggle -->
+  <div class="card" style="padding:8px 12px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:600;color:var(--text)">Nebulised / spray bioavailability</div>
+        <div style="font-size:10px;color:var(--sub);margin-top:1px" id="bioavailNote">Conservative: full administered dose counted</div>
+      </div>
+      <div class="toggle-btns">
+        <button class="tbtn active" id="tbFull" onclick="setBioavail('full')">Full</button>
+        <button class="tbtn" id="tbAdj" onclick="setBioavail('adjusted')">~50%</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="card">
+    <div class="card-title">Topical Agents Used</div>
+    <div class="drug-list" id="afoiList"><div class="empty-hint">Tap "+ Add Agent" to begin</div></div>
+    <div class="row-btns">
+      <button class="btn-add" onclick="addAFOi()">+ Add Agent</button>
+      <button class="btn-sec" onclick="clearAFOi()">Clear</button>
+    </div>
+  </div>
+
+  <!-- BREAKDOWN + NOTES -->
+  <div class="card grow">
+    <div class="card-title">Breakdown</div>
+    <div class="scroll-wrap" style="flex:1">
+      <div class="afoi-breakdown" id="afoiBreakdown">
+        <div class="empty-hint" style="padding:8px 0">No agents added</div>
+      </div>
+    </div>
+    <div class="notes-box">
+      <div class="notes-title">Technique Notes</div>
+      <div class="notes-body" id="afoiNotes">Select agents above to see guidance.</div>
+    </div>
+  </div>
+
+  <div class="footer">Topical max: 9 mg/kg (AAGBI/DAS) · Nebulised bioavailability ~40–60% · Verify locally</div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SHARED
+// ═══════════════════════════════════════════════════════════
+function showTab(t, btn) {
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// BLOCKS TAB
+// ═══════════════════════════════════════════════════════════
+let ropiMax = 225;
+
+const DRUGS = [
+  {id:'lido_p',   label:'Lidocaine',       sub:'Plain',                          adr:false, concs:[0.5,1,1.5,2],        mpk:3,   abs:200, h24:null},
+  {id:'lido_a2',  label:'Lidocaine',       sub:'+ Adr 1:200,000',                adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
+  {id:'lido_a4',  label:'Lidocaine',       sub:'+ Adr 1:400,000',                adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
+  {id:'lido_mix', label:'Lidocaine 1.5%',  sub:'1% plain + 2%/1:200k → 1:400k', adr:true,  concs:[1.5],                mpk:7,   abs:500, h24:null},
+  {id:'bupi_p',   label:'Bupivacaine',     sub:'Plain',                          adr:false, concs:[0.25,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'bupi_a',   label:'Bupivacaine',     sub:'+ Adrenaline',                   adr:true,  concs:[0.25,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'levo_p',   label:'Levobupivacaine', sub:'Plain',                          adr:false, concs:[0.25,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'levo_a',   label:'Levobupivacaine', sub:'+ Adrenaline',                   adr:true,  concs:[0.25,0.5,0.75],      mpk:2.5, abs:150, h24:400},
+  {id:'ropi',     label:'Ropivacaine',     sub:'Plain',                          adr:false, concs:[0.2,0.375,0.5,0.6,0.75,1], mpk:3,   abs:null,h24:770},
+  {id:'prilo_p',  label:'Prilocaine',      sub:'Plain',                          adr:false, concs:[0.5,1,2,3],          mpk:6,   abs:400, h24:null},
+  {id:'prilo_a',  label:'Prilocaine',      sub:'+ Adrenaline',                   adr:true,  concs:[0.5,1,2,3],          mpk:8,   abs:600, h24:null},
+  {id:'mepi_p',   label:'Mepivacaine',     sub:'Plain',                          adr:false, concs:[1,1.5,2,3],          mpk:5,   abs:400, h24:null},
+  {id:'mepi_a',   label:'Mepivacaine',     sub:'+ Adrenaline',                   adr:true,  concs:[1,1.5,2,3],          mpk:7,   abs:550, h24:null},
+  {id:'cocaine',  label:'Cocaine',         sub:'Topical (ENT)',                   adr:false, concs:[4,5,10],             mpk:1.5, abs:150, h24:null},
+];
+
+// Duration ranges in hours [min, max] per drug id
+// For ropivacaine, keyed by concentration band
+const DRUG_DUR = {
+  lido_p:   [1,  2 ],
+  lido_a2:  [2,  3 ],
+  lido_a4:  [2,  3 ],
+  lido_mix: [2,  3 ],
+  bupi_p:   [8,  16],
+  bupi_a:   [10, 18],
+  levo_p:   [8,  16],
+  levo_a:   [10, 18],
+  prilo_p:  [2,  4 ],
+  prilo_a:  [3,  5 ],
+  mepi_p:   [3,  5 ],
+  mepi_a:   [4,  6 ],
+  cocaine:  [0.5,1.5],
+};
+
+function ropiDur(conc) {
+  if (conc <= 0.2) return [4, 8];
+  if (conc <= 0.5) return [8, 14];
+  return [10, 16];
+}
+
+const BLOCKS = {
+  esb:         {dur:'12–24 h', durX:'20–36 h', note:'20–30 ml each side at T4–T8. Catheter technique preferred for prolonged analgesia.', suggest:'20–30 ml ropivacaine 0.5% or bupivacaine 0.25–0.375%'},
+  sab:         {dur:'8–18 h',  durX:'16–26 h', note:'5th ICS mid-axillary line. Ipsilateral chest wall T2–T9.', suggest:'20–30 ml bupivacaine 0.25% or ropivacaine 0.5%'},
+  pecs1:       {dur:'6–14 h',  durX:'12–22 h', note:'Between pec major and minor. Medial/lateral pectoral nerves.', suggest:'10–15 ml bupivacaine 0.25% or ropivacaine 0.375%'},
+  pecs2:       {dur:'8–16 h',  durX:'14–26 h', note:'PECS I + serratus plane. T2–T6, long thoracic, intercostobrachial.', suggest:'PECS I 10 ml + serratus plane 20 ml bupivacaine 0.25%'},
+  tap_lat:     {dur:'6–12 h',  durX:'12–18 h', note:'Lateral TAP. T10–L1 lower abdominal coverage.', suggest:'20 ml each side ropivacaine 0.375%'},
+  tap_sub:     {dur:'6–12 h',  durX:'12–18 h', note:'Subcostal TAP. Upper abdominal T7–T10.', suggest:'15–20 ml ropivacaine 0.375% or bupivacaine 0.25%'},
+  rectus:      {dur:'6–12 h',  durX:'12–18 h', note:'Posterior rectus sheath. T9–T11. Midline abdominal analgesia.', suggest:'10–15 ml each side bupivacaine 0.25%'},
+  ioi:         {dur:'4–8 h',   durX:'8–14 h',  note:'Ilioinguinal + iliohypogastric. Inguinal hernia / groin surgery.', suggest:'10–15 ml bupivacaine 0.25% or ropivacaine 0.375%'},
+  ql:          {dur:'12–24 h', durX:'20–36 h', note:'Quadratus lumborum lateral/anterior/IM approaches. Broader than TAP.', suggest:'20 ml each side ropivacaine 0.375%'},
+  ficb:        {dur:'12–24 h', durX:'20–36 h', note:'Fascia Iliaca Compartment Block. Femoral, lateral femoral cutaneous, obturator nerves. Hip fracture, THR, proximal femur surgery. Landmark or US-guided suprainguinal approach preferred.', suggest:'40 ml bupivacaine 0.25% or ropivacaine 0.375% (suprainguinal)'},
+  interscalene:{dur:'12–18 h', durX:'20–30 h', note:'C5–C6. Shoulder/upper arm. Phrenic palsy near universal — avoid bilateral, caution in poor respiratory reserve.', suggest:'15–20 ml ropivacaine 0.5% or bupivacaine 0.375%'},
+  supraclav:   {dur:'10–18 h', durX:'18–28 h', note:'Brachial plexus at trunk level. Entire arm. ~1–2% pneumothorax risk.', suggest:'20–25 ml ropivacaine 0.5%'},
+  infraclav:   {dur:'10–18 h', durX:'16–26 h', note:'Posterior cord target. Elbow/forearm/hand. Lower pneumothorax risk.', suggest:'20–30 ml ropivacaine 0.5%'},
+  axillary:    {dur:'8–16 h',  durX:'14–24 h', note:'Musculocutaneous nerve often missed — inject separately into coracobrachialis.', suggest:'30–40 ml (divided) lidocaine 1.5% + adr or ropivacaine 0.5%'},
+  wrist:       {dur:'2–4 h',   durX:'4–8 h',   note:'Median, ulnar, superficial radial. Hand surgery with tourniquet.', suggest:'5 ml per nerve lidocaine 1% or bupivacaine 0.25%'},
+  digital_hand:{dur:'1–3 h',   durX:'2–4 h',   note:'Ring or web-space technique. Avoid adrenaline in digital blocks.', suggest:'2–3 ml plain lidocaine 1% per side'},
+  femoral:     {dur:'12–18 h', durX:'20–28 h', note:'Femoral nerve lateral to artery. Anterior thigh and knee. RCOA Plan A.', suggest:'20–30 ml ropivacaine 0.5% or bupivacaine 0.25%'},
+  adductor:    {dur:'10–16 h', durX:'18–26 h', note:'Saphenous nerve + nerve to vastus medialis. TKR. Preserves motor.', suggest:'15–20 ml ropivacaine 0.5%'},
+  sciatic_prox:{dur:'18–24 h', durX:'26–36 h', note:'Subgluteal/gluteal. Hip/thigh and below-knee coverage.', suggest:'20–30 ml ropivacaine 0.5% or bupivacaine 0.375%'},
+  popliteal:   {dur:'14–20 h', durX:'22–32 h', note:'Common peroneal + tibial at popliteal fossa. Foot and ankle. RCOA Plan A.', suggest:'20–30 ml ropivacaine 0.5% or bupivacaine 0.375%'},
+  saphenous:   {dur:'8–14 h',  durX:'14–22 h', note:'Adductor canal or below-knee. Medial lower leg/foot. Complement to sciatic.', suggest:'10 ml ropivacaine 0.5%'},
+  ankle:       {dur:'6–12 h',  durX:'12–20 h', note:'5 nerves: posterior tibial, sural, superficial/deep peroneal, saphenous.', suggest:'5 ml per nerve bupivacaine 0.25% (25 ml total)'},
+  ipack:       {dur:'10–16 h', durX:'16–24 h', note:'Between popliteal artery and knee capsule. Posterior knee pain post-TKR.', suggest:'10 ml ropivacaine 0.2%'},
+  digital_foot:{dur:'1–3 h',   durX:'2–4 h',   note:'Plantar digital nerves. Avoid adrenaline.', suggest:'2 ml plain lidocaine 1% per side'},
+  peribulbar:  {dur:'4–6 h',   durX:'6–10 h',  note:'2-injection technique. Hyaluronidase standard. Low intraconal risk.', suggest:'4–5 ml each: 50:50 lidocaine 2% + bupivacaine 0.5% + hyaluronidase 15–30 IU/ml'},
+  retrobulbar: {dur:'4–6 h',   durX:'6–10 h',  note:'Intraconal injection. Higher risk (brainstem spread, globe perforation).', suggest:'4–5 ml lidocaine 2% + bupivacaine 0.5% + hyaluronidase'},
+  subtenon:    {dur:'3–5 h',   durX:'5–8 h',   note:'Blunt cannula subconjunctival. Lowest ophthalmic block risk.', suggest:'3–4 ml lidocaine 2% or bupivacaine 0.5%'},
+  spinal:      {dur:'2–4 h',   durX:'3–5 h',   note:'Heavy bupivacaine 0.5% standard. Fentanyl/morphine for extension.', suggest:'Heavy bupivacaine 0.5%: 1.5–3 ml ± fentanyl 25 mcg'},
+  epidural:    {dur:'Catheter',durX:'Catheter', note:'Catheter top-ups or infusion. Test dose mandatory.', suggest:'Bolus: 15–20 ml lidocaine 2% or bupivacaine 0.125–0.25%'},
+  cse:         {dur:'Catheter',durX:'Catheter', note:'Spinal for rapid onset; epidural for duration. Test dose mandatory.', suggest:'Spinal: heavy bupi 0.5% 1.5–2.5 ml + epidural catheter'},
+  scalp:       {dur:'4–8 h',   durX:'8–16 h',  note:'Supraorbital, supratrochlear, auriculotemporal, zygomaticotemporal, greater/lesser occipital.', suggest:'3 ml per nerve bupivacaine 0.25% + adrenaline'},
+  cervical_sp: {dur:'4–8 h',   durX:'8–14 h',  note:'Superficial cervical plexus. Carotid / thyroid / clavicle surgery.', suggest:'10–15 ml ropivacaine 0.375% or bupivacaine 0.25%'},
+  greater_aur: {dur:'4–8 h',   durX:'8–14 h',  note:'Posterior SCM border. Ear surgery.', suggest:'5–10 ml lidocaine 1% + adr or bupivacaine 0.25%'},
+  dental_inf:  {dur:'2–4 h',   durX:'4–6 h',   note:'Inferior alveolar nerve at mandibular foramen. Lingual nerve co-blocked.', suggest:'1.5–2 ml lidocaine 2% + adr 1:80,000'},
+};
+
+const ADDITIVES = [
+  {id:'adr',  name:'Adrenaline',          effect:'+1–2 h, intravascular marker',   note:'1:200k or 1:400k. Avoid in digital/penile. Prolongs by vasoconstriction.', durAdd:[1,2], durMult:1.2},
+  {id:'dex',  name:'Dexamethasone',       effect:'+6–12 h sensory block',          note:'4–8 mg perineural. Extends sensory > motor. Systemic route may be equivalent.', durAdd:[6,10]},
+  {id:'clon', name:'Clonidine',           effect:'+2–4 h sensory & motor',         note:'75–150 mcg perineural. Alpha-2 agonist. Risk of hypotension/bradycardia.', durAdd:[2,3]},
+  {id:'dmed', name:'Dexmedetomidine',     effect:'+3–5 h sensory & motor',         note:'0.5–1 mcg/kg perineural. More potent than clonidine. More sedation risk.', durAdd:[3,5]},
+  {id:'bicarb',name:'Sodium Bicarbonate', effect:'Faster onset ~1–2 min',          note:'1 mEq per 10 ml LA. Raises pH → faster membrane penetration. No duration effect.', durAdd:[0,0]},
+  {id:'hyal', name:'Hyaluronidase',       effect:'↑ spread, faster onset',         note:'15–75 IU/ml. Depolymerises HA. Standard for ophthalmic blocks.', durAdd:[0,0]},
+];
+
+let drugs=[], uid=0, selAdditives=new Set();
+
+function drugMax(d,wt){ const byWt=d.mpk*wt; if(d.id==='ropi')return Math.min(byWt,ropiMax); return d.abs===null?byWt:Math.min(byWt,d.abs); }
+function getWt(){ return Math.max(1,parseFloat(document.getElementById('wt').value)||70); }
+function setRopi(v){ ropiMax=v; document.getElementById('tb225').classList.toggle('active',v===225); document.getElementById('tb300').classList.toggle('active',v===300); calc(); }
+
+function renderDrugs(){
+  const el=document.getElementById('drugList');
+  if(!drugs.length){el.innerHTML='<div class="empty-hint">Tap "+ Add Drug" to begin</div>';return;}
+  el.innerHTML=drugs.map(e=>{
+    const d=DRUGS.find(x=>x.id===e.did)||DRUGS[0];
+    const dOpts=DRUGS.map(x=>`<option value="${x.id}"${x.id===e.did?' selected':''}>${x.label} (${x.sub})</option>`).join('');
+    const cOpts=d.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
+    return `<div class="drug-row">
+      <select class="f-select" onchange="onDrug(${e.id},this.value)">${dOpts}</select>
+      <select class="f-select" onchange="onConc(${e.id},this.value)">${cOpts}</select>
+      <div class="vol-wrap"><input type="number" inputmode="decimal" min="0" step="0.1" value="${e.vol}" oninput="onVol(${e.id},this.value)"><span class="u">ml</span></div>
+      <button class="btn-rm" onclick="rmDrug(${e.id})">×</button>
+    </div>`;
+  }).join('');
+}
+function syncRopiToggle(){
+  document.getElementById('ropiToggleRow').style.display =
+    drugs.some(e => e.did === 'ropi') ? 'flex' : 'none';
+}
+function addDrug(){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0});renderDrugs();syncRopiToggle();calc();}
+function rmDrug(id){drugs=drugs.filter(e=>e.id!==id);renderDrugs();syncRopiToggle();calc();}
+function clearDrugs(){drugs=[];renderDrugs();syncRopiToggle();calc();}
+function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=d.concs[0];renderDrugs();syncRopiToggle();calc();}
+function onConc(id,v){const e=drugs.find(x=>x.id===id);if(e){e.conc=parseFloat(v);calc();}}
+function onVol(id,v){const e=drugs.find(x=>x.id===id);if(e){e.vol=Math.max(0,parseFloat(v)||0);calc();}}
+
+function buildAdditives(){
+  document.getElementById('addGrid').innerHTML=ADDITIVES.map(a=>`
+    <div class="add-item" id="add-${a.id}" onclick="toggleAdd('${a.id}')">
+      <div class="add-name">${a.name}</div>
+      <div class="add-effect">${a.effect}</div>
+    </div>`).join('');
+}
+
+function toggleAdd(id){
+  selAdditives.has(id)?selAdditives.delete(id):selAdditives.add(id);
+  document.getElementById('add-'+id).classList.toggle('sel',selAdditives.has(id));
+  calc();
+}
+
+// ── Duration projection from actual drugs + additives ─────────────────────
+function projectDuration() {
+  const activeDrugs = drugs.filter(e => e.vol > 0);
+  if (!activeDrugs.length) return null;
+
+  // Find dominant drug = longest upper bound, tie-break by mg
+  let best = null, bestMax = -1, bestMg = 0;
+  for (const e of activeDrugs) {
+    const mg = e.conc * 10 * e.vol;
+    const dur = e.did === 'ropi' ? ropiDur(e.conc) : DRUG_DUR[e.did];
+    if (!dur) continue;
+    if (dur[1] > bestMax || (dur[1] === bestMax && mg > bestMg)) {
+      best = {did:e.did, conc:e.conc, dur, mg};
+      bestMax = dur[1]; bestMg = mg;
+    }
+  }
+  if (!best) return null;
+
+  let [lo, hi] = [...best.dur];
+  const drivers = [DRUGS.find(d=>d.id===best.did)?.label];
+
+  // Apply additives — additive in hours, not multiplicative (cleaner clinically)
+  for (const a of ADDITIVES) {
+    if (!selAdditives.has(a.id)) continue;
+    if (a.durAdd[0] === 0 && a.durAdd[1] === 0) continue;
+    lo += a.durAdd[0];
+    hi += a.durAdd[1];
+    drivers.push(a.name);
+  }
+
+  return {lo: Math.round(lo), hi: Math.round(hi), drivers};
+}
+
+function onBlockChange(){
+  const v = document.getElementById('blockSel').value;
+  const noteEl = document.getElementById('blockNote');
+  const durValEl = document.getElementById('blockDurVal');
+  if (!v || !BLOCKS[v]) { noteEl.style.display='none'; durValEl.textContent='—'; return; }
+  const b = BLOCKS[v];
+  noteEl.style.display = 'block';
+  noteEl.innerHTML = `<strong>Suggested:</strong> ${b.suggest}<br><span style="color:var(--sub)">${b.note}</span>`;
+  updateBlockDur(v);
+}
+
+function updateBlockDur(v) {
+  const durValEl = document.getElementById('blockDurVal');
+  if (!v || !BLOCKS[v]) { durValEl.textContent='—'; return; }
+  const b = BLOCKS[v];
+  const hasLong = selAdditives.has('dex') || selAdditives.has('dmed');
+  durValEl.textContent = (hasLong && b.durX) ? b.durX : b.dur;
+}
+
+// ── Main calc ──────────────────────────────────────────────────────────────
+function calc(){
+  const wt=getWt();
+  let totalFrac=0; const given={};
+  for(const e of drugs){
+    const d=DRUGS.find(x=>x.id===e.did);if(!d)continue;
+    const mg=e.conc*10*e.vol;
+    totalFrac+=drugMax(d,wt)>0?mg/drugMax(d,wt):0;
+    given[d.id]=(given[d.id]||0)+mg;
+  }
+  const pct=Math.min(100,Math.round(totalFrac*100));
+  const remFrac=Math.max(0,1-totalFrac);
+  const circ=157.08;
+  const arc=document.getElementById('arcFg');
+  arc.style.strokeDashoffset=circ-circ*Math.min(1,totalFrac);
+  const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+  arc.style.stroke=col;
+  const ap=document.getElementById('arcPct');ap.textContent=pct+'%';ap.style.color=col;
+  const bf=document.getElementById('barFill');bf.style.width=pct+'%';bf.style.background=col;
+  document.getElementById('remTxt').textContent=Math.max(0,100-pct)+'% remaining';
+  const chip=document.getElementById('statusChip');
+  if(pct>=100){chip.className='chip chip-over';chip.textContent='OVER LIMIT';}
+  else if(pct>=80){chip.className='chip chip-warn';chip.textContent='CAUTION';}
+  else{chip.className='chip chip-safe';chip.textContent='SAFE';}
+  const warns=[];
+  for(const[did,mg] of Object.entries(given)){const d=DRUGS.find(x=>x.id===did);if(d&&d.h24!==null&&mg>d.h24)warns.push(`${d.label}>24h cap`);}
+  document.getElementById('warn24').textContent=warns.length?'⚠ '+warns.join(' · '):'';
+
+  // Duration projection
+  const proj = projectDuration();
+  const projEl = document.getElementById('durProj');
+  if (proj) {
+    projEl.style.display = 'flex';
+    document.getElementById('durProjVal').textContent =
+      proj.hi > 48 ? `${proj.lo}–${proj.hi} h (extended)` : `${proj.lo}–${proj.hi} h projected duration`;
+    document.getElementById('durProjSub').textContent = 'Driven by: ' + proj.drivers.join(' + ');
+  } else {
+    projEl.style.display = 'none';
+  }
+
+  // Block duration (responds to additive changes too)
+  updateBlockDur(document.getElementById('blockSel').value);
+
+  renderTable(remFrac,wt,given,pct);
+}
+
+function renderTable(remFrac,wt,given,totalPct){
+  document.getElementById('tbody').innerHTML=DRUGS.map(d=>{
+    const mx=drugMax(d,wt);
+    const remMg=Math.max(0,remFrac*mx);
+    const mgGiven=given[d.id]||0;
+    const faded=totalPct>=100?' class="row-faded"':'';
+    const mlLines=d.concs.map(c=>`<div class="ml-line"><span class="ml-v">${(remMg/(c*10)).toFixed(1)}</span><span class="ml-c"> @${c}%</span></div>`).join('');
+    let cap24='<span class="cap24 c-na">—</span>';
+    if(d.h24!==null){const r=Math.max(0,d.h24-mgGiven);cap24=`<span class="cap24 ${r<50?'c-warn':'c-ok'}">${r.toFixed(0)}mg</span>`;}
+    const col=totalPct>=100?'color:var(--red)':totalPct>=80?'color:var(--amber)':'color:var(--text)';
+    const givenNote=mgGiven>0?` · <span class="given-tag">${mgGiven.toFixed(0)}mg given</span>`:'';
+    return `<tr${faded}><td><div class="dn">${d.label}</div><div class="dc">${d.sub}${givenNote}</div></td><td><span class="mg-val" style="${col}">${remMg.toFixed(0)}</span></td><td>${mlLines}</td><td>${cap24}</td></tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// AFOi TAB
+// ═══════════════════════════════════════════════════════════
+// Agents: bioavail = fraction absorbed for nebulised/spray routes
+const AFOI_AGENTS = [
+  {id:'neb_4',   label:'Lidocaine 4% — Nebulised',         route:'Nebulised',       concs:[4],    defVol:4,  bioavail:0.5, note:'Typically 4 ml of 4% (160 mg administered). Allow 10–15 min post-nebulisation before intubation.'},
+  {id:'neb_2',   label:'Lidocaine 2% — Nebulised',         route:'Nebulised',       concs:[2],    defVol:5,  bioavail:0.5, note:'Higher volume, lower concentration. ~50% bioavailability nebulised.'},
+  {id:'spray_4', label:'Lidocaine 4% — MAD/Atomised',      route:'Atomised (MAD)',  concs:[4],    defVol:2,  bioavail:0.6, note:'MAD device to nasopharynx/oropharynx. ~60% mucosal absorption. Estimate total volume sprayed.'},
+  {id:'cric',    label:'Lidocaine 4% — Cricothyroid inj.', route:'Trans-tracheal',  concs:[4],    defVol:2,  bioavail:1.0, note:'2–4 ml through CTM at end-expiration. Cough disperses LA. Near 100% bioavailability — count in full.'},
+  {id:'scope',   label:'Lidocaine — Spray-as-you-go',      route:'Via scope',       concs:[2,4],  defVol:2,  bioavail:1.0, note:'"Spray-as-you-go" via working channel. 2 ml aliquots at vocal cords, trachea, carina. High bioavailability — count in full.'},
+  {id:'cophen',  label:'Co-phenylcaine (Lido 5%)',          route:'Topical nasal',   concs:[5],    defVol:2,  bioavail:0.6, note:'5% lidocaine + 0.5% phenylephrine. Each metered spray ~0.14 ml. Phenylephrine adds vasoconstriction but does not contribute to LA dose.'},
+  {id:'cocaine', label:'Cocaine 10% — Topical nasal',       route:'Topical nasal',   concs:[4,5,10],defVol:2, bioavail:0.8, isCocaine:true, abs:150, mpk:1.5, note:'Separate limit: 1.5 mg/kg, max 150 mg. Counts independently — NOT added to lidocaine total.'},
+  {id:'instil',  label:'Instillagel (Lidocaine 2% gel)',    route:'Nasal/airway',    concs:[2],    defVol:6,  bioavail:0.55,note:'2% gel (6 ml = 120 mg). Applied to NP airway / nasal passages. Variable mucosal absorption ~50–60%.'},
+  {id:'lmx4',    label:'LMX4 / Lidocaine 4% gel',          route:'Topical mucosal', concs:[4],    defVol:2,  bioavail:0.5, note:'Topical gel to oropharynx. ~35–60% mucosal absorption.'},
+  {id:'xylo10',  label:'Xylocaine 10% pump spray',          route:'Oropharyngeal',   concs:[10],   defVol:1,  bioavail:0.6, note:'10 mg per 0.1 ml actuation. Enter total volume (1 ml = 10 puffs = 100 mg administered). ~60% absorbed.'},
+];
+
+let afoiEntries=[], auid=0, bioavail='full';
+
+function getAWt(){ return Math.max(1,parseFloat(document.getElementById('afoi-wt').value)||70); }
+
+function setBioavail(v){
+  bioavail=v;
+  document.getElementById('tbFull').classList.toggle('active',v==='full');
+  document.getElementById('tbAdj').classList.toggle('active',v==='adjusted');
+  document.getElementById('bioavailNote').textContent = v==='full'
+    ? 'Conservative: full administered dose counted'
+    : 'Adjusted: absorption factor applied per route';
+  calcAFOi();
+}
+
+function renderAFOi(){
+  const el=document.getElementById('afoiList');
+  if(!afoiEntries.length){el.innerHTML='<div class="empty-hint">Tap "+ Add Agent" to begin</div>';return;}
+  el.innerHTML=afoiEntries.map(e=>{
+    const a=AFOI_AGENTS.find(x=>x.id===e.aid)||AFOI_AGENTS[0];
+    const aOpts=AFOI_AGENTS.map(x=>`<option value="${x.id}"${x.id===e.aid?' selected':''}>${x.label}</option>`).join('');
+    const cOpts=a.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
+    return `<div class="afoi-row">
+      <select class="f-select" onchange="onAAgt(${e.id},this.value)">${aOpts}</select>
+      <select class="f-select" onchange="onAConc(${e.id},this.value)">${cOpts}</select>
+      <div class="vol-wrap"><input type="number" inputmode="decimal" min="0" step="0.1" value="${e.vol}" oninput="onAVol(${e.id},this.value)"><span class="u">ml</span></div>
+      <button class="btn-rm" onclick="rmAFOi(${e.id})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function addAFOi(){const a=AFOI_AGENTS[0];afoiEntries.push({id:auid++,aid:a.id,conc:a.concs[0],vol:a.defVol});renderAFOi();calcAFOi();}
+function rmAFOi(id){afoiEntries=afoiEntries.filter(e=>e.id!==id);renderAFOi();calcAFOi();}
+function clearAFOi(){afoiEntries=[];renderAFOi();calcAFOi();}
+function onAAgt(id,aid){const e=afoiEntries.find(x=>x.id===id);if(!e)return;const a=AFOI_AGENTS.find(x=>x.id===aid);e.aid=aid;e.conc=a.concs[0];e.vol=a.defVol;renderAFOi();calcAFOi();}
+function onAConc(id,v){const e=afoiEntries.find(x=>x.id===id);if(e){e.conc=parseFloat(v);calcAFOi();}}
+function onAVol(id,v){const e=afoiEntries.find(x=>x.id===id);if(e){e.vol=Math.max(0,parseFloat(v)||0);calcAFOi();}}
+
+function calcAFOi(){
+  const wt=getAWt();
+  const maxTop=9*wt;
+  let totalLido=0, cocaineMg=0;
+  const breakdown=[], notes=new Set();
+
+  for(const e of afoiEntries){
+    const a=AFOI_AGENTS.find(x=>x.id===e.aid);if(!a)continue;
+    const administered=e.conc*10*e.vol;
+    const absorbed = bioavail==='adjusted' ? administered*a.bioavail : administered;
+    notes.add(`<b style="color:var(--text)">${a.label.split('—')[0].trim()}</b> [${a.route}]: ${a.note}`);
+    if(a.isCocaine){
+      const cocMax=Math.min((a.mpk||1.5)*wt, a.abs||150);
+      cocaineMg+=administered;
+      breakdown.push({name:`${a.label}`,administered,absorbed,isCocaine:true,cocMax,route:a.route,bioavailPct:Math.round(a.bioavail*100)});
+    } else {
+      totalLido+=absorbed;
+      breakdown.push({name:`${a.label}`,administered,absorbed,isCocaine:false,route:a.route,bioavailPct:Math.round(a.bioavail*100)});
+    }
+  }
+
+  const pct=Math.min(100,Math.round(totalLido/maxTop*100));
+  const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+  document.getElementById('afoiTotalMg').textContent=totalLido.toFixed(0)+' mg';
+  document.getElementById('afoiTotalMg').style.color=col;
+  document.getElementById('afoiMaxLine').textContent=`Max: ${maxTop.toFixed(0)} mg (9 mg/kg topical)`;
+  document.getElementById('afoiBar').style.width=pct+'%';
+  document.getElementById('afoiBar').style.background=col;
+  const ac=document.getElementById('afoiChip');
+  if(pct>=100){ac.className='chip chip-over';ac.textContent='OVER LIMIT';}
+  else if(pct>=80){ac.className='chip chip-warn';ac.textContent='CAUTION';}
+  else{ac.className='chip chip-safe';ac.textContent='SAFE';}
+
+  const bdEl=document.getElementById('afoiBreakdown');
+  if(!breakdown.length){bdEl.innerHTML='<div class="empty-hint" style="padding:8px 0">No agents added</div>';}
+  else {
+    bdEl.innerHTML=breakdown.map(b=>{
+      if(b.isCocaine){
+        const over=b.administered>b.cocMax;
+        return `<div class="afoi-bd-row">
+          <div class="afoi-bd-name">${b.name}<br><span style="color:var(--purple);font-size:9.5px">Separate limit · ${b.route}</span></div>
+          <div class="afoi-bd-val" style="color:${over?'var(--red)':'var(--purple)'}">
+            ${b.administered.toFixed(0)} / ${b.cocMax.toFixed(0)} mg
+          </div></div>`;
+      }
+      const isAdj = bioavail==='adjusted';
+      const sub = isAdj ? `${b.administered.toFixed(0)} mg admin → ${b.bioavailPct}% → ${b.absorbed.toFixed(0)} mg` : `${b.administered.toFixed(0)} mg`;
+      return `<div class="afoi-bd-row">
+        <div class="afoi-bd-name">${b.name}<br><span style="color:var(--sub2);font-size:9.5px">${b.route} ${isAdj?'· adj.':''}</span></div>
+        <div class="afoi-bd-val">${b.absorbed.toFixed(0)} mg<br><span style="color:var(--sub2);font-size:9.5px">${isAdj?sub:b.route}</span></div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('afoiNotes').innerHTML=notes.size
+    ? [...notes].map(n=>`<div style="margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">${n}</div>`).join('')
+    : 'Select agents above to see guidance.';
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.getElementById('wt').addEventListener('input',calc);
+document.getElementById('afoi-wt').addEventListener('input',calcAFOi);
+buildAdditives();
+calc();
+calcAFOi();
+
+// ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
