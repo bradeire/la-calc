@@ -1041,6 +1041,8 @@ function onModalBgClick(e){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
+// Select-all on focus for every number input (current and future, including dynamically rendered)
+document.addEventListener('focus', e => { if(e.target.type === 'number') e.target.select(); }, true);
 document.getElementById('wt').addEventListener('input', () => {
   // Refresh any open additive panels that show weight-dependent values
   selAdditives.forEach(id => refreshAdd(id));
