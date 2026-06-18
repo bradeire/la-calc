@@ -827,7 +827,7 @@ function updateBlockDur(v) {
   const durValEl = document.getElementById('blockDurVal');
   if (!v || !BLOCKS[v]) { durValEl.textContent='—'; return; }
   const b = BLOCKS[v];
-  const hasLong = selAdditives.has('dex') || selAdditives.has('dmed');
+  const hasLong = selAdditives.has('dex') || selAdditives.has('dmed') || selAdditives.has('adr') || selAdditives.has('clon');
   durValEl.textContent = (hasLong && b.durX) ? b.durX : b.dur;
 }
 
