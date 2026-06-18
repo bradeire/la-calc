@@ -114,12 +114,30 @@ html,body{height:100dvh;overflow:hidden;background:var(--bg);color:var(--text);f
 .block-note strong{color:var(--purple);font-weight:600}
 
 /* ── ADDITIVES ── */
-.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.add-item{background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);padding:5px 7px;cursor:pointer;transition:all .15s}
+.add-grid{display:flex;flex-wrap:wrap;gap:4px}
+.add-item{background:var(--s1);border:1px solid var(--border);border-radius:var(--rsm);overflow:hidden;transition:border-color .15s,background .15s;width:calc(50% - 2px)}
+.add-item.sel{border-color:rgba(45,212,191,.35);background:var(--teal-d);width:100%}
+.add-header{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;cursor:pointer;gap:6px}
+.add-hdr-left{flex:1;min-width:0}
 .add-name{font-size:11px;font-weight:600;color:var(--text)}
 .add-effect{font-size:10px;color:var(--teal);font-weight:500;margin-top:1px}
-.add-item.sel{border-color:rgba(45,212,191,.35);background:var(--teal-d)}
 .add-item.sel .add-name{color:var(--teal)}
+.add-chevron{font-size:12px;color:var(--sub2);flex-shrink:0;transition:transform .2s}
+.add-item.sel .add-chevron{transform:rotate(180deg);color:var(--teal)}
+.add-dose-panel{padding:0 8px 8px;display:flex;flex-direction:column;gap:6px}
+.add-dose-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.add-dose-label{font-size:10px;color:var(--sub);white-space:nowrap;min-width:52px}
+.add-presets{display:flex;gap:3px;flex-wrap:wrap}
+.add-preset{background:var(--s2);border:1px solid var(--border2);border-radius:5px;color:var(--sub);font-size:11px;font-weight:600;padding:2px 7px;cursor:pointer;font-family:var(--font);transition:all .15s}
+.add-preset.active{background:rgba(45,212,191,.2);border-color:rgba(45,212,191,.4);color:var(--teal)}
+.add-mini-input{width:62px;background:var(--s2);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;padding:3px 5px;text-align:right;-moz-appearance:textfield;outline:none}
+.add-mini-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.add-mini-input:focus{border-color:var(--teal)}
+.add-unit{font-size:10px;color:var(--sub2);white-space:nowrap}
+.add-info{font-size:10.5px;padding:4px 7px;border-radius:5px;line-height:1.4}
+.add-info-ok{background:rgba(74,222,128,.08);color:var(--green);border:1px solid rgba(74,222,128,.15)}
+.add-info-warn{background:rgba(251,191,36,.08);color:var(--amber);border:1px solid rgba(251,191,36,.15)}
+.add-info-neutral{background:var(--s2);color:var(--sub);border:1px solid var(--border)}
 
 /* ── RESULTS TABLE ── */
 .scroll-wrap{overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--s2) transparent;border-radius:var(--rsm)}
@@ -493,13 +511,157 @@ const BLOCKS = {
 };
 
 const ADDITIVES = [
-  {id:'adr',  name:'Adrenaline',          effect:'+1–2 h, intravascular marker',   note:'1:200k or 1:400k. Avoid in digital/penile. Prolongs by vasoconstriction.', durAdd:[1,2], durMult:1.2},
-  {id:'dex',  name:'Dexamethasone',       effect:'+6–12 h sensory block',          note:'4–8 mg perineural. Extends sensory > motor. Systemic route may be equivalent.', durAdd:[6,10]},
-  {id:'clon', name:'Clonidine',           effect:'+2–4 h sensory & motor',         note:'75–150 mcg perineural. Alpha-2 agonist. Risk of hypotension/bradycardia.', durAdd:[2,3]},
-  {id:'dmed', name:'Dexmedetomidine',     effect:'+3–5 h sensory & motor',         note:'0.5–1 mcg/kg perineural. More potent than clonidine. More sedation risk.', durAdd:[3,5]},
-  {id:'bicarb',name:'Sodium Bicarbonate', effect:'Faster onset ~1–2 min',          note:'1 mEq per 10 ml LA. Raises pH → faster membrane penetration. No duration effect.', durAdd:[0,0]},
-  {id:'hyal', name:'Hyaluronidase',       effect:'↑ spread, faster onset',         note:'15–75 IU/ml. Depolymerises HA. Standard for ophthalmic blocks.', durAdd:[0,0]},
+  {id:'adr',   name:'Adrenaline',          effect:'+1–2 h · intravascular marker', durAdd:[1,2]},
+  {id:'dex',   name:'Dexamethasone',       effect:'+6–12 h sensory block',         durAdd:[6,10]},
+  {id:'clon',  name:'Clonidine',           effect:'+2–4 h sensory & motor',        durAdd:[2,3]},
+  {id:'dmed',  name:'Dexmedetomidine',     effect:'+3–5 h sensory & motor',        durAdd:[3,5]},
+  {id:'bicarb',name:'Sodium Bicarbonate',  effect:'Faster onset ~1–2 min',         durAdd:[0,0]},
+  {id:'hyal',  name:'Hyaluronidase',       effect:'↑ spread · faster onset',       durAdd:[0,0]},
 ];
+
+// Dose state per additive — persists across expand/collapse
+const addDose = {
+  adr:   { conc:'1:200,000', vol:20 },
+  dex:   { mg:8, route:'perineural' },
+  clon:  { mcg:100 },
+  dmed:  { mode:'mpk', mpk:0.5 },   // mode: 'mpk' (mcg/kg) | 'fixed'
+  bicarb:{ vol:20 },
+  hyal:  { iuml:30, vol:5 },
+};
+
+const ADR_CONCS = {'1:200,000':5, '1:400,000':2.5, '1:80,000':12.5};
+
+function adrInfo(wt) {
+  const mcgPerMl = ADR_CONCS[addDose.adr.conc] || 5;
+  const total = mcgPerMl * addDose.adr.vol;
+  const maxMcg = Math.min(10 * wt, 500);
+  const over = total > maxMcg;
+  return { total, maxMcg, over,
+    text: `${total.toFixed(0)} mcg total · max ${maxMcg.toFixed(0)} mcg (10 mcg/kg)`,
+    cls: over ? 'add-info-warn' : 'add-info-ok' };
+}
+function dexInfo() {
+  return { text:`${addDose.dex.mg} mg ${addDose.dex.route} · Systemic dose equivalent acceptable`, cls:'add-info-neutral' };
+}
+function clonInfo(wt) {
+  const mpk = (addDose.clon.mcg / wt).toFixed(1);
+  const warn = addDose.clon.mcg > 150;
+  return { text:`${addDose.clon.mcg} mcg = ${mpk} mcg/kg · caution if >150 mcg (hypotension)`, cls: warn?'add-info-warn':'add-info-ok' };
+}
+function dmedInfo(wt) {
+  const total = addDose.dmed.mode==='mpk' ? addDose.dmed.mpk*wt : addDose.dmed.fixed||0;
+  const mpk = (total/wt).toFixed(2);
+  const warn = parseFloat(mpk) > 1;
+  return { total, text:`${total.toFixed(1)} mcg total (${mpk} mcg/kg) · max ~1 mcg/kg`, cls: warn?'add-info-warn':'add-info-ok' };
+}
+function bicarbInfo() {
+  const mEq = (addDose.bicarb.vol / 10).toFixed(1);
+  return { text:`Add ${mEq} mEq NaHCO₃ (= ${mEq} ml of 8.4%) to ${addDose.bicarb.vol} ml LA`, cls:'add-info-neutral' };
+}
+function hyalInfo() {
+  const total = addDose.hyal.iuml * addDose.hyal.vol;
+  return { text:`${total} IU total (${addDose.hyal.iuml} IU/ml × ${addDose.hyal.vol} ml LA)`, cls:'add-info-neutral' };
+}
+
+function additiveDosePanel(id, wt) {
+  if (id === 'adr') {
+    const i = adrInfo(wt);
+    const concOpts = Object.keys(ADR_CONCS).map(c =>
+      `<option value="${c}"${addDose.adr.conc===c?' selected':''}>${c}</option>`).join('');
+    return `
+      <div class="add-dose-row">
+        <span class="add-dose-label">Concentration</span>
+        <select class="add-mini-input" style="width:110px;text-align:left" onchange="addDose.adr.conc=this.value;refreshAdd('adr')">${concOpts}</select>
+      </div>
+      <div class="add-dose-row">
+        <span class="add-dose-label">Volume</span>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="1" value="${addDose.adr.vol}" oninput="addDose.adr.vol=parseFloat(this.value)||0;refreshAdd('adr')">
+        <span class="add-unit">ml of LA solution</span>
+      </div>
+      <div class="add-info ${i.cls}">${i.text}</div>`;
+  }
+  if (id === 'dex') {
+    const presets = [4,6,8];
+    const btns = presets.map(p=>`<button class="add-preset${addDose.dex.mg===p?' active':''}" onclick="addDose.dex.mg=${p};refreshAdd('dex')">${p}mg</button>`).join('');
+    const routeBtns = ['perineural','IV'].map(r=>`<button class="add-preset${addDose.dex.route===r?' active':''}" onclick="addDose.dex.route='${r}';refreshAdd('dex')">${r}</button>`).join('');
+    const i = dexInfo();
+    return `
+      <div class="add-dose-row">
+        <span class="add-dose-label">Dose</span>
+        <div class="add-presets">${btns}</div>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="1" value="${addDose.dex.mg}" oninput="addDose.dex.mg=parseFloat(this.value)||0;refreshAdd('dex')">
+        <span class="add-unit">mg</span>
+      </div>
+      <div class="add-dose-row">
+        <span class="add-dose-label">Route</span>
+        <div class="add-presets">${routeBtns}</div>
+      </div>
+      <div class="add-info ${i.cls}">${i.text}</div>`;
+  }
+  if (id === 'clon') {
+    const presets = [75,100,150];
+    const btns = presets.map(p=>`<button class="add-preset${addDose.clon.mcg===p?' active':''}" onclick="addDose.clon.mcg=${p};refreshAdd('clon')">${p}</button>`).join('');
+    const i = clonInfo(wt);
+    return `
+      <div class="add-dose-row">
+        <span class="add-dose-label">Dose</span>
+        <div class="add-presets">${btns}</div>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="25" value="${addDose.clon.mcg}" oninput="addDose.clon.mcg=parseFloat(this.value)||0;refreshAdd('clon')">
+        <span class="add-unit">mcg</span>
+      </div>
+      <div class="add-info ${i.cls}">${i.text}</div>`;
+  }
+  if (id === 'dmed') {
+    const isMpk = addDose.dmed.mode === 'mpk';
+    const modeBtns = ['mcg/kg','fixed mcg'].map((r,i)=>`<button class="add-preset${(i===0&&isMpk)||(i===1&&!isMpk)?' active':''}" onclick="addDose.dmed.mode=${i===0?`'mpk'`:`'fixed'`};refreshAdd('dmed')">${r}</button>`).join('');
+    const presets = isMpk ? [0.5,0.75,1] : [25,50,75];
+    const curVal = isMpk ? addDose.dmed.mpk : (addDose.dmed.fixed||50);
+    const btns = presets.map(p=>`<button class="add-preset${(isMpk?addDose.dmed.mpk:addDose.dmed.fixed)===p?' active':''}" onclick="${isMpk?`addDose.dmed.mpk`:`addDose.dmed.fixed`}=${p};refreshAdd('dmed')">${p}</button>`).join('');
+    const i = dmedInfo(wt);
+    return `
+      <div class="add-dose-row">
+        <span class="add-dose-label">Mode</span>
+        <div class="add-presets">${modeBtns}</div>
+      </div>
+      <div class="add-dose-row">
+        <span class="add-dose-label">Dose</span>
+        <div class="add-presets">${btns}</div>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="${isMpk?0.25:10}" value="${curVal}" oninput="${isMpk?`addDose.dmed.mpk`:`addDose.dmed.fixed`}=parseFloat(this.value)||0;refreshAdd('dmed')">
+        <span class="add-unit">${isMpk?'mcg/kg':'mcg'}</span>
+      </div>
+      <div class="add-info ${i.cls}">${i.text}</div>`;
+  }
+  if (id === 'bicarb') {
+    const i = bicarbInfo();
+    return `
+      <div class="add-dose-row">
+        <span class="add-dose-label">LA volume</span>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="5" value="${addDose.bicarb.vol}" oninput="addDose.bicarb.vol=parseFloat(this.value)||0;refreshAdd('bicarb')">
+        <span class="add-unit">ml total LA</span>
+      </div>
+      <div class="add-info ${i.cls}">${i.text}</div>
+      <div class="add-info add-info-neutral" style="margin-top:2px">Avoid with bupivacaine — precipitation risk. Best with lidocaine/mepivacaine.</div>`;
+  }
+  if (id === 'hyal') {
+    const presets = [15,30,75];
+    const btns = presets.map(p=>`<button class="add-preset${addDose.hyal.iuml===p?' active':''}" onclick="addDose.hyal.iuml=${p};refreshAdd('hyal')">${p}</button>`).join('');
+    const i = hyalInfo();
+    return `
+      <div class="add-dose-row">
+        <span class="add-dose-label">Conc.</span>
+        <div class="add-presets">${btns}</div>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="15" value="${addDose.hyal.iuml}" oninput="addDose.hyal.iuml=parseFloat(this.value)||0;refreshAdd('hyal')">
+        <span class="add-unit">IU/ml</span>
+      </div>
+      <div class="add-dose-row">
+        <span class="add-dose-label">LA volume</span>
+        <input class="add-mini-input" type="number" inputmode="decimal" min="0" step="1" value="${addDose.hyal.vol}" oninput="addDose.hyal.vol=parseFloat(this.value)||0;refreshAdd('hyal')">
+        <span class="add-unit">ml</span>
+      </div>
+      <div class="add-info ${i.cls}">${i.text}</div>`;
+  }
+  return '';
+}
 
 let drugs=[], uid=0, selAdditives=new Set();
 
@@ -535,15 +697,37 @@ function onVol(id,v){const e=drugs.find(x=>x.id===id);if(e){e.vol=Math.max(0,par
 
 function buildAdditives(){
   document.getElementById('addGrid').innerHTML=ADDITIVES.map(a=>`
-    <div class="add-item" id="add-${a.id}" onclick="toggleAdd('${a.id}')">
-      <div class="add-name">${a.name}</div>
-      <div class="add-effect">${a.effect}</div>
+    <div class="add-item" id="add-${a.id}">
+      <div class="add-header" onclick="toggleAdd('${a.id}')">
+        <div class="add-hdr-left">
+          <div class="add-name">${a.name}</div>
+          <div class="add-effect">${a.effect}</div>
+        </div>
+        <span class="add-chevron">⌄</span>
+      </div>
+      <div class="add-dose-panel" id="dose-${a.id}" style="display:none"></div>
     </div>`).join('');
 }
 
 function toggleAdd(id){
-  selAdditives.has(id)?selAdditives.delete(id):selAdditives.add(id);
-  document.getElementById('add-'+id).classList.toggle('sel',selAdditives.has(id));
+  const wasSelected = selAdditives.has(id);
+  if(wasSelected){ selAdditives.delete(id); } else { selAdditives.add(id); }
+  const item = document.getElementById('add-'+id);
+  const panel = document.getElementById('dose-'+id);
+  item.classList.toggle('sel', !wasSelected);
+  if(!wasSelected){
+    panel.style.display = 'flex';
+    panel.innerHTML = additiveDosePanel(id, getWt());
+  } else {
+    panel.style.display = 'none';
+    panel.innerHTML = '';
+  }
+  calc();
+}
+
+function refreshAdd(id){
+  const panel = document.getElementById('dose-'+id);
+  if(panel) panel.innerHTML = additiveDosePanel(id, getWt());
   calc();
 }
 
@@ -774,7 +958,11 @@ function calcAFOi(){
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
-document.getElementById('wt').addEventListener('input',calc);
+document.getElementById('wt').addEventListener('input', () => {
+  // Refresh any open additive panels that show weight-dependent values
+  selAdditives.forEach(id => refreshAdd(id));
+  calc();
+});
 document.getElementById('afoi-wt').addEventListener('input',calcAFOi);
 buildAdditives();
 calc();
