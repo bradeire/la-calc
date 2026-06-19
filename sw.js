@@ -1,4 +1,4 @@
-const CACHE = 'la-calc-v3';
+const CACHE = 'la-calc-v4';
 const ASSETS = [
   './',
   './index.html',

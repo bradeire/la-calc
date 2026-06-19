@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#111827">
-<title>LA Calculator</title>
+<title>LASTCalc</title>
 <!-- Privacy-friendly analytics by Plausible -->
 <script async src="https://plausible.io/js/pa-912VsUXsJtskHg5oyFYG4.js"></script>
 <script>
@@ -219,6 +219,39 @@ tbody td:not(:first-child){text-align:right}
 .notes-body{font-size:11px;color:var(--sub);line-height:1.5;max-height:72px;overflow-y:auto}
 
 .footer{font-size:10px;color:var(--sub2);text-align:center;flex-shrink:0;padding-bottom:3px;line-height:1.4}
+
+/* ── ANTHROPOMETRIC PANEL ── */
+.anthro-panel{background:var(--s0);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow);flex-shrink:0;overflow:hidden;transition:max-height .3s cubic-bezier(.4,0,.2,1),opacity .3s,padding .3s}
+.anthro-panel.collapsed{max-height:0;padding-top:0;padding-bottom:0;opacity:0;border-color:transparent;box-shadow:none;pointer-events:none}
+.anthro-panel.open{max-height:280px;opacity:1}
+.anthro-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.anthro-field{display:flex;flex-direction:column;gap:3px}
+.anthro-label{font-size:10px;font-weight:600;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px}
+.anthro-results{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.anthro-chip{font-size:10.5px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.achip-blue{background:var(--blue-d);color:var(--blue);border:1px solid rgba(96,165,250,.25)}
+.achip-green{background:var(--green-d);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.achip-amber{background:var(--amber-d);color:var(--amber);border:1px solid rgba(251,191,36,.25)}
+.achip-red{background:var(--red-d);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+.achip-purple{background:var(--purple-d);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.ped-banner{background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.3);border-radius:var(--rsm);padding:5px 8px;font-size:11px;color:var(--purple);font-weight:600;margin-top:4px}
+
+/* ── PRIOR LA ── */
+.drug-row.prior{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:var(--rsm);padding:3px}
+.prior-tag{font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;padding-left:2px}
+
+/* ── DISCLAIMER MODAL ── */
+.disc-footer{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:0 2px}
+.disc-btn{background:none;border:1px solid var(--border);border-radius:99px;color:var(--sub2);font-family:var(--font);font-size:10px;font-weight:500;padding:3px 10px;cursor:pointer}
+.disc-btn:active{background:var(--s1)}
+.disclaimer-body{font-size:12px;color:var(--sub);line-height:1.65;padding:0 4px}
+.disclaimer-body h3{font-size:12px;font-weight:700;color:var(--text);margin:12px 0 4px}
+.disclaimer-body h3:first-child{margin-top:0}
+.disclaimer-body ol{padding-left:16px;margin:4px 0}
+.disclaimer-body ol li{margin-bottom:6px}
+.disclaimer-body strong{color:var(--text)}
+.disclaimer-body hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.disclaimer-body em{color:var(--sub2);font-style:italic}
 </style>
 </head>
 <body>
@@ -237,13 +270,54 @@ tbody td:not(:first-child){text-align:right}
   <div class="hdr">
     <div class="hdr-left">
       <div class="hdr-icon" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6)">💉</div>
-      <h1>LA Dose Calculator</h1>
+      <h1>LASTCalc</h1>
+      <div style="font-size:9px;color:var(--sub);font-weight:500;letter-spacing:.5px;margin-top:1px">Local Anaesthetic Systemic Toxicity Calculator</div>
     </div>
-    <div class="wt-pill">
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
       <label>Wt</label>
       <input type="number" id="wt" min="1" max="250" value="70" inputmode="decimal">
       <span class="wt-unit">kg</span>
+      <span id="anthroChevron" style="font-size:11px;color:var(--sub2);margin-left:2px">⌄</span>
     </div>
+  </div>
+
+  <!-- ANTHROPOMETRIC EXPANSION -->
+  <div class="anthro-panel collapsed" id="anthroPanel">
+    <div class="card-title">Body Metrics <span style="font-weight:400;color:var(--sub2);text-transform:none;letter-spacing:0">(optional — refines dose weight)</span></div>
+    <div class="anthro-grid">
+      <div class="anthro-field">
+        <span class="anthro-label">Sex (for LBW/IBW)</span>
+        <div class="toggle-btns" style="width:fit-content">
+          <button class="tbtn active" id="sexM" onclick="setSex('M')">Male</button>
+          <button class="tbtn" id="sexF" onclick="setSex('F')">Female</button>
+        </div>
+      </div>
+      <div class="anthro-field">
+        <span class="anthro-label">Height</span>
+        <div class="vol-wrap" style="max-width:100px">
+          <input type="number" id="heightInput" inputmode="decimal" min="30" max="250" placeholder="cm" oninput="onAnthroChange()">
+          <span class="u">cm</span>
+        </div>
+      </div>
+      <div class="anthro-field">
+        <span class="anthro-label">Age</span>
+        <div style="display:flex;gap:4px;align-items:center">
+          <div class="vol-wrap" style="max-width:80px">
+            <input type="number" id="ageInput" inputmode="decimal" min="0" max="120" placeholder="—" oninput="onAnthroChange()">
+          </div>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="ageYrs" onclick="setAgeUnit('yrs')">yrs</button>
+            <button class="tbtn" id="ageMos" onclick="setAgeUnit('mos')">mos</button>
+          </div>
+        </div>
+      </div>
+      <div class="anthro-field">
+        <span class="anthro-label">BMI</span>
+        <div style="font-size:15px;font-weight:700;color:var(--text);padding:5px 0" id="bmiDisplay">—</div>
+      </div>
+    </div>
+    <div class="anthro-results" id="anthroResults"></div>
+    <div id="pedbanner"></div>
   </div>
 
   <!-- DRUGS GIVEN -->
@@ -258,7 +332,8 @@ tbody td:not(:first-child){text-align:right}
       </div>
     </div>
     <div class="row-btns">
-      <button class="btn-add" onclick="addDrug()">+ Add Drug</button>
+      <button class="btn-add" onclick="addDrug(false)">+ Add Drug</button>
+      <button class="btn-add" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:var(--amber)" onclick="addDrug(true)">+ Prior LA</button>
       <button class="btn-sec" onclick="clearDrugs()">Clear</button>
     </div>
   </div>
@@ -373,8 +448,11 @@ tbody td:not(:first-child){text-align:right}
     </div>
   </div>
 
-  <div class="footer">Literature doses — verify locally · 6 h single-site injection window</div>
-  <div class="footer" style="margin-top:1px">© 2026 Ó Brolcháin &nbsp;·&nbsp; Version 1.0</div>
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left">Literature doses · verify locally · 6 h window</div>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.1</div>
 </div>
 
 <!-- MODAL OVERLAY -->
@@ -469,8 +547,11 @@ tbody td:not(:first-child){text-align:right}
     </div>
   </div>
 
-  <div class="footer">Topical max: 9 mg/kg (AAGBI/DAS) · Nebulised bioavailability ~40–60% · Verify locally</div>
-  <div class="footer" style="margin-top:1px">© 2026 Ó Brolcháin &nbsp;·&nbsp; Version 1.0</div>
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left">Topical max: 9 mg/kg · Verify locally</div>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.1</div>
 </div>
 
 </div><!-- #app -->
@@ -489,6 +570,20 @@ tbody td:not(:first-child){text-align:right}
         <div class="notes-title" style="font-size:10px;font-weight:600;color:var(--sub2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Technique Notes</div>
         <div class="notes-body" id="afoiNotes" style="font-size:12px;color:var(--sub);line-height:1.6">Select agents to see guidance.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- DISCLAIMER MODAL -->
+<div class="modal-backdrop" id="disclaimerModal" onclick="onDiscModalBgClick(event)">
+  <div class="modal-sheet" style="max-height:92vh;max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">⚠ Disclaimer &amp; Terms of Use</span>
+      <button class="modal-close" onclick="closeDisclaimer()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:14px 16px 28px">
+      <div class="disclaimer-body" id="disclaimerBody"></div>
     </div>
   </div>
 </div>
@@ -742,7 +837,131 @@ function additiveDosePanel(id, wt) {
 
 let drugs=[], uid=0, selAdditives=new Set();
 
-function drugMax(d,wt){ const byWt=d.mpk*wt; if(d.id==='ropi')return Math.min(byWt,ropiMax); return d.abs===null?byWt:Math.min(byWt,d.abs); }
+// ── ANTHROPOMETRICS ────────────────────────────────────────────────────────
+const anthro = { sex:'M', heightCm:null, ageVal:null, ageUnit:'yrs' };
+let anthroOpen = false;
+
+function getAgeMonths() {
+  if (anthro.ageVal === null || anthro.ageVal === '') return null;
+  return anthro.ageUnit === 'yrs' ? anthro.ageVal * 12 : anthro.ageVal;
+}
+
+function calcEffectiveWt() {
+  const tbw = getWt();
+  const h = anthro.heightCm;
+  if (!h || h < 50) return { wt: tbw, tbw, bmi: null, bsa: null, lbw: null, ibw: null, label: null, pedMode: null };
+
+  const bmi = tbw / ((h / 100) ** 2);
+  const bsa = Math.sqrt(h * tbw / 3600);
+  const ibw = Math.max(20, anthro.sex === 'M' ? 50 + 0.906 * (h - 152.4) : 45.5 + 0.906 * (h - 152.4));
+  const lbw = anthro.sex === 'M' ? (9270 * tbw) / (6680 + 216 * bmi) : (9270 * tbw) / (8780 + 244 * bmi);
+
+  const doseWt = bmi >= 30 ? Math.max(1, lbw) : tbw;
+  const bmiCat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Normal' : bmi < 30 ? 'Overweight' : bmi < 35 ? 'Obese I' : bmi < 40 ? 'Obese II' : 'Obese III';
+  const label = bmi >= 30 ? `LBW ${lbw.toFixed(1)} kg` : `TBW ${tbw} kg`;
+
+  const mos = getAgeMonths();
+  let pedMode = null;
+  if (mos !== null) {
+    if (mos < 1) pedMode = 'neonate';
+    else if (mos < 6) pedMode = '<6m';
+    else if (mos < 12) pedMode = '6-12m';
+    else if (mos < 216) pedMode = '>1yr';
+  }
+
+  return { wt: doseWt, tbw, bmi, bsa, lbw, ibw, label, bmiCat, pedMode };
+}
+
+function drugMax(d, _wt) {
+  const eff = calcEffectiveWt();
+  const wt = eff.wt;
+  const mos = getAgeMonths();
+
+  // Paediatric overrides (PNB single-shot)
+  if (eff.pedMode && mos !== null) {
+    if (mos < 1 || mos < 6) {
+      // Neonate / <6m: ropivacaine only, ≤0.5 mg/kg
+      return d.id === 'ropi' ? Math.min(0.5 * wt, 20) : 0;
+    }
+    if (mos < 12) return Math.min(1.0 * wt, 50);   // 6–12m: 0.5–1.0 mg/kg
+    if (mos < 216) return Math.min(1.5 * wt, 100); // >1yr <18yr: 1.5 mg/kg
+  }
+
+  // Adult dosing
+  const byWt = d.mpk * wt;
+  if (d.id === 'ropi') return Math.min(byWt, ropiMax);
+  return d.abs === null ? byWt : Math.min(byWt, d.abs);
+}
+
+function toggleAnthro() {
+  anthroOpen = !anthroOpen;
+  document.getElementById('anthroPanel').className = 'anthro-panel ' + (anthroOpen ? 'open' : 'collapsed');
+  document.getElementById('anthroChevron').style.transform = anthroOpen ? 'rotate(180deg)' : '';
+  if (anthroOpen) document.getElementById('heightInput').focus();
+}
+
+function setSex(s) {
+  anthro.sex = s;
+  document.getElementById('sexM').classList.toggle('active', s === 'M');
+  document.getElementById('sexF').classList.toggle('active', s === 'F');
+  onAnthroChange();
+}
+
+function setAgeUnit(u) {
+  anthro.ageUnit = u;
+  document.getElementById('ageYrs').classList.toggle('active', u === 'yrs');
+  document.getElementById('ageMos').classList.toggle('active', u === 'mos');
+  onAnthroChange();
+}
+
+function onAnthroChange() {
+  const hv = parseFloat(document.getElementById('heightInput').value);
+  const av = parseFloat(document.getElementById('ageInput').value);
+  anthro.heightCm = isNaN(hv) ? null : hv;
+  anthro.ageVal = isNaN(av) ? null : av;
+  updateAnthroUI();
+  calc();
+}
+
+function updateAnthroUI() {
+  const eff = calcEffectiveWt();
+  const bmiEl = document.getElementById('bmiDisplay');
+  const resEl = document.getElementById('anthroResults');
+  const pedEl = document.getElementById('pedbanner');
+
+  if (!eff.bmi) {
+    bmiEl.textContent = '—';
+    resEl.innerHTML = '';
+    pedEl.innerHTML = '';
+    return;
+  }
+
+  const bmiColor = eff.bmi < 18.5 ? 'achip-blue' : eff.bmi < 25 ? 'achip-green' : eff.bmi < 30 ? 'achip-amber' : 'achip-red';
+  bmiEl.textContent = eff.bmi.toFixed(1);
+  bmiEl.style.color = eff.bmi >= 30 ? 'var(--amber)' : 'var(--green)';
+
+  const chips = [
+    `<span class="anthro-chip ${bmiColor}">${eff.bmiCat}</span>`,
+    `<span class="anthro-chip achip-blue">BSA ${eff.bsa.toFixed(2)} m²</span>`,
+    `<span class="anthro-chip achip-purple">IBW ${eff.ibw.toFixed(1)} kg</span>`,
+    `<span class="anthro-chip achip-purple">LBW ${eff.lbw.toFixed(1)} kg</span>`,
+    `<span class="anthro-chip ${eff.bmi >= 30 ? 'achip-amber' : 'achip-green'}">Dose wt: ${eff.wt.toFixed(1)} kg ${eff.bmi >= 30 ? '(LBW)' : '(TBW)'}</span>`,
+  ];
+  resEl.innerHTML = chips.join('');
+
+  if (eff.pedMode) {
+    const msgs = {
+      'neonate': '⚠ Neonate: ropivacaine only ≤0.5 mg/kg — extreme caution, specialist guidance required',
+      '<6m': '⚠ <6 months: ropivacaine only ≤0.5 mg/kg — caution',
+      '6-12m': '⚠ 6–12 months: 0.5–1.0 mg/kg ceiling applied',
+      '>1yr': '⚠ Paediatric (>1 yr): 1.5 mg/kg ceiling applied'
+    };
+    pedEl.innerHTML = `<div class="ped-banner">${msgs[eff.pedMode] || ''}</div>`;
+  } else {
+    pedEl.innerHTML = '';
+  }
+}
+
 function getWt(){ return Math.max(1,parseFloat(document.getElementById('wt').value)||70); }
 function setRopi(v){ ropiMax=v; document.getElementById('tb225').classList.toggle('active',v===225); document.getElementById('tb300').classList.toggle('active',v===300); calc(); }
 
@@ -753,7 +972,10 @@ function renderDrugs(){
     const d=DRUGS.find(x=>x.id===e.did)||DRUGS[0];
     const dOpts=DRUGS.map(x=>`<option value="${x.id}"${x.id===e.did?' selected':''}>${x.label} (${x.sub})</option>`).join('');
     const cOpts=d.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
-    return `<div class="drug-row">
+    const priorClass = e.prior ? ' prior' : '';
+    const priorLabel = e.prior ? '<div class="prior-tag" style="grid-column:1/-1">⏱ Prior (by others)</div>' : '';
+    return `<div class="drug-row${priorClass}">
+      ${priorLabel}
       <select class="f-select" onchange="onDrug(${e.id},this.value)">${dOpts}</select>
       <select class="f-select" onchange="onConc(${e.id},this.value)">${cOpts}</select>
       <div class="vol-wrap"><input type="number" inputmode="decimal" min="0" step="0.1" value="${e.vol}" oninput="onVol(${e.id},this.value)"><span class="u">ml</span></div>
@@ -765,7 +987,7 @@ function syncRopiToggle(){
   document.getElementById('ropiToggleRow').style.display =
     drugs.some(e => e.did === 'ropi') ? 'flex' : 'none';
 }
-function addDrug(){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0});renderDrugs();syncRopiToggle();calc();}
+function addDrug(prior=false){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();}
 function rmDrug(id){drugs=drugs.filter(e=>e.id!==id);renderDrugs();syncRopiToggle();calc();}
 function clearDrugs(){drugs=[];renderDrugs();syncRopiToggle();calc();}
 function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=d.concs[0];renderDrugs();syncRopiToggle();calc();}
@@ -1096,17 +1318,49 @@ function onAfoiModalBgClick(e){
   if(e.target === document.getElementById('afoiModal')) closeAfoiModal();
 }
 
+function openDisclaimer(){
+  document.getElementById('disclaimerModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('disclaimerBody').innerHTML=`
+    <h3>Nature of this tool</h3>
+    <p>LASTCalc is an educational and decision-support aid designed to assist qualified healthcare professionals in calculating maximum weight-based local anaesthetic doses for peripheral nerve blocks. It does not constitute medical advice, clinical guidance, or a substitute for professional judgement.</p>
+    <h3>No liability</h3>
+    <p>This tool is provided in good faith on an "as is" basis, without warranty of any kind, express or implied. The developer(s) of LASTCalc accept no responsibility or liability for any clinical decision made in reliance upon its outputs, nor for any harm, loss, or adverse outcome — direct or indirect — arising from its use or misuse. Outputs are generated from generalised dosing rules and cannot account for the full clinical context of any individual patient.</p>
+    <h3>Your professional responsibility</h3>
+    <p>By using LASTCalc you confirm that:</p>
+    <ol>
+      <li>You are a qualified and registered healthcare professional with appropriate training and competence in regional anaesthesia.</li>
+      <li>You will independently verify all doses against your local drug formulary, departmental protocols, and national guidance — including guidance published by the Association of Anaesthetists, the BNF, and relevant Royal College resources.</li>
+      <li>You understand that this tool provides a <strong>ceiling dose only</strong>. Clinical judgement must be applied to determine the minimum effective dose appropriate for each individual patient.</li>
+      <li>You accept sole professional and legal responsibility for any dose you administer. Performing your own independent dose calculation before proceeding is mandatory.</li>
+    </ol>
+    <h3>Accuracy and currency</h3>
+    <p>Dosing thresholds are based on recognised guidance at the time of development. Pharmacological guidance evolves; the developer(s) make no guarantee that outputs reflect the most current recommendations at the time of your use.</p>
+    <h3>Paediatric and high-risk patients</h3>
+    <p>This tool includes paediatric dosing parameters. Use in neonates, infants, and patients with significant comorbidities requires particular caution. Outputs in these patient groups should be treated with additional scrutiny and verified against specialist guidance.</p>
+    <h3>Regulatory status</h3>
+    <p>LASTCalc is not a registered medical device. It has not been evaluated or approved by the MHRA or any equivalent regulatory body.</p>
+    <h3>Governing law</h3>
+    <p>This disclaimer and your use of LASTCalc are governed by the laws of England and Wales.</p>
+    <hr>
+    <em>By proceeding to use LASTCalc, you confirm that you have read, understood, and agreed to the above terms.</em>
+  `;
+}
+function closeDisclaimer(){document.getElementById('disclaimerModal').classList.remove('open');document.body.style.overflow='';}
+function onDiscModalBgClick(e){if(e.target===document.getElementById('disclaimerModal'))closeDisclaimer();}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 // Select-all on focus for every number input (current and future, including dynamically rendered)
 // setTimeout defers select() until after iOS Safari finishes its focus handling
 document.addEventListener('focus', e => { if(e.target.type === 'number') setTimeout(() => e.target.select(), 0); }, true);
 document.getElementById('wt').addEventListener('input', () => {
-  // Refresh any open additive panels that show weight-dependent values
   selAdditives.forEach(id => refreshAdd(id));
+  updateAnthroUI();
   calc();
 });
 document.getElementById('afoi-wt').addEventListener('input',calcAFOi);
 buildAdditives();
+updateAnthroUI();
 calc();
 calcAFOi();
 
