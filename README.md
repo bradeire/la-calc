@@ -1,6 +1,6 @@
-# LA Dose Calculator
+# LASTCalc — Local Anaesthetic Systemic Toxicity Calculator
 
-A mobile-optimised Progressive Web App (PWA) for calculating maximum safe doses of local anaesthetic drugs, including mixture calculations, nerve block duration estimates, additive dosing, and awake fibreoptic intubation (AFOi) topical dosing.
+A mobile-optimised Progressive Web App (PWA) for calculating maximum safe doses of local anaesthetic drugs, with obesity-adjusted and paediatric dosing, mixture calculations, nerve block duration estimates, additive dosing, and awake fibreoptic intubation (AFOi) topical dosing.
 
 **Live app:** https://bradeire.github.io/la-calc
 
@@ -9,10 +9,14 @@ A mobile-optimised Progressive Web App (PWA) for calculating maximum safe doses 
 ## Features
 
 - **Blocks tab** — dose calculator for single drugs and mixtures using fractional max-dose logic (e.g. 40% lidocaine + 60% bupivacaine = 100% total capacity used)
+- **Body metrics panel** — tap weight to expand height/age inputs; calculates BMI, BSA, IBW, LBW (Janmahasatian); auto-selects LBW for obese patients (BMI ≥ 30)
+- **Paediatric dosing** — age-based dose ceilings (neonate, <6m, 6–12m, >1yr)
+- **Prior LA** — add drugs given by another clinician within the 6-hour window
 - **Block selector** — 30+ nerve blocks with suggested volumes, concentrations, and predicted duration ranges
 - **Additives** — expandable dose panels for adrenaline, dexamethasone, clonidine, dexmedetomidine, sodium bicarbonate, and hyaluronidase, with weight-adjusted safety checks
 - **Duration projection** — dynamically calculated from the actual drugs and additives entered
 - **AFOi tab** — topical lidocaine dose calculator for awake fibreoptic intubation, with per-agent bioavailability adjustment
+- **Install page** — platform-aware install guide at `/install.html` (shows Android prompt or iOS step-by-step)
 - **Offline capable** — works without internet after first load
 
 ---
@@ -96,4 +100,4 @@ GitHub Pages deploys automatically within ~60 seconds of each push.
 
 ---
 
-© 2026 Ó Brolcháin · Version 1.0
+© 2026 Ó Brolcháin · LASTCalc Version 1.1
