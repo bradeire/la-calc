@@ -1,6 +1,6 @@
 {
-  "name": "LA Dose Calculator",
-  "short_name": "LA Calc",
+  "name": "LASTCalc",
+  "short_name": "LASTCalc",
   "description": "Local anaesthetic dose calculator with block selector and AFOi topical dosing",
   "start_url": "./index.html",
   "scope": "./",
