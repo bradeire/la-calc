@@ -493,9 +493,10 @@ tbody td:not(:first-child){text-align:right}
 
   <div class="disc-footer">
     <div class="footer" style="text-align:left">Literature doses · verify locally · 6 h window</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.1</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
 </div>
 
 <!-- MODAL OVERLAY -->
@@ -593,9 +594,10 @@ tbody td:not(:first-child){text-align:right}
 
   <div class="disc-footer">
     <div class="footer" style="text-align:left">Topical max: 9 mg/kg · Verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.1</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
 </div>
 
 </div><!-- #app -->
@@ -631,6 +633,20 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div class="modal-body" style="padding:14px 16px 28px">
       <div id="workingsBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGELOG MODAL -->
+<div class="modal-backdrop" id="changelogModal" onclick="onChangelogBgClick(event)">
+  <div class="modal-sheet" style="max-height:92vh;max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">📋 Changelog</span>
+      <button class="modal-close" onclick="closeChangelog()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:14px 16px 28px">
+      <div class="disclaimer-body" id="changelogBody"></div>
     </div>
   </div>
 </div>
@@ -1431,6 +1447,52 @@ function openDisclaimer(){
 }
 function closeDisclaimer(){document.getElementById('disclaimerModal').classList.remove('open');document.body.style.overflow='';}
 function onDiscModalBgClick(e){if(e.target===document.getElementById('disclaimerModal'))closeDisclaimer();}
+
+function openChangelog(){
+  document.getElementById('changelogModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('changelogBody').innerHTML=`
+    <h3>v1.2 — 2026-06-20</h3>
+    <strong>New features</strong>
+    <ol>
+      <li><strong>Show Workings</strong> — tap the gauge for a step-by-step fractional dose breakdown per drug, with running total and dose weight rationale</li>
+      <li><strong>Print / Export PDF</strong> — white-background clinical report with SVG gauge, per-drug bars, and block/patient info for EPR pasting</li>
+      <li><strong>AFOi → Blocks transfer</strong> — send total topical lidocaine from the AFOi tab into Blocks as a prior entry, using the 9 mg/kg topical ceiling throughout</li>
+    </ol>
+    <strong>Bug fixes</strong>
+    <ol>
+      <li>AFOi-transferred lidocaine now correctly measured against 9 mg/kg topical ceiling (not 3 mg/kg infiltration) in gauge, Show Workings, and Print</li>
+      <li>Transfer always uses full administered dose (no bioavailability reduction) to remain conservative for LAST risk</li>
+      <li>Print PDF no longer bleeds dark app background; report is fully white</li>
+      <li>Show Workings displays correct "Topical ceiling" note for AFOi entries</li>
+    </ol>
+    <strong>Block suggestions updated</strong>
+    <ol>
+      <li>Levobupivacaine specified for vascular-adjacent blocks (interscalene, femoral, sciatic, popliteal, FICB, ESB, SAB, ophthalmic, scalp, cervical plexus, greater auricular) — preferred for cardiac safety if inadvertent IV injection</li>
+      <li>(Levo)bupivacaine for fascial plane blocks where either is appropriate (TAP, PECS, rectus sheath, ilioinguinal, wrist, ankle)</li>
+      <li>Axillary block volume corrected to 15–20 ml</li>
+    </ol>
+    <hr>
+    <h3>v1.1</h3>
+    <strong>New features</strong>
+    <ol>
+      <li><strong>Body metrics panel</strong> — tap weight to expand height/sex/age; calculates BMI, BSA, IBW, LBW; auto-selects LBW when BMI ≥ 30</li>
+      <li><strong>Paediatric dosing</strong> — age-based ceilings for neonates, &lt;6 m, 6–12 m, &gt;1 yr</li>
+      <li><strong>Prior LA</strong> — add drugs given by others within the 6-hour window</li>
+      <li><strong>Gauge enhancements</strong> — total mg and TBW/LBW dose weight label displayed</li>
+      <li>Disclaimer modal, install page, app renamed to LASTCalc</li>
+    </ol>
+    <hr>
+    <h3>v1.0 — Initial release</h3>
+    <ol>
+      <li>Fractional dose mixture calculator for 6 LA drugs</li>
+      <li>Half-donut gauge, remaining capacity table, nerve block selector (30+ blocks)</li>
+      <li>Additives panel, AFOi topical dose calculator, PWA offline support</li>
+    </ol>
+  `;
+}
+function closeChangelog(){document.getElementById('changelogModal').classList.remove('open');document.body.style.overflow='';}
+function onChangelogBgClick(e){if(e.target===document.getElementById('changelogModal'))closeChangelog();}
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 // Select-all on focus for every number input (current and future, including dynamically rendered)
