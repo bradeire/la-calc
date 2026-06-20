@@ -294,8 +294,8 @@ tbody td:not(:first-child){text-align:right}
 .cam-capture{flex:1;background:var(--purple);border:none;border-radius:var(--rsm);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;cursor:pointer}
 .cam-capture:active{opacity:.8}
 .cam-capture:disabled{opacity:.4;cursor:default}
-.cam-freeze{position:relative;width:100%;max-width:500px;max-height:45vh;overflow:hidden;flex-shrink:0;border-radius:0 0 8px 8px;display:none}
-.cam-freeze canvas{width:100%;height:100%;display:block}
+.cam-freeze{position:relative;width:100%;max-width:500px;flex-shrink:0;border-radius:0 0 8px 8px;display:none;background:#000;text-align:center}
+.cam-freeze canvas{width:auto;max-width:100%;max-height:45vh;height:auto;display:block;margin:0 auto}
 .cam-freeze-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .cam-scanning-ring{width:40px;height:40px;border:3px solid rgba(139,92,246,.3);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1796,27 +1796,29 @@ function applyOCRValues() {
   const age = parseFloat(document.getElementById('ocrAge').value);
   const sex = document.getElementById('ocrSex').value;
 
-  // Open anthro panel first so all field handlers fire correctly
-  if (!document.getElementById('anthroPanel').classList.contains('open')) toggleAnthro();
-
+  // Weight is always visible — apply first
   if (!isNaN(wt) && wt > 0) {
     document.getElementById('wt').value = wt;
     document.getElementById('wt').dispatchEvent(new Event('input'));
   }
+
+  // Ensure anthro panel is open before writing to its fields
+  if (!anthroOpen) toggleAnthro();
+
+  // Set sex toggle
   if (sex === 'M' || sex === 'F') setSex(sex);
-  if (!isNaN(ht) && ht > 0) {
-    document.getElementById('htInput').value = ht;
-    document.getElementById('htInput').dispatchEvent(new Event('input'));
-  }
+
+  // Set height and age values directly, then trigger a single onAnthroChange()
+  if (!isNaN(ht) && ht > 0) document.getElementById('htInput').value = ht;
   if (!isNaN(age) && age >= 0) {
     setAgeUnit('yrs');
     document.getElementById('ageInput').value = age;
-    document.getElementById('ageInput').dispatchEvent(new Event('input'));
   }
+  onAnthroChange();
 
   closeScanner();
-  // Return to the tab that opened the scanner
-  if (scannerSourceTab) scannerSourceTab.click();
+  // Return to the tab that opened the scanner (delay lets modal close first)
+  if (scannerSourceTab) setTimeout(() => scannerSourceTab.click(), 80);
 }
 
 // ── PNG EXPORT ────────────────────────────────────────────────────────────
