@@ -1643,10 +1643,15 @@ function parseOCRText(text) {
   const t = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
   const result = {};
 
-  // Weight — "Wt: 103.7 kg", "Weight 70", "70kg"; handle comma decimal separator from OCR
-  const wtM = t.match(/(?:wt|weight)\s*[:\-]?\s*([0-9]{2,3}(?:[.,][0-9]{1,2})?)\s*k?g/i)
-           || t.match(/([0-9]{2,3}(?:[.,][0-9]{1,2})?)\s*kg\b/i);
-  if (wtM) result.wt = { val: parseFloat(wtM[1].replace(',', '.')), conf: 'high' };
+  // Weight — "Wt: 125.8 kg", "103.7kg", "70 kg"
+  // Allow 4 digits to catch OCR dropping the decimal (e.g. 125.8 → 1258); rescue by ÷10
+  const wtM = t.match(/(?:wt|weight)\s*[:\-]?\s*([0-9]{1,4}(?:[.,][0-9]{1,2})?)\s*k?g/i)
+           || t.match(/\b([0-9]{1,4}(?:[.,][0-9]{1,2})?)\s*kg\b/i);
+  if (wtM) {
+    let wv = parseFloat(wtM[1].replace(',', '.'));
+    if (wv > 300 && wv < 4000) wv = wv / 10; // rescue dropped decimal e.g. 1258 → 125.8
+    if (wv >= 2 && wv <= 300) result.wt = { val: Math.round(wv * 10) / 10, conf: 'high' };
+  }
 
   // Height — "Ht: 180 cm", "Ht 180cm", "Height 180"
   const htM = t.match(/(?:ht|height)\s*[:\-]?\s*([0-9]{2,3}(?:[.,][0-9])?)\s*cm/i)
