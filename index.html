@@ -268,8 +268,9 @@ tbody td:not(:first-child){text-align:right}
 /* ── PRINT ── */
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { background: #fff !important; margin: 0 !important; }
   body > *:not(#printReport) { display: none !important; }
-  #printReport { display: block !important; }
+  #printReport { display: block !important; background: #fff !important; }
   @page { margin: 15mm; size: A4; }
 }
 #printReport { display: none; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 13px; line-height: 1.5; }
@@ -1150,7 +1151,9 @@ function calc(){
     const d=DRUGS.find(x=>x.id===e.did);if(!d)continue;
     const mg=e.conc*10*e.vol;
     totalMg+=mg;
-    totalFrac+=drugMax(d,wt)>0?mg/drugMax(d,wt):0;
+    // AFOi topical lidocaine uses 9 mg/kg topical ceiling, not infiltration ceiling
+    const eMax = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d,wt);
+    totalFrac+=eMax>0?mg/eMax:0;
     given[d.id]=(given[d.id]||0)+mg;
   }
   const pct=Math.min(100,Math.round(totalFrac*100));
@@ -1570,12 +1573,12 @@ function doPrint() {
   let html = `<div style="max-width:700px;margin:0 auto;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:#111;font-size:13px;line-height:1.5">`;
 
   // ── HEADER ──
-  html += `<div style="background:#1d4ed8;color:#fff;padding:16px 20px;border-radius:10px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center">
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:18px">
     <div>
-      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1">LASTCalc</div>
-      <div style="font-size:10px;opacity:.75;letter-spacing:.5px;margin-top:2px">LOCAL ANAESTHETIC SYSTEMIC TOXICITY CALCULATOR</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:#1d4ed8">LASTCalc</div>
+      <div style="font-size:10px;color:#6b7280;letter-spacing:.5px;margin-top:2px">LOCAL ANAESTHETIC SYSTEMIC TOXICITY CALCULATOR</div>
     </div>
-    <div style="text-align:right;font-size:11px;opacity:.8">${dateStr}<br><span style="opacity:.6">Beta · v1.1</span></div>
+    <div style="text-align:right;font-size:11px;color:#6b7280">${dateStr}<br><span style="color:#1d4ed8;font-weight:600">Beta · v1.1</span></div>
   </div>`;
 
   // ── TOP ROW: patient + gauge side by side ──
@@ -1719,15 +1722,17 @@ function doPrint() {
 
 // ── AFOi → BLOCKS BRIDGE ──────────────────────────────────────────────────
 function afoiToBlocks() {
-  let afoiTotal = 0;
+  // Always use FULL administered dose regardless of bioavailability setting — conservative for safety
+  let fullDose = 0;
   for (const e of afoiEntries) {
     const a = AFOI_AGENTS.find(x => x.id === e.aid); if (!a || a.isCocaine) continue;
-    const adm = e.conc * 10 * e.vol;
-    afoiTotal += bioavail === 'adjusted' ? adm * a.bioavail : adm;
+    fullDose += e.conc * 10 * e.vol;
   }
-  if (afoiTotal <= 0) { alert('No AFOi lidocaine dose to transfer. Add agents on the AFOi tab first.'); return; }
-  // Store as lidocaine 1% with equivalent volume (mg / 10 = ml at 1%)
-  drugs.push({ id: uid++, did: 'lido_p', conc: 1, vol: parseFloat((afoiTotal / 10).toFixed(1)), prior: true, afoiSource: true });
+  if (fullDose <= 0) { alert('No AFOi lidocaine dose to transfer. Add agents on the AFOi tab first.'); return; }
+  // Ceiling is the AFOi topical max (9 mg/kg) — locks it to the weight at time of transfer
+  const topicalMax = 9 * getAWt();
+  // Store as 1% lidocaine equivalent volume; topicalMax carried for correct fraction calc on blocks tab
+  drugs.push({ id: uid++, did: 'lido_p', conc: 1, vol: parseFloat((fullDose / 10).toFixed(1)), prior: true, afoiSource: true, topicalMax });
   renderDrugs(); syncRopiToggle(); calc();
   showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
 }
