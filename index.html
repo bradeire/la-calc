@@ -1614,9 +1614,6 @@ async function captureAndOCR() {
   canvas.height = video.videoHeight || 720;
   canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  // Stop camera to save battery while OCR runs
-  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
-
   try {
     // Lazy-load Tesseract.js from CDN on first use
     if (!window.Tesseract) {
