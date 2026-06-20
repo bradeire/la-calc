@@ -4,6 +4,13 @@
 
 ## v1.2 — Beta features merged (2026-06-20)
 
+### Block suggestions updated
+- Levobupivacaine specified for vascular-adjacent nerve blocks (interscalene, femoral, sciatic, popliteal, FICB, ESB, SAB, peribulbar, retrobulbar, scalp, cervical plexus, greater auricular) — preferred for cardiac safety if inadvertent IV injection occurs
+- (Levo)bupivacaine for fascial plane blocks where either agent is appropriate (PECS, TAP, rectus sheath, ilioinguinal, wrist, ankle, subtenon)
+- Spinal, epidural, and CSE entries left as plain bupivacaine (neuraxial standard)
+- Axillary block volume corrected to 15–20 ml (divided)
+- In-app changelog modal added (📋 Changelog pill in footer)
+
 ### New features
 - **Show Workings** — tap the gauge to open a step-by-step breakdown of the fractional dose calculation, showing each drug's contribution, running total, dose weight rationale, and remaining capacity
 - **Print / Export PDF** — generates a white-background clinical report with SVG half-donut gauge, per-drug table with mini bars and coloured risk indicators, block info, and patient demographics; suitable for pasting into an EPR
