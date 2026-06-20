@@ -361,6 +361,10 @@ tbody td:not(:first-child){text-align:right}
           <span class="gauge-rem" id="remTxt">100% remaining</span>
           <span class="chip chip-safe" id="statusChip">SAFE</span>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px">
+          <span id="mgTxt" style="font-size:11px;font-weight:600;color:var(--sub2)"></span>
+          <span id="wtUsedLabel" style="font-size:10px;font-weight:600;padding:2px 7px;border-radius:99px;display:none"></span>
+        </div>
         <div class="gauge-sub" id="warn24"></div>
       </div>
     </div>
@@ -1085,10 +1089,11 @@ function updateBlockDur(v) {
 // ── Main calc ──────────────────────────────────────────────────────────────
 function calc(){
   const wt=getWt();
-  let totalFrac=0; const given={};
+  let totalFrac=0, totalMg=0; const given={};
   for(const e of drugs){
     const d=DRUGS.find(x=>x.id===e.did);if(!d)continue;
     const mg=e.conc*10*e.vol;
+    totalMg+=mg;
     totalFrac+=drugMax(d,wt)>0?mg/drugMax(d,wt):0;
     given[d.id]=(given[d.id]||0)+mg;
   }
@@ -1102,6 +1107,25 @@ function calc(){
   const ap=document.getElementById('arcPct');ap.textContent=pct+'%';ap.style.color=col;
   const bf=document.getElementById('barFill');bf.style.width=pct+'%';bf.style.background=col;
   document.getElementById('remTxt').textContent=Math.max(0,100-pct)+'% remaining';
+
+  // Total mg given
+  const mgEl=document.getElementById('mgTxt');
+  mgEl.textContent=totalMg>0?totalMg.toFixed(1)+' mg given':'';
+  mgEl.style.color=col;
+
+  // Weight-in-use label
+  const eff=calcEffectiveWt();
+  const wtEl=document.getElementById('wtUsedLabel');
+  if(eff.bmi){
+    const usingLBW=eff.bmi>=30;
+    wtEl.style.display='inline';
+    wtEl.textContent=(usingLBW?'LBW':'TBW')+' '+eff.wt.toFixed(1)+' kg';
+    wtEl.style.background=usingLBW?'rgba(251,191,36,.12)':'rgba(74,222,128,.1)';
+    wtEl.style.color=usingLBW?'var(--amber)':'var(--green)';
+    wtEl.style.border='1px solid '+(usingLBW?'rgba(251,191,36,.3)':'rgba(74,222,128,.25)');
+  } else {
+    wtEl.style.display='none';
+  }
   const chip=document.getElementById('statusChip');
   if(pct>=100){chip.className='chip chip-over';chip.textContent='OVER LIMIT';}
   else if(pct>=80){chip.className='chip chip-warn';chip.textContent='CAUTION';}
