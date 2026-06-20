@@ -1635,14 +1635,20 @@ async function captureAndOCR() {
 
   // Freeze frame — show captured image instead of live video
   const freezeCanvas = document.getElementById('camFreezeCanvas');
-  freezeCanvas.width = video.videoWidth || 1280;
-  freezeCanvas.height = video.videoHeight || 720;
-  freezeCanvas.getContext('2d').drawImage(video, 0, 0, freezeCanvas.width, freezeCanvas.height);
+  const vw = video.videoWidth || 1280, vh = video.videoHeight || 720;
+  freezeCanvas.width = vw; freezeCanvas.height = vh;
+  freezeCanvas.getContext('2d').drawImage(video, 0, 0, vw, vh);
   video.style.display = 'none';
   document.getElementById('camFreeze').style.display = 'block';
 
-  // Also use same canvas for OCR
-  const canvas = freezeCanvas;
+  // Downscale to max 1000px wide for OCR speed — Tesseract doesn't need full res
+  const maxW = 1000;
+  const scale = vw > maxW ? maxW / vw : 1;
+  const ocrCanvas = document.createElement('canvas');
+  ocrCanvas.width = Math.round(vw * scale);
+  ocrCanvas.height = Math.round(vh * scale);
+  ocrCanvas.getContext('2d').drawImage(freezeCanvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+  const canvas = ocrCanvas;
 
   try {
     // Lazy-load Tesseract.js from CDN on first use
@@ -1805,20 +1811,28 @@ function applyOCRValues() {
   // Ensure anthro panel is open before writing to its fields
   if (!anthroOpen) toggleAnthro();
 
-  // Set sex toggle
-  if (sex === 'M' || sex === 'F') setSex(sex);
+  // Write sex directly to anthro state (bypass setSex to avoid premature onAnthroChange)
+  if (sex === 'M' || sex === 'F') {
+    anthro.sex = sex;
+    document.getElementById('sexM').classList.toggle('active', sex === 'M');
+    document.getElementById('sexF').classList.toggle('active', sex === 'F');
+  }
 
-  // Set height and age values directly, then trigger a single onAnthroChange()
-  if (!isNaN(ht) && ht > 0) document.getElementById('htInput').value = ht;
+  // Set height and age directly — actual element ID is 'heightInput' not 'htInput'
+  if (!isNaN(ht) && ht > 0) document.getElementById('heightInput').value = ht;
   if (!isNaN(age) && age >= 0) {
-    setAgeUnit('yrs');
+    anthro.ageUnit = 'yrs';
+    document.getElementById('ageYrs').classList.add('active');
+    document.getElementById('ageMos').classList.remove('active');
     document.getElementById('ageInput').value = age;
   }
+
+  // Single recalc after all values are set
   onAnthroChange();
 
   closeScanner();
-  // Return to the tab that opened the scanner (delay lets modal close first)
-  if (scannerSourceTab) setTimeout(() => scannerSourceTab.click(), 80);
+  // Return to originating tab after modal fade completes
+  if (scannerSourceTab) setTimeout(() => scannerSourceTab.click(), 150);
 }
 
 // ── PNG EXPORT ────────────────────────────────────────────────────────────
