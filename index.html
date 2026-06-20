@@ -39,7 +39,7 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .tab-bar{display:flex;gap:4px;padding:8px 10px 0;flex-shrink:0}
 .tab-btn{flex:1;background:var(--s0);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--sub);font-family:var(--font);font-size:11.5px;font-weight:600;padding:7px 4px 6px;cursor:pointer;transition:all .15s;letter-spacing:.1px}
 .tab-btn.active{background:var(--s1);border-color:var(--border2);color:var(--text)}
-.tab-page{display:none;flex-direction:column;flex:1;overflow:hidden;padding:0 10px 6px;gap:7px}
+.tab-page{display:none;flex-direction:column;flex:1;overflow-y:auto;padding:0 10px 6px;gap:7px}
 .tab-page.active{display:flex}
 
 /* ── HEADER ── */
@@ -294,6 +294,14 @@ tbody td:not(:first-child){text-align:right}
 .cam-capture{flex:1;background:var(--purple);border:none;border-radius:var(--rsm);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;cursor:pointer}
 .cam-capture:active{opacity:.8}
 .cam-capture:disabled{opacity:.4;cursor:default}
+.cam-freeze{position:relative;width:100%;max-width:500px;max-height:45vh;overflow:hidden;flex-shrink:0;border-radius:0 0 8px 8px;display:none}
+.cam-freeze canvas{width:100%;height:100%;display:block}
+.cam-freeze-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.cam-scanning-ring{width:40px;height:40px;border:3px solid rgba(139,92,246,.3);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cam-scanning-txt{font-size:12px;font-weight:600;color:#fff;letter-spacing:.5px}
+.btn-png{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:var(--rsm);color:var(--green);font-family:var(--font);font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer}
+.btn-png:active{opacity:.7}
 .cam-status{font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:0 20px 10px;min-height:18px}
 /* OCR review panel */
 .ocr-review{background:var(--s1);border-radius:var(--rsm);margin:0 20px;padding:12px 14px;width:calc(100% - 40px);max-width:460px;box-sizing:border-box}
@@ -439,7 +447,8 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
-      <button class="btn-print" onclick="doPrint()">🖨 Print / Export</button>
+      <button class="btn-print" onclick="doPrint()">🖨 Print / PDF</button>
+      <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
     <div class="dur-proj" id="durProj" style="display:none">
@@ -678,6 +687,13 @@ tbody td:not(:first-child){text-align:right}
     <button class="cam-close" onclick="closeScanner()">✕</button>
   </div>
   <video id="cameraVideo" autoplay playsinline muted></video>
+  <div class="cam-freeze" id="camFreeze">
+    <canvas id="camFreezeCanvas"></canvas>
+    <div class="cam-freeze-overlay" id="camFreezeOverlay">
+      <div class="cam-scanning-ring"></div>
+      <div class="cam-scanning-txt">Scanning…</div>
+    </div>
+  </div>
   <div class="cam-guide">Frame the weight, height, age, and sex fields clearly. Avoid glare on screens.</div>
   <div class="cam-btns">
     <button class="cam-capture" id="camCaptureBtn" onclick="captureAndOCR()">📸 Capture &amp; Scan</button>
@@ -1574,13 +1590,22 @@ function onChangelogBgClick(e){if(e.target===document.getElementById('changelogM
 // ── CAMERA / OCR ──────────────────────────────────────────────────────────
 let camStream = null;
 let tesseractWorker = null;
+let scannerSourceTab = null;
 
 async function openScanner() {
+  // Remember which tab launched the scanner so we can return to it
+  const activeTab = document.querySelector('.tab-btn.active');
+  scannerSourceTab = activeTab || null;
+
   const modal = document.getElementById('cameraModal');
   document.getElementById('ocrReview').style.display = 'none';
   document.getElementById('camStatus').textContent = 'Starting camera…';
   document.getElementById('ocrNote').textContent = '';
   document.getElementById('camCaptureBtn').disabled = false;
+  document.getElementById('camCaptureBtn').textContent = '📸 Capture & Scan';
+  // Reset freeze/live state
+  document.getElementById('cameraVideo').style.display = 'block';
+  document.getElementById('camFreeze').style.display = 'none';
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
   try {
@@ -1608,11 +1633,16 @@ async function captureAndOCR() {
   btn.disabled = true;
   status.textContent = '📸 Captured — running OCR…';
 
-  // Draw frame to offscreen canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth || 1280;
-  canvas.height = video.videoHeight || 720;
-  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  // Freeze frame — show captured image instead of live video
+  const freezeCanvas = document.getElementById('camFreezeCanvas');
+  freezeCanvas.width = video.videoWidth || 1280;
+  freezeCanvas.height = video.videoHeight || 720;
+  freezeCanvas.getContext('2d').drawImage(video, 0, 0, freezeCanvas.width, freezeCanvas.height);
+  video.style.display = 'none';
+  document.getElementById('camFreeze').style.display = 'block';
+
+  // Also use same canvas for OCR
+  const canvas = freezeCanvas;
 
   try {
     // Lazy-load Tesseract.js from CDN on first use
@@ -1631,9 +1661,12 @@ async function captureAndOCR() {
     }
     status.textContent = '🔍 Scanning text…';
     const { data: { text } } = await tesseractWorker.recognize(canvas);
+    // Hide spinner, keep frozen frame visible
+    document.getElementById('camFreezeOverlay').style.display = 'none';
     const parsed = parseOCRText(text);
     showOCRReview(parsed, text);
   } catch(err) {
+    document.getElementById('camFreezeOverlay').style.display = 'none';
     status.textContent = '⚠ OCR failed: ' + (err.message || err);
     btn.disabled = false;
   }
@@ -1738,35 +1771,90 @@ function showOCRReview(parsed, rawText) {
   document.getElementById('ocrReview').style.display = detected > 0 ? 'block' : 'none';
   document.getElementById('camCaptureBtn').disabled = false;
   document.getElementById('camCaptureBtn').textContent = '📸 Retake';
+  // On retake: restore live video feed
+  document.getElementById('camCaptureBtn').onclick = async () => {
+    document.getElementById('camFreezeOverlay').style.display = 'flex';
+    document.getElementById('camFreeze').style.display = 'none';
+    document.getElementById('cameraVideo').style.display = 'block';
+    document.getElementById('ocrReview').style.display = 'none';
+    document.getElementById('camCaptureBtn').textContent = '📸 Capture & Scan';
+    document.getElementById('camCaptureBtn').onclick = captureAndOCR;
+    // Restart camera if it stopped
+    if (!camStream) {
+      try {
+        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        document.getElementById('cameraVideo').srcObject = camStream;
+      } catch(e) { document.getElementById('camStatus').textContent = '⚠ Camera unavailable: ' + e.message; }
+    }
+    document.getElementById('camStatus').textContent = 'Camera ready — frame the patient demographics and tap Capture.';
+  };
 }
 
 function applyOCRValues() {
-  const wt = parseFloat(document.getElementById('ocrWt').value);
-  const ht = parseFloat(document.getElementById('ocrHt').value);
+  const wt  = parseFloat(document.getElementById('ocrWt').value);
+  const ht  = parseFloat(document.getElementById('ocrHt').value);
   const age = parseFloat(document.getElementById('ocrAge').value);
   const sex = document.getElementById('ocrSex').value;
+
+  // Open anthro panel first so all field handlers fire correctly
+  if (!document.getElementById('anthroPanel').classList.contains('open')) toggleAnthro();
 
   if (!isNaN(wt) && wt > 0) {
     document.getElementById('wt').value = wt;
     document.getElementById('wt').dispatchEvent(new Event('input'));
   }
+  if (sex === 'M' || sex === 'F') setSex(sex);
   if (!isNaN(ht) && ht > 0) {
     document.getElementById('htInput').value = ht;
-    // Ensure panel is open so height triggers calc
-    if (!document.getElementById('anthroPanel').classList.contains('open')) toggleAnthro();
     document.getElementById('htInput').dispatchEvent(new Event('input'));
   }
   if (!isNaN(age) && age >= 0) {
-    document.getElementById('ageInput').value = age;
     setAgeUnit('yrs');
+    document.getElementById('ageInput').value = age;
     document.getElementById('ageInput').dispatchEvent(new Event('input'));
   }
-  if (sex === 'M' || sex === 'F') {
-    setSex(sex);
-  }
+
   closeScanner();
-  // Open anthro panel to show applied values
-  if (!document.getElementById('anthroPanel').classList.contains('open')) toggleAnthro();
+  // Return to the tab that opened the scanner
+  if (scannerSourceTab) scannerSourceTab.click();
+}
+
+// ── PNG EXPORT ────────────────────────────────────────────────────────────
+async function doExportPNG() {
+  // Build the same report HTML as doPrint() but inject into a temp div
+  const btn = document.querySelector('.btn-png');
+  btn.textContent = '⏳ Building…';
+  btn.disabled = true;
+
+  // Lazy-load html2canvas
+  if (!window.html2canvas) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  // Trigger the print report build (reuses doPrint logic) into #printReport
+  doPrint(true); // pass flag to suppress window.print()
+
+  const el = document.getElementById('printReport');
+  el.style.display = 'block';
+  el.style.width = '794px'; // A4 width in px at 96dpi
+
+  try {
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' });
+    const link = document.createElement('a');
+    link.download = `LASTCalc-report-${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } finally {
+    el.style.display = 'none';
+    el.style.width = '';
+    btn.textContent = '💾 PNG';
+    btn.disabled = false;
+  }
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
@@ -1874,7 +1962,7 @@ function closeWorkings() { document.getElementById('workingsModal').classList.re
 function onWorkingsBgClick(e) { if (e.target === document.getElementById('workingsModal')) closeWorkings(); }
 
 // ── PRINT/PDF REPORT ───────────────────────────────────────────────────────
-function doPrint() {
+function doPrint(suppressPrint = false) {
   const wt = getWt();
   const eff = calcEffectiveWt();
   const now = new Date();
@@ -2056,7 +2144,7 @@ function doPrint() {
   </div></div>`;
 
   document.getElementById('printContent').innerHTML = html;
-  window.print();
+  if (!suppressPrint) window.print();
 }
 
 // ── AFOi → BLOCKS BRIDGE ──────────────────────────────────────────────────
