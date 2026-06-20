@@ -240,6 +240,41 @@ tbody td:not(:first-child){text-align:right}
 .drug-row.prior{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2);border-radius:var(--rsm);padding:3px}
 .prior-tag{font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;padding-left:2px}
 
+/* ── WORKINGS MODAL ── */
+.work-section{margin-bottom:14px}
+.work-section:last-child{margin-bottom:0}
+.work-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub2);margin-bottom:6px}
+.work-row{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.work-row:last-child{border-bottom:none}
+.work-row span:first-child{color:var(--sub)}
+.work-row span:last-child{font-weight:600;color:var(--text)}
+.work-highlight{background:rgba(255,255,255,.05);border-radius:var(--rsm);padding:5px 8px;margin:4px 0;border-bottom:none}
+.work-highlight span:first-child{color:var(--sub2);font-weight:600}
+.work-drug-block{background:var(--s1);border-radius:var(--rsm);padding:8px 10px;margin-bottom:6px}
+.work-drug-block.work-prior{border-left:3px solid var(--amber)}
+.work-prior-tag{font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.work-drug-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px}
+.work-formula{display:flex;align-items:center;gap:6px;margin:5px 0;flex-wrap:wrap}
+.wf-step{font-size:11px;font-weight:600;background:var(--s2);border-radius:var(--rsm);padding:3px 7px;color:var(--text)}
+.wf-op{font-size:11px;color:var(--sub2);font-weight:700}
+.work-note{font-size:10.5px;color:var(--sub2);line-height:1.5;margin-top:3px}
+.work-total{background:rgba(255,255,255,.03);border-radius:var(--rsm);padding:8px 10px;border:1px solid var(--border)}
+.work-running{font-size:10.5px;color:var(--sub);padding:2px 0}
+.btn-workings{background:none;border:none;color:var(--sub2);font-size:10.5px;font-weight:600;cursor:pointer;padding:2px 0;font-family:var(--font);text-decoration:underline;text-underline-offset:2px}
+.btn-workings:active{color:var(--text)}
+.btn-print{background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.25);border-radius:var(--rsm);color:var(--blue);font-family:var(--font);font-size:12px;font-weight:600;padding:5px 12px;cursor:pointer}
+.btn-print:active{background:rgba(96,165,250,.2)}
+
+/* ── PRINT ── */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body { background: #fff !important; margin: 0 !important; }
+  body > *:not(#printReport) { display: none !important; }
+  #printReport { display: block !important; background: #fff !important; }
+  @page { margin: 15mm; size: A4; }
+}
+#printReport { display: none; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 13px; line-height: 1.5; }
+
 /* ── DISCLAIMER MODAL ── */
 .disc-footer{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:0 2px}
 .disc-btn{background:none;border:1px solid var(--border);border-radius:99px;color:var(--sub2);font-family:var(--font);font-size:10px;font-weight:500;padding:3px 10px;cursor:pointer}
@@ -367,6 +402,10 @@ tbody td:not(:first-child){text-align:right}
         </div>
         <div class="gauge-sub" id="warn24"></div>
       </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
+      <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
+      <button class="btn-print" onclick="doPrint()">🖨 Print / Export</button>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
     <div class="dur-proj" id="durProj" style="display:none">
@@ -535,6 +574,7 @@ tbody td:not(:first-child){text-align:right}
     <div class="row-btns">
       <button class="btn-add" onclick="addAFOi()">+ Add Agent</button>
       <button class="btn-sec" onclick="clearAFOi()">Clear</button>
+      <button class="btn-add" style="background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.25);color:var(--blue)" onclick="afoiToBlocks()">→ Send to Blocks</button>
     </div>
   </div>
 
@@ -560,6 +600,9 @@ tbody td:not(:first-child){text-align:right}
 
 </div><!-- #app -->
 
+<!-- PRINT REPORT (hidden, shown only at print time) -->
+<div id="printReport"><div id="printContent"></div></div>
+
 <!-- AFOi BREAKDOWN MODAL -->
 <div class="modal-backdrop" id="afoiModal" onclick="onAfoiModalBgClick(event)">
   <div class="modal-sheet">
@@ -574,6 +617,20 @@ tbody td:not(:first-child){text-align:right}
         <div class="notes-title" style="font-size:10px;font-weight:600;color:var(--sub2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Technique Notes</div>
         <div class="notes-body" id="afoiNotes" style="font-size:12px;color:var(--sub);line-height:1.6">Select agents to see guidance.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKINGS MODAL -->
+<div class="modal-backdrop" id="workingsModal" onclick="onWorkingsBgClick(event)">
+  <div class="modal-sheet" style="max-height:92vh;max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">⚙ Dose Workings</span>
+      <button class="modal-close" onclick="closeWorkings()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:14px 16px 28px">
+      <div id="workingsBody"></div>
     </div>
   </div>
 </div>
@@ -977,7 +1034,7 @@ function renderDrugs(){
     const dOpts=DRUGS.map(x=>`<option value="${x.id}"${x.id===e.did?' selected':''}>${x.label} (${x.sub})</option>`).join('');
     const cOpts=d.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
     const priorClass = e.prior ? ' prior' : '';
-    const priorLabel = e.prior ? '<div class="prior-tag" style="grid-column:1/-1">⏱ Prior (by others)</div>' : '';
+    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : '⏱ Prior (by others)'}</div>` : '';
     return `<div class="drug-row${priorClass}">
       ${priorLabel}
       <select class="f-select" onchange="onDrug(${e.id},this.value)">${dOpts}</select>
@@ -1094,7 +1151,9 @@ function calc(){
     const d=DRUGS.find(x=>x.id===e.did);if(!d)continue;
     const mg=e.conc*10*e.vol;
     totalMg+=mg;
-    totalFrac+=drugMax(d,wt)>0?mg/drugMax(d,wt):0;
+    // AFOi topical lidocaine uses 9 mg/kg topical ceiling, not infiltration ceiling
+    const eMax = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d,wt);
+    totalFrac+=eMax>0?mg/eMax:0;
     given[d.id]=(given[d.id]||0)+mg;
   }
   const pct=Math.min(100,Math.round(totalFrac*100));
@@ -1387,6 +1446,298 @@ buildAdditives();
 updateAnthroUI();
 calc();
 calcAFOi();
+
+// ── WORKINGS MODAL ────────────────────────────────────────────────────────
+function openWorkings() {
+  const wt = getWt();
+  const eff = calcEffectiveWt();
+  const doseWt = eff.wt;
+  let totalFrac = 0, totalMg = 0;
+  const rows = [];
+  for (const e of drugs) {
+    const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
+    const mg = e.conc * 10 * e.vol;
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
+    const frac = max > 0 ? mg / max : 0;
+    totalFrac += frac; totalMg += mg;
+    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource });
+  }
+  const totalPct = Math.min(100, Math.round(totalFrac * 100));
+  const col = totalPct >= 100 ? 'var(--red)' : totalPct >= 80 ? 'var(--amber)' : 'var(--green)';
+  let html = '';
+
+  // Dose weight section
+  html += `<div class="work-section"><div class="work-title">Dose Weight</div>`;
+  if (eff.bmi) {
+    html += `<div class="work-row"><span>BMI</span><span>${eff.bmi.toFixed(1)} — ${eff.bmiCat}</span></div>`;
+    html += `<div class="work-row"><span>TBW entered</span><span>${eff.tbw} kg</span></div>`;
+    html += `<div class="work-row"><span>LBW (Janmahasatian)</span><span>${eff.lbw.toFixed(1)} kg</span></div>`;
+    html += `<div class="work-row"><span>IBW (Devine)</span><span>${eff.ibw.toFixed(1)} kg</span></div>`;
+    html += `<div class="work-row work-highlight"><span>Using ${eff.bmi >= 30 ? 'LBW' : 'TBW'} (BMI ${eff.bmi >= 30 ? '≥' : '<'} 30)</span><span style="color:${eff.bmi>=30?'var(--amber)':'var(--green)'}">${doseWt.toFixed(1)} kg</span></div>`;
+  } else {
+    html += `<div class="work-row work-highlight"><span>Using TBW (no height entered)</span><span>${wt} kg</span></div>`;
+    html += `<div class="work-note">Enter height in body metrics to enable obesity-adjusted dosing.</div>`;
+  }
+  html += `</div>`;
+
+  // Drug breakdown
+  if (rows.length) {
+    html += `<div class="work-section"><div class="work-title">Drug-by-Drug Breakdown</div>`;
+    for (const r of rows) {
+      const pctDrug = Math.round(r.frac * 100);
+      const dc = pctDrug >= 100 ? 'var(--red)' : pctDrug >= 80 ? 'var(--amber)' : 'var(--green)';
+      const byWt = r.d.mpk * doseWt;
+      const capAt = r.d.id === 'ropi' ? ropiMax : r.d.abs;
+      const capped = capAt !== null && byWt > capAt;
+      const pedMos = getAgeMonths();
+      const isPed = eff.pedMode && pedMos !== null;
+      html += `<div class="work-drug-block${r.prior ? ' work-prior' : ''}">`;
+      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : '⏱ Prior (by others)'}</div>`;
+      html += `<div class="work-drug-name">${r.d.label} <span style="font-size:11px;color:var(--sub2);font-weight:400">${r.d.sub}</span></div>`;
+      if (isPed) {
+        html += `<div class="work-note" style="margin-bottom:4px;color:var(--purple)">⚠ Paediatric ceiling applied (${eff.pedMode})</div>`;
+      }
+      html += `<div class="work-formula">`;
+      html += `<span class="wf-step">${r.mg.toFixed(1)} mg given</span>`;
+      html += `<span class="wf-op">÷</span>`;
+      html += `<span class="wf-step">${r.max.toFixed(1)} mg max</span>`;
+      html += `<span class="wf-op">=</span>`;
+      html += `<span class="wf-step" style="color:${dc}">${(r.frac*100).toFixed(1)}%</span>`;
+      html += `</div>`;
+      if (r.afoiSource) {
+        html += `<div class="work-note">Topical ceiling: ${wt.toFixed(1)} kg × 9 mg/kg = ${r.max.toFixed(1)} mg (AAGBI/DAS topical limit)</div>`;
+      } else if (!isPed) {
+        html += `<div class="work-note">${doseWt.toFixed(1)} kg × ${r.d.mpk} mg/kg = ${byWt.toFixed(1)} mg${capped ? ` → capped at ${capAt} mg absolute limit` : ''}</div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+
+    // Running total
+    html += `<div class="work-section work-total"><div class="work-title">Mixture Total (Fractional Addition)</div>`;
+    let run = 0;
+    for (const r of rows) {
+      run += r.frac;
+      const rc = run >= 1 ? 'var(--red)' : run >= 0.8 ? 'var(--amber)' : 'var(--green)';
+      html += `<div class="work-row"><span>+ ${(r.frac*100).toFixed(1)}% (${r.d.label.split(' ')[0]})</span><span style="color:${rc}">= ${(run*100).toFixed(1)}%</span></div>`;
+    }
+    html += `<div class="work-row work-highlight" style="margin-top:6px"><span>Combined fraction used</span><span style="color:${col}">${totalPct}%</span></div>`;
+    html += `<div class="work-row"><span>Total mg given</span><span style="color:${col}">${totalMg.toFixed(1)} mg</span></div>`;
+    html += `</div>`;
+    html += `<div class="work-note" style="margin-top:8px">Mixture rule: each drug's fraction of its own maximum dose is summed. 100% = maximum permissible combined systemic exposure.</div>`;
+  } else {
+    html += `<div class="work-note">No drugs entered yet — add drugs to see the breakdown.</div>`;
+  }
+
+  document.getElementById('workingsBody').innerHTML = html;
+  document.getElementById('workingsModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeWorkings() { document.getElementById('workingsModal').classList.remove('open'); document.body.style.overflow = ''; }
+function onWorkingsBgClick(e) { if (e.target === document.getElementById('workingsModal')) closeWorkings(); }
+
+// ── PRINT/PDF REPORT ───────────────────────────────────────────────────────
+function doPrint() {
+  const wt = getWt();
+  const eff = calcEffectiveWt();
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB') + ' · ' + now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  // ── collect drug data first so we can draw the SVG gauge ──
+  let totalFrac = 0, totalMg = 0;
+  const drugRows = [];
+  for (const e of drugs) {
+    const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
+    const mg = e.conc * 10 * e.vol;
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
+    const frac = max > 0 ? mg / max : 0;
+    totalFrac += frac; totalMg += mg;
+    drugRows.push({ d, e, mg, max, frac });
+  }
+  const totalPct = Math.min(100, Math.round(totalFrac * 100));
+  const totalCol = totalPct >= 100 ? '#dc2626' : totalPct >= 80 ? '#d97706' : '#16a34a';
+  const statusTxt = totalPct >= 100 ? 'OVER LIMIT' : totalPct >= 80 ? 'CAUTION' : 'SAFE';
+  const statusBg  = totalPct >= 100 ? '#fef2f2' : totalPct >= 80 ? '#fffbeb' : '#f0fdf4';
+  const statusBdr = totalPct >= 100 ? '#fca5a5' : totalPct >= 80 ? '#fcd34d' : '#86efac';
+
+  // SVG half-donut gauge
+  const r = 54, cx = 70, cy = 70, sw = 14;
+  const circ = Math.PI * r;
+  const filled = circ * Math.min(1, totalFrac);
+  const svgGauge = `<svg viewBox="0 0 140 80" width="140" height="80" xmlns="http://www.w3.org/2000/svg">
+    <path d="M${cx-r},${cy} A${r},${r} 0 0,1 ${cx+r},${cy}" fill="none" stroke="#e5e7eb" stroke-width="${sw}" stroke-linecap="round"/>
+    <path d="M${cx-r},${cy} A${r},${r} 0 0,1 ${cx+r},${cy}" fill="none" stroke="${totalCol}" stroke-width="${sw}" stroke-linecap="round"
+      stroke-dasharray="${circ}" stroke-dashoffset="${circ - filled}"/>
+    <text x="${cx}" y="${cy-8}" text-anchor="middle" font-size="22" font-weight="900" fill="${totalCol}" font-family="Arial,sans-serif">${totalPct}%</text>
+    <text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="9" fill="#6b7280" font-family="Arial,sans-serif">of max dose used</text>
+  </svg>`;
+
+  let html = `<div style="max-width:700px;margin:0 auto;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:#111;font-size:13px;line-height:1.5">`;
+
+  // ── HEADER ──
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:18px">
+    <div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:#1d4ed8">LASTCalc</div>
+      <div style="font-size:10px;color:#6b7280;letter-spacing:.5px;margin-top:2px">LOCAL ANAESTHETIC SYSTEMIC TOXICITY CALCULATOR</div>
+    </div>
+    <div style="text-align:right;font-size:11px;color:#6b7280">${dateStr}<br><span style="color:#1d4ed8;font-weight:600">Beta · v1.1</span></div>
+  </div>`;
+
+  // ── TOP ROW: patient + gauge side by side ──
+  html += `<div style="display:flex;gap:16px;margin-bottom:16px">`;
+
+  // Patient card
+  html += `<div style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:14px">
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:10px">Patient Data</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px">`;
+  html += `<tr><td style="padding:3px 0;color:#6b7280">Weight (TBW)</td><td style="font-weight:700;text-align:right">${wt} kg</td></tr>`;
+  if (eff.bmi) {
+    html += `<tr><td style="padding:3px 0;color:#6b7280">Height</td><td style="font-weight:700;text-align:right">${anthro.heightCm} cm</td></tr>`;
+    html += `<tr><td style="padding:3px 0;color:#6b7280">BMI</td><td style="font-weight:700;text-align:right">${eff.bmi.toFixed(1)} <span style="color:#6b7280;font-weight:400">(${eff.bmiCat})</span></td></tr>`;
+    html += `<tr><td style="padding:3px 0;color:#6b7280">BSA</td><td style="font-weight:700;text-align:right">${eff.bsa.toFixed(2)} m²</td></tr>`;
+    html += `<tr><td style="padding:3px 0;color:#6b7280">LBW</td><td style="font-weight:700;text-align:right">${eff.lbw.toFixed(1)} kg</td></tr>`;
+    const dwCol = eff.bmi >= 30 ? '#d97706' : '#15803d';
+    html += `<tr style="border-top:1px solid #f3f4f6"><td style="padding:5px 0 2px;font-weight:600">Dose weight used</td><td style="font-weight:800;color:${dwCol};text-align:right">${eff.wt.toFixed(1)} kg (${eff.bmi>=30?'LBW':'TBW'})</td></tr>`;
+  } else {
+    html += `<tr style="border-top:1px solid #f3f4f6"><td style="padding:5px 0 2px;font-weight:600">Dose weight used</td><td style="font-weight:800;text-align:right">${wt} kg (TBW)</td></tr>`;
+  }
+  html += `</table></div>`;
+
+  // Gauge card
+  html += `<div style="width:160px;flex-shrink:0;border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-align:center;background:${statusBg};border-color:${statusBdr}">
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:6px">Dose Summary</div>
+    ${svgGauge}
+    <div style="font-size:18px;font-weight:900;color:${totalCol};margin-top:2px">${totalMg.toFixed(0)} mg</div>
+    <div style="font-size:10px;color:#6b7280">total administered</div>
+    <div style="margin-top:8px;background:${totalCol};color:#fff;border-radius:4px;padding:3px 0;font-size:11px;font-weight:800;letter-spacing:.5px">${statusTxt}</div>
+  </div>`;
+  html += `</div>`;
+
+  // ── DRUGS TABLE ──
+  if (drugRows.length) {
+    html += `<div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;margin-bottom:16px">
+      <div style="background:#f9fafb;padding:10px 14px;border-bottom:1px solid #e5e7eb">
+        <span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280">Drugs Administered</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb">
+        <th style="text-align:left;padding:8px 14px;font-weight:600;color:#374151;font-size:11px">Drug</th>
+        <th style="text-align:center;padding:8px 6px;font-weight:600;color:#374151;font-size:11px">Conc</th>
+        <th style="text-align:center;padding:8px 6px;font-weight:600;color:#374151;font-size:11px">Vol</th>
+        <th style="text-align:right;padding:8px 6px;font-weight:600;color:#374151;font-size:11px">Given</th>
+        <th style="text-align:right;padding:8px 6px;font-weight:600;color:#374151;font-size:11px">Max</th>
+        <th style="text-align:left;padding:8px 14px 8px 6px;font-weight:600;color:#374151;font-size:11px">Fraction used</th>
+      </tr></thead><tbody>`;
+
+    for (const r of drugRows) {
+      const pd = Math.round(r.frac * 100);
+      const dc = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#16a34a';
+      const bg = pd >= 100 ? '#fef2f2' : pd >= 80 ? '#fffbeb' : '#fff';
+      const borderL = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#d1fae5';
+      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : '⏱ Prior') : '';
+      const barW = Math.min(100, pd);
+      html += `<tr style="border-bottom:1px solid #f3f4f6;background:${bg}">
+        <td style="padding:10px 14px;border-left:3px solid ${borderL}">
+          <div style="font-weight:700;font-size:13px;color:#111">${r.d.label}</div>
+          <div style="font-size:10px;color:#6b7280">${r.d.sub}${tag ? ` · <span style="color:#d97706;font-weight:600">${tag}</span>` : ''}</div>
+        </td>
+        <td style="text-align:center;padding:10px 6px;color:#374151">${r.e.conc}%</td>
+        <td style="text-align:center;padding:10px 6px;color:#374151">${r.e.vol} ml</td>
+        <td style="text-align:right;padding:10px 6px;font-weight:700;font-size:14px;color:#111">${r.mg.toFixed(0)}&thinsp;mg</td>
+        <td style="text-align:right;padding:10px 6px;color:#9ca3af;font-size:11px">${r.max.toFixed(0)}&thinsp;mg</td>
+        <td style="padding:10px 14px 10px 6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${barW}%;background:${dc};border-radius:4px"></div>
+            </div>
+            <span style="font-weight:700;color:${dc};font-size:12px;min-width:32px;text-align:right">${pd}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }
+
+    html += `<tr style="background:#f9fafb;border-top:2px solid #e5e7eb;font-weight:700">
+      <td style="padding:10px 14px;border-left:3px solid ${totalCol};font-size:13px" colspan="2">COMBINED TOTAL</td>
+      <td></td>
+      <td style="text-align:right;padding:10px 6px;font-size:16px;font-weight:900;color:#111">${totalMg.toFixed(0)}&thinsp;mg</td>
+      <td></td>
+      <td style="padding:10px 14px 10px 6px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden">
+            <div style="height:100%;width:${totalPct}%;background:${totalCol};border-radius:4px"></div>
+          </div>
+          <span style="font-weight:900;color:${totalCol};font-size:13px;min-width:32px;text-align:right">${totalPct}%</span>
+        </div>
+      </td>
+    </tr>`;
+    html += `</tbody></table></div>`;
+  }
+
+  // ── BLOCK + AFOI ROW ──
+  const bSel = document.getElementById('blockSel');
+  const bName = bSel.options[bSel.selectedIndex]?.text;
+  const hasBlock = bName && bName.indexOf('Select') === -1;
+  let afoiTotal = 0, afoiPct = 0, afoiCol = '#16a34a';
+  if (afoiEntries.length) {
+    const aWt = getAWt();
+    for (const e of afoiEntries) {
+      const a = AFOI_AGENTS.find(x => x.id === e.aid); if (!a || a.isCocaine) continue;
+      const adm = e.conc * 10 * e.vol;
+      afoiTotal += bioavail === 'adjusted' ? adm * a.bioavail : adm;
+    }
+    const aMax = 9 * aWt;
+    afoiPct = Math.min(100, Math.round(afoiTotal / aMax * 100));
+    afoiCol = afoiPct >= 100 ? '#dc2626' : afoiPct >= 80 ? '#d97706' : '#16a34a';
+  }
+
+  if (hasBlock || afoiEntries.length) {
+    html += `<div style="display:flex;gap:16px;margin-bottom:16px">`;
+    if (hasBlock) {
+      html += `<div style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:14px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:6px">Block / Procedure</div>
+        <div style="font-weight:700;font-size:14px;color:#111">${bName}</div>
+      </div>`;
+    }
+    if (afoiEntries.length) {
+      html += `<div style="flex:1;border:1px solid #e5e7eb;border-radius:8px;padding:14px">
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6b7280;margin-bottom:6px">AFOi Topical Lidocaine</div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <span style="font-size:20px;font-weight:900;color:${afoiCol}">${afoiTotal.toFixed(0)} mg</span>
+          <span style="font-size:11px;color:#6b7280">${afoiPct}% of topical max</span>
+        </div>
+        <div style="font-size:10px;color:#9ca3af;margin-top:2px">${bioavail==='adjusted'?'Bioavailability-adjusted':'Conservative (full dose)'}</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  // ── FOOTER ──
+  html += `<div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:9px;color:#9ca3af;line-height:1.6">
+    <strong style="color:#6b7280">LASTCalc Beta v1.1</strong> · Educational decision-support tool only · Not a registered medical device ·
+    All doses must be independently verified by the treating clinician against local formulary and current guidelines ·
+    This printout does not constitute a clinical prescription or formal medical record.
+  </div></div>`;
+
+  document.getElementById('printContent').innerHTML = html;
+  window.print();
+}
+
+// ── AFOi → BLOCKS BRIDGE ──────────────────────────────────────────────────
+function afoiToBlocks() {
+  // Always use FULL administered dose regardless of bioavailability setting — conservative for safety
+  let fullDose = 0;
+  for (const e of afoiEntries) {
+    const a = AFOI_AGENTS.find(x => x.id === e.aid); if (!a || a.isCocaine) continue;
+    fullDose += e.conc * 10 * e.vol;
+  }
+  if (fullDose <= 0) { alert('No AFOi lidocaine dose to transfer. Add agents on the AFOi tab first.'); return; }
+  // Ceiling is the AFOi topical max (9 mg/kg) — locks it to the weight at time of transfer
+  const topicalMax = 9 * getAWt();
+  // Store as 1% lidocaine equivalent volume; topicalMax carried for correct fraction calc on blocks tab
+  drugs.push({ id: uid++, did: 'lido_p', conc: 1, vol: parseFloat((fullDose / 10).toFixed(1)), prior: true, afoiSource: true, topicalMax });
+  renderDrugs(); syncRopiToggle(); calc();
+  showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
+}
 
 // ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
 if ('serviceWorker' in navigator) {
