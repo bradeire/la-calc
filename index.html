@@ -273,11 +273,11 @@ tbody td:not(:first-child){text-align:right}
       <h1>LASTCalc</h1>
       <div style="font-size:9px;color:var(--sub);font-weight:500;letter-spacing:.5px;margin-top:1px">Local Anaesthetic Systemic Toxicity Calculator</div>
     </div>
-    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+    <div class="wt-pill">
       <label>Wt</label>
-      <input type="number" id="wt" min="1" max="250" value="70" inputmode="decimal">
+      <input type="number" id="wt" min="1" max="250" value="70" inputmode="decimal" onclick="event.stopPropagation()">
       <span class="wt-unit">kg</span>
-      <span id="anthroChevron" style="font-size:11px;color:var(--sub2);margin-left:2px">⌄</span>
+      <span id="anthroChevron" onclick="toggleAnthro()" style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 4px;cursor:pointer;user-select:none">⌄</span>
     </div>
   </div>
 
@@ -295,7 +295,7 @@ tbody td:not(:first-child){text-align:right}
       <div class="anthro-field">
         <span class="anthro-label">Height</span>
         <div class="vol-wrap" style="max-width:100px">
-          <input type="number" id="heightInput" inputmode="decimal" min="30" max="250" placeholder="cm" oninput="onAnthroChange()">
+          <input type="number" id="heightInput" inputmode="decimal" min="30" max="250" placeholder="" oninput="onAnthroChange()">
           <span class="u">cm</span>
         </div>
       </div>
@@ -303,7 +303,7 @@ tbody td:not(:first-child){text-align:right}
         <span class="anthro-label">Age</span>
         <div style="display:flex;gap:4px;align-items:center">
           <div class="vol-wrap" style="max-width:80px">
-            <input type="number" id="ageInput" inputmode="decimal" min="0" max="120" placeholder="—" oninput="onAnthroChange()">
+            <input type="number" id="ageInput" inputmode="decimal" min="0" max="120" placeholder="" oninput="onAnthroChange()">
           </div>
           <div class="toggle-btns">
             <button class="tbtn active" id="ageYrs" onclick="setAgeUnit('yrs')">yrs</button>
@@ -897,7 +897,7 @@ function toggleAnthro() {
   anthroOpen = !anthroOpen;
   document.getElementById('anthroPanel').className = 'anthro-panel ' + (anthroOpen ? 'open' : 'collapsed');
   document.getElementById('anthroChevron').style.transform = anthroOpen ? 'rotate(180deg)' : '';
-  if (anthroOpen) document.getElementById('heightInput').focus();
+  // no auto-focus — avoids keyboard hijack on mobile
 }
 
 function setSex(s) {
