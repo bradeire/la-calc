@@ -1457,7 +1457,7 @@ function openWorkings() {
   for (const e of drugs) {
     const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
     const mg = e.conc * 10 * e.vol;
-    const max = drugMax(d, wt);
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
     rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource });
@@ -1504,7 +1504,9 @@ function openWorkings() {
       html += `<span class="wf-op">=</span>`;
       html += `<span class="wf-step" style="color:${dc}">${(r.frac*100).toFixed(1)}%</span>`;
       html += `</div>`;
-      if (!isPed) {
+      if (r.afoiSource) {
+        html += `<div class="work-note">Topical ceiling: ${wt.toFixed(1)} kg × 9 mg/kg = ${r.max.toFixed(1)} mg (AAGBI/DAS topical limit)</div>`;
+      } else if (!isPed) {
         html += `<div class="work-note">${doseWt.toFixed(1)} kg × ${r.d.mpk} mg/kg = ${byWt.toFixed(1)} mg${capped ? ` → capped at ${capAt} mg absolute limit` : ''}</div>`;
       }
       html += `</div>`;
@@ -1547,7 +1549,7 @@ function doPrint() {
   for (const e of drugs) {
     const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
     const mg = e.conc * 10 * e.vol;
-    const max = drugMax(d, wt);
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
     drugRows.push({ d, e, mg, max, frac });
