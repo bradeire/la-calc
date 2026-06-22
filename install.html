@@ -63,11 +63,11 @@ h1{font-size:24px;font-weight:800;text-align:center;letter-spacing:-.5px}
   <div id="otherSection" class="hidden">
     <div class="step">
       <div class="step-num">1</div>
-      <div class="step-text">Open <strong>https://bradeire.github.io/la-calc</strong> on your phone in Chrome (Android) or Safari (iPhone)</div>
+      <div class="step-text">Open <strong>lastcalc.netlify.app</strong> on your phone in Chrome (Android) or Safari (iPhone)</div>
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">Follow the install prompt or use the Share → Add to Home Screen option</div>
+      <div class="step-text">Follow the install prompt or use Share → Add to Home Screen</div>
     </div>
   </div>
 
@@ -106,19 +106,21 @@ document.getElementById('installBtn').addEventListener('click', async () => {
 });
 
 if (isIOS && isSafari) {
+  // iOS Safari: manual steps only
   document.getElementById('iosSection').classList.remove('hidden');
-} else if (isAndroid) {
-  // Show Android section; if prompt doesn't arrive in 3s, show a helpful fallback
+} else {
+  // Android Chrome, desktop Chrome, Edge etc — all support beforeinstallprompt
+  // Show the install button and wait for the event; fall back after 8s if it never fires
   document.getElementById('androidSection').classList.remove('hidden');
   document.getElementById('installBtn').textContent = 'Install App';
   document.getElementById('installBtn').disabled = true;
   setTimeout(() => {
     if (!deferredPrompt) {
-      document.getElementById('installBtn').textContent = 'Install not available in this browser';
+      // Prompt didn't fire — likely incognito, already installed, or unsupported browser
+      document.getElementById('installBtn').textContent = 'Already installed or not supported';
+      document.getElementById('installBtn').disabled = true;
     }
-  }, 3000);
-} else {
-  document.getElementById('otherSection').classList.remove('hidden');
+  }, 8000);
 }
 </script>
 </body>
