@@ -2,6 +2,7 @@
   "name": "LASTCalc",
   "short_name": "LASTCalc",
   "description": "Local anaesthetic dose calculator with block selector and AFOi topical dosing",
+  "id": "https://lastcalc.netlify.app/",
   "start_url": "https://lastcalc.netlify.app/",
   "scope": "https://lastcalc.netlify.app/",
   "display": "standalone",
