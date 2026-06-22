@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -161,7 +161,7 @@ footer .copy{font-size:12px;color:var(--text3)}
     </div>
     <div class="feat">
       <div class="feat-icon">📷</div>
-      <div class="feat-title">EPR scanning</div>
+      <div class="feat-title">EPR scanning <span style="font-size:10px;font-weight:600;color:#f59e0b;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:99px;padding:2px 7px;vertical-align:middle;white-space:nowrap">Closed beta</span></div>
       <div class="feat-desc">Camera OCR reads weight, height, age, and sex directly from an EPR sidebar</div>
     </div>
     <div class="feat">
@@ -188,9 +188,27 @@ footer .copy{font-size:12px;color:var(--text3)}
   <div class="footer-links">
     <a href="https://lastcalc.netlify.app">LASTCalc</a>
     <a href="mailto:periop.digital@gmail.com">Contact</a>
-    <a href="https://lastcalc.netlify.app">Disclaimer</a>
+    <a href="#" onclick="document.getElementById('discModal').style.display='flex';return false">Disclaimer</a>
   </div>
 </footer>
+
+<!-- Disclaimer modal -->
+<div id="discModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center">
+  <div style="background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:20px 20px 0 0;padding:28px 24px 40px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <span style="font-size:16px;font-weight:700;color:#f8fafc">Disclaimer</span>
+      <button onclick="document.getElementById('discModal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <div style="font-size:13px;color:#94a3b8;line-height:1.75;display:flex;flex-direction:column;gap:12px">
+      <p><strong style="color:#f8fafc">Educational and decision-support use only.</strong> PeriOp Digital tools, including LASTCalc, are intended to assist trained clinicians in calculating drug doses based on published reference data. They do not replace clinical judgement, institutional protocols, or the guidance of a responsible consultant.</p>
+      <p><strong style="color:#f8fafc">Dose references.</strong> Maximum doses are derived from AAGBI, DAS, and standard published anaesthetic references. Local formularies and departmental protocols may differ — always verify doses against your own institution's guidance before administering any drug.</p>
+      <p><strong style="color:#f8fafc">Patient safety.</strong> No calculator can account for all individual patient factors. Clinical decisions must be made by a qualified practitioner who has assessed the patient directly. If in doubt, seek senior advice.</p>
+      <p><strong style="color:#f8fafc">No liability.</strong> PeriOp Digital and its developers accept no liability for clinical decisions made using these tools. Use is entirely at the clinician's own risk.</p>
+      <p><strong style="color:#f8fafc">Data privacy.</strong> No patient data is collected, stored, or transmitted. All calculations run locally in your browser.</p>
+    </div>
+    <button onclick="document.getElementById('discModal').style.display='none'" style="margin-top:22px;width:100%;background:#334155;border:none;border-radius:10px;color:#f8fafc;font-family:inherit;font-size:14px;font-weight:600;padding:12px;cursor:pointer">Close</button>
+  </div>
+</div>
 
 </body>
 </html>
