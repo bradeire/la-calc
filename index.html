@@ -178,6 +178,7 @@ footer .copy{font-size:12px;color:var(--text3)}
 
   <div class="cred-box">
     <p>Doses are based on <strong>AAGBI, DAS, and standard published references</strong>. LASTCalc is an educational and decision-support aid — it does not replace clinical judgement or local formulary guidance. Always verify doses against your departmental protocols.</p>
+    <button onclick="document.getElementById('sourcesModal').style.display='flex'" style="margin-top:14px;display:inline-flex;align-items:center;gap:6px;background:var(--blue-dim);border:1px solid var(--blue-border);border-radius:99px;color:var(--info);font-family:inherit;font-size:12px;font-weight:500;padding:5px 14px;cursor:pointer">📚 Sources &amp; citations</button>
   </div>
 </section>
 
@@ -191,6 +192,90 @@ footer .copy{font-size:12px;color:var(--text3)}
     <a href="#" onclick="document.getElementById('discModal').style.display='flex';return false">Disclaimer</a>
   </div>
 </footer>
+
+<!-- Sources modal -->
+<div id="sourcesModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center">
+  <div style="background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:20px 20px 0 0;padding:28px 24px 40px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <span style="font-size:16px;font-weight:700;color:#f8fafc">Sources &amp; citations</span>
+      <button onclick="document.getElementById('sourcesModal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;font-size:13px;color:#94a3b8;line-height:1.65">
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Local anaesthetic toxicity &amp; maximum doses</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">AAGBI Safety Guideline — Local Anaesthetic Toxicity</div>
+            <div>Association of Anaesthetists of Great Britain &amp; Ireland, 2010. Primary source for maximum mg/kg dose limits used throughout LASTCalc.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">El-Boghdadly K et al. — Local anaesthetic systemic toxicity</div>
+            <div><em>BJA Education</em>, 2018; 18(11): 328–335. Fractional dose mixture rationale and clinical risk stratification.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">AFOi topical lidocaine ceiling (9 mg/kg)</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">DAS Guidelines for awake tracheal intubation in adults</div>
+            <div>Difficult Airway Society, <em>Anaesthesia</em> 2020; 75: 509–528. Source for 9 mg/kg topical lidocaine ceiling used in AFOi calculations.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">Woodall NM et al. — Topical anaesthesia for awake intubation</div>
+            <div><em>Anaesthesia</em> 2005; 60: 765–771. Topical bioavailability estimates by route (nebulised, spray-as-you-go, cricothyroid) informing AFOi tab calculations.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Obesity-adjusted dosing</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">Janmahasatian M et al. — Quantification of lean bodyweight</div>
+            <div><em>Clinical Pharmacokinetics</em> 2005; 44(10): 1051–1065. Formula used to calculate lean body weight (LBW) when BMI ≥ 30.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">Devine BJ — Gentamicin therapy</div>
+            <div><em>Drug Intelligence &amp; Clinical Pharmacy</em> 1974; 8: 650–655. Devine formula used for ideal body weight (IBW) calculation.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Paediatric dosing</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">BNF for Children — Local anaesthetics</div>
+            <div>British National Formulary for Children (current edition). Age-banded maximum dose ceilings for neonates, infants, and children.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">AAGBI / APAGBI — Safe use of local anaesthesia in children</div>
+            <div>Association of Paediatric Anaesthetists of Great Britain &amp; Ireland guidance. Additional dose ceiling context for paediatric regional techniques.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Nerve block volumes &amp; drug selection</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">NYSORA — Textbook of Regional Anesthesia and Acute Pain Management</div>
+            <div>Hadzic A (ed.), 2nd ed. McGraw-Hill. Volumes, concentrations, and expected durations for individual nerve blocks.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="color:#f8fafc;font-weight:500;margin-bottom:2px">Levobupivacaine cardiac safety — Rossaint R et al.</div>
+            <div><em>European Journal of Anaesthesiology</em> 2004. Rationale for preferring levobupivacaine over racemic bupivacaine for vascular-adjacent nerve blocks.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <button onclick="document.getElementById('sourcesModal').style.display='none'" style="margin-top:22px;width:100%;background:#334155;border:none;border-radius:10px;color:#f8fafc;font-family:inherit;font-size:14px;font-weight:600;padding:12px;cursor:pointer">Close</button>
+  </div>
+</div>
 
 <!-- Disclaimer modal -->
 <div id="discModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center">
