@@ -71,7 +71,7 @@ h1{font-size:24px;font-weight:800;text-align:center;letter-spacing:-.5px}
     </div>
   </div>
 
-  <button class="btn-open" onclick="window.location.href='https://bradeire.github.io/la-calc'">Open LASTCalc →</button>
+  <button class="btn-open" id="continueBtn">Continue to LASTCalc →</button>
   <div class="note">Works offline after first load · No login · No data collected</div>
 </div>
 
@@ -80,6 +80,18 @@ const ua = navigator.userAgent;
 const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
 const isAndroid = /Android/.test(ua);
 const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
+const fromApp = new URLSearchParams(window.location.search).get('from') === 'app';
+
+// Always return to index relative to this page
+document.getElementById('continueBtn').addEventListener('click', () => {
+  window.location.href = './';
+});
+
+// If launched from first-run redirect, update label
+if (fromApp) {
+  document.getElementById('continueBtn').textContent = 'I\'ve installed it — Open Calculator →';
+  document.querySelector('.sub').textContent = 'Install the app first, then return here to open LASTCalc.';
+}
 
 let deferredPrompt = null;
 
@@ -95,13 +107,12 @@ document.getElementById('installBtn').addEventListener('click', async () => {
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
   deferredPrompt = null;
-  if (outcome === 'accepted') window.location.href = 'https://bradeire.github.io/la-calc';
+  if (outcome === 'accepted') window.location.href = './';
 });
 
 if (isIOS && isSafari) {
   document.getElementById('iosSection').classList.remove('hidden');
 } else if (isAndroid) {
-  // Show fallback text while waiting for beforeinstallprompt
   if (!deferredPrompt) {
     document.getElementById('androidSection').classList.remove('hidden');
     document.getElementById('installBtn').textContent = 'Waiting for install prompt…';
