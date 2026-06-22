@@ -279,6 +279,24 @@ tbody td:not(:first-child){text-align:right}
 .disc-footer{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:0 2px}
 .disc-btn{background:none;border:1px solid var(--border);border-radius:99px;color:var(--sub2);font-family:var(--font);font-size:10px;font-weight:500;padding:3px 10px;cursor:pointer}
 .disc-btn:active{background:var(--s1)}
+/* Install modal */
+#installModal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+#installModal.open{opacity:1;pointer-events:all}
+.install-sheet{background:var(--s1);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;border-top:1px solid var(--border2)}
+.install-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px}
+.install-title{font-size:20px;font-weight:800;text-align:center;letter-spacing:-.3px;color:var(--text)}
+.install-sub{font-size:12px;color:var(--sub2);text-align:center;margin:4px 0 20px;line-height:1.5}
+.install-step{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
+.install-step:first-of-type{border-top:none}
+.install-step-num{width:22px;height:22px;border-radius:99px;background:rgba(96,165,250,.15);color:#60a5fa;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.install-step-text{font-size:12px;line-height:1.5;color:var(--sub)}
+.install-step-text strong{color:var(--text)}
+.install-ios-arrow{display:inline-block;animation:bounce .8s infinite alternate}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(4px)}}
+.btn-install-main{width:100%;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;border-radius:12px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;padding:13px;cursor:pointer;margin-top:16px}
+.btn-install-main:disabled{opacity:.4;cursor:not-allowed}
+.btn-install-skip{width:100%;background:none;border:1px solid var(--border);border-radius:12px;color:var(--sub2);font-family:var(--font);font-size:13px;font-weight:500;padding:11px;cursor:pointer;margin-top:8px}
+.btn-install-skip:active{background:var(--s2)}
 .disclaimer-body{font-size:12px;color:var(--sub);line-height:1.65;padding:0 4px}
 .disclaimer-body h3{font-size:12px;font-weight:700;color:var(--text);margin:12px 0 4px}
 .disclaimer-body h3:first-child{margin-top:0}
@@ -634,6 +652,33 @@ tbody td:not(:first-child){text-align:right}
     <div class="modal-body" style="padding:14px 16px 28px">
       <div id="workingsBody"></div>
     </div>
+  </div>
+</div>
+
+<!-- INSTALL MODAL -->
+<div id="installModal">
+  <div class="install-sheet">
+    <div class="install-icon">💉</div>
+    <div class="install-title">LASTCalc</div>
+    <div class="install-sub">Install as an app for quick access and offline use</div>
+    <div id="installStepsAndroid" style="display:none">
+      <button class="btn-install-main" id="installPromptBtn" disabled>Install App</button>
+    </div>
+    <div id="installStepsIOS" style="display:none">
+      <div class="install-step">
+        <div class="install-step-num">1</div>
+        <div class="install-step-text">Tap the <strong>Share button</strong> <span class="install-ios-arrow">↑</span> at the bottom of Safari</div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">2</div>
+        <div class="install-step-text">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">3</div>
+        <div class="install-step-text">Tap <strong>Add</strong> — LASTCalc appears on your home screen</div>
+      </div>
+    </div>
+    <button class="btn-install-skip" onclick="closeInstallModal(true)">Continue without installing</button>
   </div>
 </div>
 
@@ -1510,20 +1555,53 @@ calc();
 calcAFOi();
 
 // ── FIRST LAUNCH ──────────────────────────────────────────────────────────
-(function firstLaunch() {
-  const installed = localStorage.getItem('lc_installed');
-  const discSeen  = localStorage.getItem('lc_disc_seen');
+let _installPrompt = null;
 
-  if (!installed) {
-    // First ever visit — show install page in-app, then mark done
-    localStorage.setItem('lc_installed', '1');
-    // Redirect to install guide; install.html sets lc_disc_seen then returns
-    window.location.href = 'install.html?from=app';
-    return;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  const btn = document.getElementById('installPromptBtn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Install App'; }
+});
+
+document.getElementById('installPromptBtn').addEventListener('click', async () => {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  const { outcome } = await _installPrompt.userChoice;
+  _installPrompt = null;
+  if (outcome === 'accepted') closeInstallModal(true);
+});
+
+function openInstallModal() {
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
+  if (isIOS && isSafari) {
+    document.getElementById('installStepsIOS').style.display = 'block';
+  } else {
+    document.getElementById('installStepsAndroid').style.display = 'block';
   }
+  document.getElementById('installModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
 
-  if (!discSeen) {
-    // Installed but disclaimer not yet accepted — show it
+function closeInstallModal(markDone) {
+  document.getElementById('installModal').classList.remove('open');
+  document.body.style.overflow = '';
+  if (markDone) {
+    localStorage.setItem('lc_installed', '1');
+    // Show disclaimer next if not yet seen
+    if (!localStorage.getItem('lc_disc_seen')) {
+      localStorage.setItem('lc_disc_seen', '1');
+      setTimeout(openDisclaimer, 300);
+    }
+  }
+}
+
+(function firstLaunch() {
+  if (!localStorage.getItem('lc_installed')) {
+    setTimeout(openInstallModal, 800);
+  } else if (!localStorage.getItem('lc_disc_seen')) {
     localStorage.setItem('lc_disc_seen', '1');
     openDisclaimer();
   }
