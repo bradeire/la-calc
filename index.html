@@ -1888,6 +1888,26 @@ updateAnthroUI();
 calc();
 calcAFOi();
 
+// ── FIRST LAUNCH ──────────────────────────────────────────────────────────
+(function firstLaunch() {
+  const installed = localStorage.getItem('lc_installed');
+  const discSeen  = localStorage.getItem('lc_disc_seen');
+
+  if (!installed) {
+    // First ever visit — show install page in-app, then mark done
+    localStorage.setItem('lc_installed', '1');
+    // Redirect to install guide; install.html sets lc_disc_seen then returns
+    window.location.href = 'install.html?from=app';
+    return;
+  }
+
+  if (!discSeen) {
+    // Installed but disclaimer not yet accepted — show it
+    localStorage.setItem('lc_disc_seen', '1');
+    openDisclaimer();
+  }
+})();
+
 // ── WORKINGS MODAL ────────────────────────────────────────────────────────
 function openWorkings() {
   const wt = getWt();
