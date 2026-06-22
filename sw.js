@@ -1,6 +1,5 @@
-const CACHE = 'la-calc-v4';
+const CACHE = 'la-calc-v5';
 const ASSETS = [
-  './',
   './index.html',
   './manifest.json',
   './icon-192.png',
