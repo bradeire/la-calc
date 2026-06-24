@@ -332,6 +332,8 @@ tbody td:not(:first-child){text-align:right}
 <div class="tab-bar">
   <button class="tab-btn active" onclick="showTab('blocks',this)">💉 Blocks</button>
   <button class="tab-btn" onclick="showTab('afoi',this)">🫁 AFOi</button>
+  <button class="tab-btn" onclick="showTab('lidoiv',this)">💧 Lido IV</button>
+  <button class="tab-btn" onclick="showTab('dilutions',this)">🧪 Dilutions</button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -637,6 +639,147 @@ tbody td:not(:first-child){text-align:right}
 
   <div class="disc-footer">
     <div class="footer" style="text-align:left">Topical max: 9 mg/kg · Verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 3 — LIDOCAINE IV INFUSION
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-lidoiv">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">💧</div>
+      <h1>Lidocaine IV</h1>
+    </div>
+    <div class="wt-pill">
+      <label>Wt</label>
+      <input type="number" id="lidoiv-wt" min="1" max="250" value="70" inputmode="decimal" oninput="calcLidoIV()">
+      <span class="wt-unit">kg</span>
+    </div>
+  </div>
+
+  <!-- BOLUS CARD -->
+  <div class="card">
+    <div class="card-title">Loading Bolus</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.5">Slow IV bolus · 1–1.5 mg/kg over 2–4 min (max 20 min) · <em>Oxford Handbook of Anaesthesia</em></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Dose</span>
+      <div class="toggle-btns">
+        <button class="tbtn active" id="lidobolus-1" onclick="setBolusRate(1)">1 mg/kg</button>
+        <button class="tbtn" id="lidobolus-15" onclick="setBolusRate(1.5)">1.5 mg/kg</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Duration</span>
+      <div class="toggle-btns">
+        <button class="tbtn active" id="lidodur-2" onclick="setBolusMin(2)">2 min</button>
+        <button class="tbtn" id="lidodur-4" onclick="setBolusMin(4)">4 min</button>
+        <button class="tbtn" id="lidodur-20" onclick="setBolusMin(20)">20 min</button>
+      </div>
+    </div>
+    <div id="lidoiv-bolus-result" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <!-- INFUSION CARD -->
+  <div class="card">
+    <div class="card-title">Maintenance Infusion</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.5">0.5–2 mg/kg/hr · Usual starting rate 1 mg/kg/hr</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Rate</span>
+      <div class="toggle-btns">
+        <button class="tbtn" id="lidoinf-05" onclick="setInfRate(0.5)">0.5</button>
+        <button class="tbtn active" id="lidoinf-1" onclick="setInfRate(1)">1</button>
+        <button class="tbtn" id="lidoinf-15" onclick="setInfRate(1.5)">1.5</button>
+        <button class="tbtn" id="lidoinf-2" onclick="setInfRate(2)">2</button>
+      </div>
+      <span style="font-size:10.5px;color:var(--sub2)">mg/kg/hr</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Conc</span>
+      <div class="toggle-btns">
+        <button class="tbtn" id="lidoconc-01" onclick="setInfConc(0.1)">0.1%</button>
+        <button class="tbtn active" id="lidoconc-02" onclick="setInfConc(0.2)">0.2%</button>
+        <button class="tbtn" id="lidoconc-05" onclick="setInfConc(0.5)">0.5%</button>
+        <button class="tbtn" id="lidoconc-1" onclick="setInfConc(1)">1%</button>
+      </div>
+    </div>
+    <div id="lidoiv-inf-result" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left">Oxford Handbook of Anaesthesia · Verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 4 — DILUTIONS
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-dilutions">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#10b981,#3b82f6)">🧪</div>
+      <h1>Dilutions</h1>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Mixing Calculator</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px">How to achieve a target concentration by mixing two available strengths</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Low conc (%)</span>
+        <input type="number" id="dil-low" min="0.01" max="20" step="0.01" value="0.25" inputmode="decimal" oninput="calcDilution()"
+          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">High conc (%)</span>
+        <input type="number" id="dil-high" min="0.01" max="20" step="0.01" value="0.5" inputmode="decimal" oninput="calcDilution()"
+          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Target conc (%)</span>
+        <input type="number" id="dil-target" min="0.01" max="20" step="0.01" value="0.375" inputmode="decimal" oninput="calcDilution()"
+          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Total volume</span>
+        <input type="number" id="dil-vol" min="1" max="500" step="1" value="20" inputmode="decimal" oninput="calcDilution()"
+          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="card" id="dil-result-card">
+    <div class="card-title">Result</div>
+    <div id="dil-result"></div>
+  </div>
+
+  <!-- QUICK PRESETS -->
+  <div class="card">
+    <div class="card-title">Quick Presets</div>
+    <div style="display:flex;flex-direction:column;gap:6px" id="dil-presets"></div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left">C₁V₁ + C₂V₂ = C₃V₃ · Verify before administration</div>
     <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
   </div>
@@ -2201,12 +2344,153 @@ function afoiToBlocks() {
   showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
 }
 
+// ═══════════════════════════════════════════════════════════
+// TAB 3 — LIDOCAINE IV INFUSION
+// ═══════════════════════════════════════════════════════════
+let lidoBolusRate = 1;    // mg/kg
+let lidoBolusMin  = 2;    // minutes
+let lidoInfRate   = 1;    // mg/kg/hr
+let lidoInfConc   = 0.2;  // %
+
+function getLidoIVWt() { return Math.max(1, parseFloat(document.getElementById('lidoiv-wt').value) || 70); }
+
+function setBolusRate(r) {
+  lidoBolusRate = r;
+  ['1','15'].forEach(k => document.getElementById('lidobolus-'+k).classList.remove('active'));
+  document.getElementById('lidobolus-'+(r===1?'1':'15')).classList.add('active');
+  calcLidoIV();
+}
+
+function setBolusMin(m) {
+  lidoBolusMin = m;
+  [2,4,20].forEach(k => document.getElementById('lidodur-'+k).classList.remove('active'));
+  document.getElementById('lidodur-'+m).classList.add('active');
+  calcLidoIV();
+}
+
+function setInfRate(r) {
+  lidoInfRate = r;
+  ['05','1','15','2'].forEach(k => document.getElementById('lidoinf-'+k).classList.remove('active'));
+  const keyMap = {0.5:'05', 1:'1', 1.5:'15', 2:'2'};
+  document.getElementById('lidoinf-'+keyMap[r]).classList.add('active');
+  calcLidoIV();
+}
+
+function setInfConc(c) {
+  lidoInfConc = c;
+  ['01','02','05','1'].forEach(k => document.getElementById('lidoconc-'+k).classList.remove('active'));
+  const keyMap = {0.1:'01', 0.2:'02', 0.5:'05', 1:'1'};
+  document.getElementById('lidoconc-'+keyMap[c]).classList.add('active');
+  calcLidoIV();
+}
+
+function lidoIVRow(label, value, unit, sub) {
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-top:1px solid var(--border)">
+    <span style="font-size:11.5px;color:var(--sub2)">${label}</span>
+    <span style="font-size:14px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums">${value} <span style="font-size:11px;font-weight:500;color:var(--sub2)">${unit}</span>${sub?`<span style="font-size:10px;color:var(--sub);display:block;text-align:right">${sub}</span>`:''}</span>
+  </div>`;
+}
+
+function calcLidoIV() {
+  const wt = getLidoIVWt();
+
+  // Bolus
+  const bolusMg   = lidoBolusRate * wt;
+  const bolusVolConcs = [0.5, 1, 2];
+  let bHtml = `<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:5px">
+    <span style="font-size:12px;font-weight:700;color:var(--text)">Total dose</span>
+    <span style="font-size:20px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums">${bolusMg.toFixed(1)} <span style="font-size:12px;font-weight:500;color:var(--sub2)">mg</span></span>
+  </div>`;
+  bolusVolConcs.forEach(c => {
+    const vol = bolusMg / (c * 10);
+    const rateMlMin = vol / lidoBolusMin;
+    bHtml += lidoIVRow(`${c}% lidocaine`, vol.toFixed(1), 'ml', `${rateMlMin.toFixed(1)} ml/min over ${lidoBolusMin} min`);
+  });
+  document.getElementById('lidoiv-bolus-result').innerHTML = bHtml;
+
+  // Infusion
+  const infMgHr = lidoInfRate * wt;
+  const infMlHr = infMgHr / (lidoInfConc * 10);
+  let iHtml = `<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:5px">
+    <span style="font-size:12px;font-weight:700;color:var(--text)">Rate at ${lidoInfConc}%</span>
+    <span style="font-size:20px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums">${infMlHr.toFixed(1)} <span style="font-size:12px;font-weight:500;color:var(--sub2)">ml/hr</span></span>
+  </div>`;
+  iHtml += lidoIVRow('Dose delivered', infMgHr.toFixed(1), 'mg/hr', `${(infMgHr/60).toFixed(2)} mg/min`);
+  iHtml += lidoIVRow('mg/kg/hr check', lidoInfRate.toFixed(1), 'mg/kg/hr', '');
+  document.getElementById('lidoiv-inf-result').innerHTML = iHtml;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 4 — DILUTIONS
+// ═══════════════════════════════════════════════════════════
+const DIL_PRESETS = [
+  { label:'Lidocaine 1.5% from 1% + 2%',       low:1,    high:2,    target:1.5  },
+  { label:'Bupi/Levo 0.375% from 0.25% + 0.5%',low:0.25, high:0.5,  target:0.375},
+  { label:'Bupi/Levo 0.125% from 0.25% + saline',low:0, high:0.25, target:0.125},
+  { label:'Ropivacaine 0.375% from 0.2% + 0.5%',low:0.2, high:0.5,  target:0.375},
+  { label:'Lidocaine 1% from 2% + saline',      low:0,    high:2,    target:1    },
+];
+
+function applyDilPreset(p) {
+  document.getElementById('dil-low').value    = p.low;
+  document.getElementById('dil-high').value   = p.high;
+  document.getElementById('dil-target').value = p.target;
+  calcDilution();
+}
+
+function calcDilution() {
+  const low    = parseFloat(document.getElementById('dil-low').value);
+  const high   = parseFloat(document.getElementById('dil-high').value);
+  const target = parseFloat(document.getElementById('dil-target').value);
+  const vol    = parseFloat(document.getElementById('dil-vol').value) || 20;
+  const res    = document.getElementById('dil-result');
+
+  if (isNaN(low)||isNaN(high)||isNaN(target)||high<=low||target<=low||target>=high) {
+    res.innerHTML = `<span style="font-size:12px;color:var(--sub);font-style:italic">Target must be between low and high concentration.</span>`;
+    return;
+  }
+
+  const volHigh  = vol * (target - low) / (high - low);
+  const volLow   = vol - volHigh;
+  const lowLabel = low === 0 ? 'Saline / water for injection' : `${low}% solution`;
+
+  res.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--blue-d);border-radius:10px;border:1px solid rgba(96,165,250,.2)">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">${high}% solution</span>
+        <span style="font-size:22px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums">${volHigh.toFixed(1)} <span style="font-size:12px;font-weight:500">ml</span></span>
+      </div>
+      <div style="text-align:center;font-size:20px;color:var(--sub2);line-height:1">+</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--s1);border-radius:10px;border:1px solid var(--border)">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">${lowLabel}</span>
+        <span style="font-size:22px;font-weight:900;color:var(--sub);font-variant-numeric:tabular-nums">${volLow.toFixed(1)} <span style="font-size:12px;font-weight:500">ml</span></span>
+      </div>
+      <div style="text-align:center;font-size:20px;color:var(--sub2);line-height:1">=</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(16,185,129,.08);border-radius:10px;border:1px solid rgba(16,185,129,.2)">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">${target}% · ${vol} ml total</span>
+        <span style="font-size:16px;font-weight:800;color:var(--green)">✓</span>
+      </div>
+    </div>`;
+}
+
+function initDilPresets() {
+  document.getElementById('dil-presets').innerHTML = DIL_PRESETS.map(p =>
+    `<button onclick='applyDilPreset(${JSON.stringify(p)})' style="text-align:left;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11.5px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">${p.label}</button>`
+  ).join('');
+}
+
 // ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
+
+window.addEventListener('load', () => {
+  calcLidoIV();
+  initDilPresets();
+  calcDilution();
+});
 </script>
 </body>
 </html>
