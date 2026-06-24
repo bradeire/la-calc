@@ -727,20 +727,20 @@ function showTab(t, btn) {
 let ropiMax = 225;
 
 const DRUGS = [
-  {id:'lido_p',   label:'Lidocaine',       sub:'Plain',                          adr:false, concs:[0.5,1,1.5,2],        mpk:3,   abs:200, h24:null},
-  {id:'lido_a2',  label:'Lidocaine',       sub:'+ Adr 1:200,000',                adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
-  {id:'lido_a4',  label:'Lidocaine',       sub:'+ Adr 1:400,000',                adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
-  {id:'lido_mix', label:'Lidocaine 1.5%',  sub:'1% plain + 2%/1:200k → 1:400k', adr:true,  concs:[1.5],                mpk:7,   abs:500, h24:null},
-  {id:'bupi_p',   label:'Bupivacaine',     sub:'Plain',                          adr:false, concs:[0.25,0.5,0.75],      mpk:2,   abs:150, h24:400},
-  {id:'bupi_a',   label:'Bupivacaine',     sub:'+ Adrenaline',                   adr:true,  concs:[0.25,0.5,0.75],      mpk:2,   abs:150, h24:400},
-  {id:'levo_p',   label:'Levobupivacaine', sub:'Plain',                          adr:false, concs:[0.25,0.5,0.75],      mpk:2,   abs:150, h24:400},
-  {id:'levo_a',   label:'Levobupivacaine', sub:'+ Adrenaline',                   adr:true,  concs:[0.25,0.5,0.75],      mpk:2.5, abs:150, h24:400},
-  {id:'ropi',     label:'Ropivacaine',     sub:'Plain',                          adr:false, concs:[0.2,0.375,0.5,0.6,0.75,1], mpk:3,   abs:null,h24:770},
-  {id:'prilo_p',  label:'Prilocaine',      sub:'Plain',                          adr:false, concs:[0.5,1,2,3],          mpk:6,   abs:400, h24:null},
-  {id:'prilo_a',  label:'Prilocaine',      sub:'+ Adrenaline',                   adr:true,  concs:[0.5,1,2,3],          mpk:8,   abs:600, h24:null},
-  {id:'mepi_p',   label:'Mepivacaine',     sub:'Plain',                          adr:false, concs:[1,1.5,2,3],          mpk:5,   abs:400, h24:null},
-  {id:'mepi_a',   label:'Mepivacaine',     sub:'+ Adrenaline',                   adr:true,  concs:[1,1.5,2,3],          mpk:7,   abs:550, h24:null},
-  {id:'cocaine',  label:'Cocaine',         sub:'Topical (ENT)',                   adr:false, concs:[4,5,10],             mpk:1.5, abs:150, h24:null},
+  {id:'lido_p',   label:'Lidocaine',       sub:'Plain',                          route:'Injectable', adr:false, concs:[0.5,1,1.5,2],        mpk:3,   abs:200, h24:null},
+  {id:'lido_a2',  label:'Lidocaine',       sub:'+ Adr 1:200,000',                route:'Injectable', adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
+  {id:'lido_a4',  label:'Lidocaine',       sub:'+ Adr 1:400,000',                route:'Injectable', adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
+  {id:'lido_mix', label:'Lidocaine 1.5%',  sub:'1% plain + 2%/1:200k → 1:400k', route:'Injectable', adr:true,  concs:[1.5],                mpk:7,   abs:500, h24:null},
+  {id:'bupi_p',   label:'Bupivacaine',     sub:'Plain',                          route:'Injectable', adr:false, concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'bupi_a',   label:'Bupivacaine',     sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'levo_p',   label:'Levobupivacaine', sub:'Plain',                          route:'Injectable', adr:false, concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'levo_a',   label:'Levobupivacaine', sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[0.25,0.375,0.5,0.75],      mpk:2.5, abs:150, h24:400},
+  {id:'ropi',     label:'Ropivacaine',     sub:'Plain',                          route:'Injectable', adr:false, concs:[0.2,0.375,0.5,0.6,0.75,1], mpk:3,   abs:null,h24:770},
+  {id:'prilo_p',  label:'Prilocaine',      sub:'Plain',                          route:'Injectable', adr:false, concs:[0.5,1,2,3],          mpk:6,   abs:400, h24:null},
+  {id:'prilo_a',  label:'Prilocaine',      sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[0.5,1,2,3],          mpk:8,   abs:600, h24:null},
+  {id:'mepi_p',   label:'Mepivacaine',     sub:'Plain',                          route:'Injectable', adr:false, concs:[1,1.5,2,3],          mpk:5,   abs:400, h24:null},
+  {id:'mepi_a',   label:'Mepivacaine',     sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[1,1.5,2,3],          mpk:7,   abs:550, h24:null},
+  {id:'cocaine',  label:'Cocaine',         sub:'Topical (ENT)',                   route:'Topical',    adr:false, concs:[4,5,10],             mpk:1.5, abs:150, h24:null},
 ];
 
 // Duration ranges in hours [min, max] per drug id
@@ -1302,7 +1302,8 @@ function renderTable(remFrac,wt,given,totalPct){
     if(d.h24!==null){const r=Math.max(0,d.h24-mgGiven);cap24=`<span class="cap24 ${r<50?'c-warn':'c-ok'}">${r.toFixed(0)}mg</span>`;}
     const col=totalPct>=100?'color:var(--red)':totalPct>=80?'color:var(--amber)':'color:var(--text)';
     const givenNote=mgGiven>0?` · <span class="given-tag">${mgGiven.toFixed(0)}mg given</span>`:'';
-    return `<tr${faded}><td><div class="dn">${d.label}</div><div class="dc">${d.sub}${givenNote}</div></td><td><span class="mg-val" style="${col}">${remMg.toFixed(0)}</span></td><td>${mlLines}</td><td>${cap24}</td></tr>`;
+    const routeTag=d.route?` · <span style="color:var(--teal);font-weight:600">${d.route}</span>`:'';
+    return `<tr${faded}><td><div class="dn">${d.label}</div><div class="dc">${d.sub}${routeTag}${givenNote}</div></td><td><span class="mg-val" style="${col}">${remMg.toFixed(0)}</span></td><td>${mlLines}</td><td>${cap24}</td></tr>`;
   }).join('');
 }
 
@@ -1740,7 +1741,7 @@ function doPrint() {
       <div style="font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:#1d4ed8">LASTCalc</div>
       <div style="font-size:10px;color:#6b7280;letter-spacing:.5px;margin-top:2px">LOCAL ANAESTHETIC SYSTEMIC TOXICITY CALCULATOR</div>
     </div>
-    <div style="text-align:right;font-size:11px;color:#6b7280">${dateStr}<br><span style="color:#1d4ed8;font-weight:600">Beta · v1.1</span></div>
+    <div style="text-align:right;font-size:11px;color:#6b7280">${dateStr}<br><span style="color:#1d4ed8;font-weight:600">v1.2</span></div>
   </div>`;
 
   // ── TOP ROW: patient + gauge side by side ──
@@ -1873,7 +1874,7 @@ function doPrint() {
 
   // ── FOOTER ──
   html += `<div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:9px;color:#9ca3af;line-height:1.6">
-    <strong style="color:#6b7280">LASTCalc Beta v1.1</strong> · Educational decision-support tool only · Not a registered medical device ·
+    <strong style="color:#6b7280">LASTCalc v1.2</strong> · Educational decision-support tool only · Not a registered medical device ·
     All doses must be independently verified by the treating clinician against local formulary and current guidelines ·
     This printout does not constitute a clinical prescription or formal medical record.
   </div></div>`;
