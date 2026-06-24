@@ -710,6 +710,13 @@ tbody td:not(:first-child){text-align:right}
     <div id="lidoiv-inf-result" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
 
+  <!-- PREPARATION CARD -->
+  <div class="card">
+    <div class="card-title">Preparation</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.5">Syringe driver (50 ml) or pre-mixed 0.1% bag — based on infusion settings above</div>
+    <div id="lidoiv-prep-result" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+
   <div class="disc-footer">
     <div class="footer" style="text-align:left">Oxford Handbook of Anaesthesia · Verify locally</div>
     <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
@@ -2418,6 +2425,69 @@ function calcLidoIV() {
   iHtml += lidoIVRow('Dose delivered', infMgHr.toFixed(1), 'mg/hr', `${(infMgHr/60).toFixed(2)} mg/min`);
   iHtml += lidoIVRow('mg/kg/hr check', lidoInfRate.toFixed(1), 'mg/kg/hr', '');
   document.getElementById('lidoiv-inf-result').innerHTML = iHtml;
+
+  // Preparation
+  const syringeVol = 50;
+  const stocks = [{conc:2, label:'2%'}, {conc:1, label:'1%'}];
+  const bagConc = 0.1; // % → 1 mg/ml
+
+  function prepRow(label, val, unit) {
+    return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-top:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--sub2)">${label}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${val} <span style="font-size:10.5px;font-weight:400;color:var(--sub2)">${unit}</span></span>
+    </div>`;
+  }
+
+  let pHtml = '';
+
+  // ── Syringe driver ──
+  pHtml += `<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--sub2);margin-bottom:6px">50 ml syringe driver · ${lidoInfConc}%</div>`;
+  pHtml += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">`;
+  stocks.forEach(s => {
+    const volStock = (lidoInfConc / s.conc) * syringeVol;
+    const volSaline = syringeVol - volStock;
+    const runMlHr = infMgHr / (lidoInfConc * 10);
+    const durH = syringeVol / runMlHr;
+    pHtml += `<div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:11px;font-weight:600;color:var(--sub2);margin-bottom:8px">Using ${s.label} lidocaine</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums">${volStock.toFixed(1)} ml</div><div style="font-size:10px;color:var(--sub2)">${s.label} lidocaine</div></div>
+        ${volSaline > 0.05 ? `<div style="font-size:16px;color:var(--sub2)">+</div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--sub);font-variant-numeric:tabular-nums">${volSaline.toFixed(1)} ml</div><div style="font-size:10px;color:var(--sub2)">0.9% NaCl</div></div>
+        <div style="font-size:16px;color:var(--sub2)">=</div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--green)">50 ml</div><div style="font-size:10px;color:var(--sub2)">${lidoInfConc}% solution</div></div>` : `<div style="font-size:16px;color:var(--sub2)">=</div><div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--green)">Undiluted</div><div style="font-size:10px;color:var(--sub2)">${lidoInfConc}% ready to use</div></div>`}
+      </div>
+      ${prepRow('Run at', runMlHr.toFixed(1), 'ml/hr')}
+      ${prepRow('Syringe lasts', durH.toFixed(1), 'hr at this rate')}
+    </div>`;
+  });
+  pHtml += `</div>`;
+
+  // ── 0.1% pre-mixed bag ──
+  const bagMlHr = infMgHr / (bagConc * 10);
+  const vol500dur = (500 / bagMlHr).toFixed(1);
+  const vol250dur = (250 / bagMlHr).toFixed(1);
+  // How to make a 500ml 0.1% bag from 2% stock:
+  // 0.1% of 500ml = 500mg; from 2% → 500/20 = 25ml of 2% into 475ml saline
+  const makeFrom2pct500 = (bagConc / 2 * 500).toFixed(1);
+  const salineFor500 = (500 - parseFloat(makeFrom2pct500)).toFixed(1);
+
+  pHtml += `<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--sub2);margin-bottom:6px">Pre-mixed 0.1% bag · volumetric pump</div>`;
+  pHtml += `<div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+    <div style="font-size:11px;font-weight:600;color:var(--sub2);margin-bottom:8px">0.1% lidocaine = 1 mg/ml</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span style="font-size:12px;color:var(--text);font-weight:600">Pump rate (${lidoInfRate} mg/kg/hr)</span>
+      <span style="font-size:22px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums">${bagMlHr.toFixed(1)} <span style="font-size:11px;font-weight:500;color:var(--sub2)">ml/hr</span></span>
+    </div>
+    ${prepRow('500 ml bag lasts', vol500dur, 'hr')}
+    ${prepRow('250 ml bag lasts', vol250dur, 'hr')}
+    <div style="margin-top:8px;padding:8px 10px;background:rgba(96,165,250,.07);border-radius:6px;border:1px solid rgba(96,165,250,.15)">
+      <div style="font-size:10px;font-weight:600;color:var(--blue);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">To make a 500 ml 0.1% bag from 2%</div>
+      <div style="font-size:11.5px;color:var(--sub);line-height:1.6">Remove <strong style="color:var(--text)">${makeFrom2pct500} ml</strong> from a 500 ml saline bag, then add <strong style="color:var(--text)">${makeFrom2pct500} ml</strong> of 2% lidocaine</div>
+    </div>
+  </div>`;
+
+  document.getElementById('lidoiv-prep-result').innerHTML = pHtml;
 }
 
 // ═══════════════════════════════════════════════════════════
