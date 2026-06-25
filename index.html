@@ -3547,8 +3547,12 @@ function calcAdrAdd() {
   // mcg/ml for target: 1:200,000 = 5 mcg/ml; formula: 1,000,000 / (adrTarget * 1000) = 1000 / adrTarget
   const mcgPerMl = 1000 / adrTarget;
   const totalMcg = vol * mcgPerMl;
-  const stockMl = totalMcg / 1000; // 1:1000 adrenaline = 1 mg/ml = 1000 mcg/ml
-  el.innerHTML = `Add <strong style="color:var(--text);font-size:14px">${stockMl.toFixed(2)} ml</strong> of 1:1000 adrenaline&nbsp;(${totalMcg.toFixed(0)}&thinsp;mcg) to ${vol.toFixed(0)}&thinsp;ml LA<br><span style="font-size:10px;color:var(--sub2)">Stock 1:1000 = 1&thinsp;mg/ml = 1000&thinsp;mcg/ml · Total volume increases by ${stockMl.toFixed(2)}&thinsp;ml</span>`;
+  const stockMl1k  = totalMcg / 1000;  // 1:1,000  = 1 mg/ml    = 1000 mcg/ml
+  const stockMl10k = totalMcg / 100;   // 1:10,000 = 0.1 mg/ml  = 100 mcg/ml
+  el.innerHTML = `
+    <div style="margin-bottom:4px">Add <strong style="color:var(--text);font-size:14px">${stockMl1k.toFixed(2)} ml</strong> of <strong style="color:var(--text)">1:1,000</strong> adrenaline&nbsp;(${totalMcg.toFixed(0)}&thinsp;mcg) to ${vol.toFixed(0)}&thinsp;ml LA</div>
+    <div style="margin-bottom:6px">or <strong style="color:var(--text);font-size:14px">${stockMl10k.toFixed(2)} ml</strong> of <strong style="color:var(--text)">1:10,000</strong> adrenaline&nbsp;(${totalMcg.toFixed(0)}&thinsp;mcg) to ${vol.toFixed(0)}&thinsp;ml LA</div>
+    <span style="font-size:10px;color:var(--sub2)">1:1,000 = 1&thinsp;mg/ml = 1000&thinsp;mcg/ml · 1:10,000 = 0.1&thinsp;mg/ml = 100&thinsp;mcg/ml · Volume increase as stated above</span>`;
 }
 function adrRatioLabel(mcgPerMl) {
   const known = [[10,'1:100,000'],[5,'1:200,000'],[2.5,'1:400,000'],[12.5,'1:80,000']];
