@@ -410,6 +410,7 @@ tbody td:not(:first-child){text-align:right}
         <button class="tbtn" id="tb300" onclick="setRopi(300)">300 mg</button>
       </div>
     </div>
+    <div id="ropiNote" style="display:none;font-size:10px;color:var(--sub);padding:4px 10px 2px;line-height:1.5"></div>
     <div class="row-btns">
       <button class="btn-add" onclick="addDrug(false)">+ Add Drug</button>
       <button class="btn-add" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:var(--amber)" onclick="addDrug(true)">+ Prior LA</button>
@@ -794,6 +795,63 @@ tbody td:not(:first-child){text-align:right}
   <div class="card">
     <div class="card-title">Quick Presets</div>
     <div style="display:flex;flex-direction:column;gap:6px" id="dil-presets"></div>
+  </div>
+
+  <!-- ADRENALINE CALCULATOR -->
+  <div class="card">
+    <div class="card-title">Adrenaline Calculator</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:14px;line-height:1.4">Add adrenaline to plain LA, or calculate the resulting concentration when mixing solutions with different adrenaline strengths.</div>
+
+    <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Add to Plain LA</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">LA volume</span>
+        <input type="number" id="adr-add-vol" min="1" max="500" step="1" placeholder="e.g. 20" inputmode="decimal" oninput="calcAdrAdd()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Target</span>
+        <div class="toggle-btns">
+          <button class="tbtn" id="adrT100" onclick="setAdrTarget(100)">1:100k</button>
+          <button class="tbtn active" id="adrT200" onclick="setAdrTarget(200)">1:200k</button>
+          <button class="tbtn" id="adrT400" onclick="setAdrTarget(400)">1:400k</button>
+        </div>
+      </div>
+    </div>
+    <div id="adr-add-result" style="font-size:12.5px;color:var(--sub);line-height:1.6;min-height:18px"></div>
+
+    <div style="border-top:1px solid var(--border);margin:14px 0"></div>
+
+    <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Mix Two Solutions</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.4">e.g. 10 ml 1% + 1:200k &amp; 10 ml 2% plain → 1.5% + 1:400k</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Solution A</span>
+        <input type="number" id="adr-mix-vola" min="0" max="500" step="1" placeholder="ml" inputmode="decimal" oninput="calcAdrMix()"
+          style="width:64px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+        <select id="adr-mix-conca" onchange="calcAdrMix()" style="flex:1;padding:5px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:11px;font-family:var(--font)">
+          <option value="0">plain</option>
+          <option value="100">1:100,000</option>
+          <option value="200" selected>1:200,000</option>
+          <option value="400">1:400,000</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Solution B</span>
+        <input type="number" id="adr-mix-volb" min="0" max="500" step="1" placeholder="ml" inputmode="decimal" oninput="calcAdrMix()"
+          style="width:64px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+        <select id="adr-mix-concb" onchange="calcAdrMix()" style="flex:1;padding:5px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:11px;font-family:var(--font)">
+          <option value="0" selected>plain</option>
+          <option value="100">1:100,000</option>
+          <option value="200">1:200,000</option>
+          <option value="400">1:400,000</option>
+        </select>
+      </div>
+    </div>
+    <div id="adr-mix-result" style="font-size:12.5px;color:var(--sub);line-height:1.6;min-height:18px"></div>
   </div>
 
   <div class="disc-footer">
@@ -1310,7 +1368,7 @@ function updateAnthroUI() {
 }
 
 function getWt(){ return Math.max(1,parseFloat(document.getElementById('wt').value)||70); }
-function setRopi(v){ ropiMax=v; document.getElementById('tb225').classList.toggle('active',v===225); document.getElementById('tb300').classList.toggle('active',v===300); calc(); }
+function setRopi(v){ ropiMax=v; document.getElementById('tb225').classList.toggle('active',v===225); document.getElementById('tb300').classList.toggle('active',v===300); updateRopiNote(); calc(); }
 
 function renderDrugs(){
   const el=document.getElementById('drugList');
@@ -1330,9 +1388,17 @@ function renderDrugs(){
     </div>`;
   }).join('');
 }
+function updateRopiNote(){
+  document.getElementById('ropiNote').textContent = ropiMax === 225
+    ? '225 mg — standard limit for peripheral nerve blocks and neuraxial use (single-shot or catheter)'
+    : '300 mg — supported for large-volume single-injection techniques (e.g. bilateral QL, FICB, tumescent infiltration). Verify against local guidelines.';
+}
 function syncRopiToggle(){
-  document.getElementById('ropiToggleRow').style.display =
-    drugs.some(e => e.did === 'ropi') ? 'flex' : 'none';
+  const has = drugs.some(e => e.did === 'ropi');
+  document.getElementById('ropiToggleRow').style.display = has ? 'flex' : 'none';
+  const n = document.getElementById('ropiNote');
+  n.style.display = has ? 'block' : 'none';
+  if (has) updateRopiNote();
 }
 const DEF_CONCS = {lido_p:1, lido_a2:1, lido_a4:1, ropi:0.75};
 function defConc(d){ return DEF_CONCS[d.id] ?? d.concs[0]; }
@@ -2684,6 +2750,51 @@ function initDilPresets() {
   document.getElementById('dil-presets').innerHTML = DIL_PRESETS.map(p =>
     `<button onclick='applyDilPreset(${JSON.stringify(p)})' style="text-align:left;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11.5px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">${p.label}</button>`
   ).join('');
+}
+
+// ── ADRENALINE CALCULATOR ─────────────────────────────────────────────────
+let adrTarget = 200; // thousands — 200 = 1:200,000
+function setAdrTarget(v) {
+  adrTarget = v;
+  [100, 200, 400].forEach(x => document.getElementById('adrT' + x).classList.toggle('active', x === v));
+  calcAdrAdd();
+}
+function calcAdrAdd() {
+  const vol = parseFloat(document.getElementById('adr-add-vol').value);
+  const el = document.getElementById('adr-add-result');
+  if (isNaN(vol) || vol <= 0) { el.innerHTML = ''; return; }
+  // mcg/ml for target: 1:200,000 = 5 mcg/ml; formula: 1,000,000 / (adrTarget * 1000) = 1000 / adrTarget
+  const mcgPerMl = 1000 / adrTarget;
+  const totalMcg = vol * mcgPerMl;
+  const stockMl = totalMcg / 1000; // 1:1000 adrenaline = 1 mg/ml = 1000 mcg/ml
+  el.innerHTML = `Add <strong style="color:var(--text);font-size:14px">${stockMl.toFixed(2)} ml</strong> of 1:1000 adrenaline&nbsp;(${totalMcg.toFixed(0)}&thinsp;mcg) to ${vol.toFixed(0)}&thinsp;ml LA<br><span style="font-size:10px;color:var(--sub2)">Stock 1:1000 = 1&thinsp;mg/ml = 1000&thinsp;mcg/ml · Total volume increases by ${stockMl.toFixed(2)}&thinsp;ml</span>`;
+}
+function adrRatioLabel(mcgPerMl) {
+  const known = [[10,'1:100,000'],[5,'1:200,000'],[2.5,'1:400,000'],[12.5,'1:80,000']];
+  const hit = known.find(([m]) => Math.abs(mcgPerMl - m) < 0.01);
+  if (hit) return hit[1];
+  const r = Math.round(1e6 / mcgPerMl);
+  return '1:' + r.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function calcAdrMix() {
+  const volA = parseFloat(document.getElementById('adr-mix-vola').value);
+  const volB = parseFloat(document.getElementById('adr-mix-volb').value);
+  const ratioA = parseInt(document.getElementById('adr-mix-conca').value); // 0=plain,100,200,400
+  const ratioB = parseInt(document.getElementById('adr-mix-concb').value);
+  const el = document.getElementById('adr-mix-result');
+  if (isNaN(volA) || isNaN(volB)) { el.innerHTML = ''; return; }
+  const totalVol = volA + volB;
+  if (totalVol <= 0) { el.innerHTML = ''; return; }
+  const mcgA = ratioA === 0 ? 0 : volA * (1000 / ratioA);
+  const mcgB = ratioB === 0 ? 0 : volB * (1000 / ratioB);
+  const totalMcg = mcgA + mcgB;
+  if (totalMcg === 0) {
+    el.innerHTML = `<span style="color:var(--sub2)">Both plain — no adrenaline in mixture</span>`;
+    return;
+  }
+  const finalMcgPerMl = totalMcg / totalVol;
+  const label = adrRatioLabel(finalMcgPerMl);
+  el.innerHTML = `Total <strong style="color:var(--text)">${totalVol.toFixed(0)} ml</strong> · Adrenaline <strong style="color:var(--text)">${label}</strong> (${finalMcgPerMl.toFixed(2)}&thinsp;mcg/ml · ${totalMcg.toFixed(0)}&thinsp;mcg total)`;
 }
 
 // ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
