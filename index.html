@@ -334,7 +334,7 @@ tbody td:not(:first-child){text-align:right}
   <button class="tab-btn" onclick="showTab('afoi',this)">🫁 AFOi</button>
   <button class="tab-btn" onclick="showTab('lidoiv',this)">💧 Lido IV</button>
   <button class="tab-btn" onclick="showTab('dilutions',this)">🧪 Dilutions</button>
-  <button class="tab-btn" onclick="showTab('obs',this)">🤱 Obs</button>
+  <button class="tab-btn" onclick="showTab('obs',this)">🫀 Obs</button>
 </div>
 
 <!-- SHARED ANTHROPOMETRICS PANEL (shared across all tabs) -->
@@ -872,7 +872,7 @@ tbody td:not(:first-child){text-align:right}
 
   <div class="hdr">
     <div class="hdr-left">
-      <div class="hdr-icon" style="background:linear-gradient(135deg,#ec4899,#a855f7)">🤱</div>
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#ec4899,#a855f7)">🫀</div>
       <h1>Obstetrics</h1>
     </div>
     <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
@@ -2155,6 +2155,17 @@ function openSources(){
 <ol>
   <li><strong><a href="https://www.nysora.com/topics/pharmacology/clinical-pharmacology-local-anesthetics/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">NYSORA — Clinical Pharmacology of Local Anesthetics ↗</a></strong><br>Hadzic A (ed.). Volumes, concentrations, and expected durations for individual nerve blocks.</li>
   <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/11945112/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Bardsley H et al. — Cardiac and CNS toxicity of levobupivacaine ↗</a></strong><br><em>Drug Safety</em> 2002; 25(3): 153–163. Evidence basis for preferring levobupivacaine at vascular-adjacent blocks.</li>
+</ol>
+<hr>
+<h3>Obstetric spinal &amp; epidural anaesthesia</h3>
+<ol>
+  <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/Epidural%20top-up%20for%20emergency%20LSCS%20protocol.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Epidural Top-up for Emergency LSCS ↗</a></strong><br>Obstetric Anaesthetists' Association. Levo 0.5% + lido 2% standard recipe; onset to T4; dose guidance.</li>
+  <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/OAA%20resources/OAA_Spinal_for_Elective_CS_Protocol_2019.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Spinal Anaesthesia for Caesarean Section ↗</a></strong><br>Obstetric Anaesthetists' Association, 2019. Bupivacaine heavy 0.5% dosing (1.6–2.5 ml); intrathecal adjuvants including diamorphine 300 mcg.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/23661490/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sng BL et al. — Intrathecal diamorphine dose for CS: systematic review ↗</a></strong><br><em>Anaesthesia</em> 2013; 68(7): 732–741. Meta-analysis supporting 300 mcg as optimal dose balancing analgesia with PONV/itch.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/29224958/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sultan P et al. — Intrathecal morphine for CS: systematic review ↗</a></strong><br><em>BJA</em> 2019; 122(1): e23–e35. Evidence for morphine PF 100–150 mcg; monitoring requirements (12–24 h).</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/8214480/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Chestnut DH et al. — Alkalinised lidocaine epidural top-up for urgent CS ↗</a></strong><br><em>Anesthesiology</em> 1993; 79(5): 1054–1060. Alkalinisation with NaHCO₃ reduces pH and accelerates epidural lidocaine onset; do not mix with bupivacaine (precipitation).</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/9118730/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Siddik SM et al. — NaHCO₃ with lidocaine for epidural anaesthesia in CS ↗</a></strong><br><em>Acta Anaesthesiologica Scandinavica</em> 1997; 41(1): 75–79. Fizzy mix composition; onset advantage vs plain lidocaine.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/16430477/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Stocks GM et al. — Block height and epidural top-up volume for conversion to surgical anaesthesia ↗</a></strong><br><em>International Journal of Obstetric Anesthesia</em> 2006. Relationship between pre-existing epidural block height and epidural top-up volume required; risk of high spinal extension.</li>
 </ol>`;
 }
 function closeSources(){document.getElementById('sourcesModal').classList.remove('open');document.body.style.overflow='';}
