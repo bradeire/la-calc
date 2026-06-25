@@ -2386,20 +2386,32 @@ async function doExportPNG() {
 // Select-all on focus for every number input (current and future, including dynamically rendered)
 // setTimeout defers select() until after iOS Safari finishes its focus handling
 document.addEventListener('focus', e => { if(e.target.type === 'number') setTimeout(() => e.target.select(), 0); }, true);
-function syncWtMirror(el) {
-  const wt = document.getElementById('wt');
-  wt.value = el.value;
-  wt.dispatchEvent(new Event('input'));
-}
-document.getElementById('wt').addEventListener('input', () => {
-  const v = document.getElementById('wt').value || '70';
-  document.querySelectorAll('.wt-mirror').forEach(m => { m.value = v; });
+function runWtCalcs() {
   selAdditives.forEach(id => refreshAdd(id));
   updateAnthroUI();
   calc();
   calcAFOi();
   calcLidoIV();
   calcObsTracker();
+}
+function syncWtMirror(triggerEl) {
+  // Parse the raw value — number inputs return "" for incomplete entries like "81."
+  // so we skip syncing until a valid number is complete, but still run calcs so
+  // the display stays live using the last valid #wt value.
+  const n = parseFloat(triggerEl.value);
+  if (!isNaN(n) && n >= 1 && n <= 250) {
+    document.getElementById('wt').value = n;
+    // Update every OTHER mirror — never overwrite the element being typed into
+    // (overwriting it would reset the cursor and break mid-decimal entry)
+    document.querySelectorAll('.wt-mirror').forEach(m => { if (m !== triggerEl) m.value = n; });
+  }
+  runWtCalcs();
+}
+document.getElementById('wt').addEventListener('input', () => {
+  // Blocks tab #wt changed — push to all mirrors
+  const v = parseFloat(document.getElementById('wt').value);
+  if (!isNaN(v) && v >= 1) document.querySelectorAll('.wt-mirror').forEach(m => { m.value = v; });
+  runWtCalcs();
 });
 buildAdditives();
 updateAnthroUI();
