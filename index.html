@@ -894,7 +894,7 @@ tbody td:not(:first-child){text-align:right}
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Bupivacaine</span>
         <div class="toggle-btns">
-          <button class="tbtn active" id="obsSpHeavy" onclick="setObsSpDrug('heavy')">Heavy 0.5%</button>
+          <button class="tbtn" id="obsSpHeavy" onclick="setObsSpDrug('heavy')">Heavy 0.5%</button>
           <button class="tbtn" id="obsSpPlain" onclick="setObsSpDrug('plain')">Plain 0.5%</button>
         </div>
       </div>
@@ -904,12 +904,12 @@ tbody td:not(:first-child){text-align:right}
         <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
           <button class="tbtn" id="obsSpV16" onclick="setObsSpVol(1.6)">1.6</button>
           <button class="tbtn" id="obsSpV18" onclick="setObsSpVol(1.8)">1.8</button>
-          <button class="tbtn active" id="obsSpV20" onclick="setObsSpVol(2.0)">2.0</button>
+          <button class="tbtn" id="obsSpV20" onclick="setObsSpVol(2.0)">2.0</button>
           <button class="tbtn" id="obsSpV22" onclick="setObsSpVol(2.2)">2.2</button>
           <button class="tbtn" id="obsSpV23" onclick="setObsSpVol(2.3)">2.3</button>
           <button class="tbtn" id="obsSpV25" onclick="setObsSpVol(2.5)">2.5</button>
         </div>
-        <input type="number" id="obsSpVolInput" min="0.5" max="5" step="0.1" value="2.0" inputmode="decimal"
+        <input type="number" id="obsSpVolInput" min="0.5" max="5" step="0.1" value="" inputmode="decimal"
           oninput="setObsSpVolCustom(parseFloat(this.value))"
           style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
         <span style="font-size:11px;color:var(--sub2)">ml</span>
@@ -3155,7 +3155,7 @@ function initDilPresets() {
 // OBS TAB
 // ═══════════════════════════════════════════════════════════
 
-const obsSp  = { drug:'heavy', vol:2.0 };
+const obsSp  = { drug:null, vol:null };
 const obsSpAdj = {
   excl: 'diamorphine', // 'none' | 'diamorphine'
   morphinePF: false,
@@ -3350,11 +3350,14 @@ function toggleObsTrk(k) {
 function calcObs() { calcObsSpinal(); calcObsTopup(); calcObsEpi(); calcObsTracker(); }
 
 function clearObsSp() {
-  setObsSpDrug('heavy');
-  setObsSpVol(2.0);
-  setObsSpAdjExcl('diamorphine');
+  obsSp.drug = null; obsSp.vol = null;
+  document.getElementById('obsSpHeavy').classList.remove('active');
+  document.getElementById('obsSpPlain').classList.remove('active');
+  ['16','18','20','22','23','25'].forEach(x => { const el=document.getElementById('obsSpV'+x); if(el) el.classList.remove('active'); });
+  document.getElementById('obsSpVolInput').value = '';
+  setObsSpAdjExcl('none');
   document.getElementById('obs-sp-result').innerHTML = '';
-  calcObsSpinal();
+  calcObsTracker();
 }
 function clearObsTop() {
   setObsTopRecipe('levoLido');
@@ -3380,6 +3383,7 @@ function clearObsEpi() {
 
 function calcObsSpinal() {
   const el = document.getElementById('obs-sp-result'); if(!el) return;
+  if(!obsSp.drug || !obsSp.vol) { el.innerHTML=''; calcObsTracker(); return; }
   const mg = obsSp.vol * 5;
   const drugLabel = obsSp.drug==='heavy' ? 'Heavy bupivacaine 0.5% (hyperbaric)' : 'Plain bupivacaine 0.5%';
   let adjLines=[], notes=[];
@@ -3461,7 +3465,7 @@ function calcObsTracker() {
   const lidoEpiMax = Math.min(calcEffectiveWt() * 5, 400);
 
   let bupiMg=0, levoMg=0, lidoPMg=0, lidoAMg=0, ropiMgT=0;
-  if(obsTrk.spinal) bupiMg += obsSp.vol * 5;
+  if(obsTrk.spinal && obsSp.vol) bupiMg += obsSp.vol * 5;
   if(obsTrk.topup) {
     const r=obsTop.recipe;
     if(r==='levoLido') {
@@ -3527,7 +3531,6 @@ function calcObsTracker() {
 // Init obs tab
 function initObs() {
   updateObsSpAdjUI();
-  setObsSpVol(2.0);
   setObsTopRecipe('levoLido');
   setObsBlockHeight('none');
   calcObs();
