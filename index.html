@@ -1181,6 +1181,9 @@ tbody td:not(:first-child){text-align:right}
     </div>
 
     <div id="obs-tracker-result"></div>
+    <div style="margin-top:10px">
+      <button onclick="obsToBlocks()" style="font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:var(--rsm);border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:var(--blue);font-family:var(--font);cursor:pointer">→ Send to Blocks</button>
+    </div>
   </div>
 
   <div class="disc-footer">
@@ -1707,7 +1710,7 @@ function renderDrugs(){
     const dOpts=DRUGS.map(x=>`<option value="${x.id}"${x.id===e.did?' selected':''}>${x.label} (${x.sub})</option>`).join('');
     const cOpts=d.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
     const priorClass = e.prior ? ' prior' : '';
-    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : '⏱ Prior (by others)'}</div>` : '';
+    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : e.obsSource ? '🍼 Obstetric LA (transferred)' : '⏱ Prior (by others)'}</div>` : '';
     return `<div class="drug-row${priorClass}">
       ${priorLabel}
       <select class="f-select" onchange="onDrug(${e.id},this.value)">${dOpts}</select>
@@ -1835,8 +1838,7 @@ function calc(){
     const d=DRUGS.find(x=>x.id===e.did);if(!d)continue;
     const mg=e.conc*10*e.vol;
     totalMg+=mg;
-    // AFOi topical lidocaine uses 9 mg/kg topical ceiling, not infiltration ceiling
-    const eMax = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d,wt);
+    const eMax = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d,wt);
     totalFrac+=eMax>0?mg/eMax:0;
     given[d.id]=(given[d.id]||0)+mg;
   }
@@ -2639,7 +2641,7 @@ function openWorkings() {
   for (const e of drugs) {
     const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
     const mg = e.conc * 10 * e.vol;
-    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
     rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource });
@@ -2674,7 +2676,7 @@ function openWorkings() {
       const pedMos = getAgeMonths();
       const isPed = eff.pedMode && pedMos !== null;
       html += `<div class="work-drug-block${r.prior ? ' work-prior' : ''}">`;
-      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : '⏱ Prior (by others)'}</div>`;
+      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : r.obsSource ? '🍼 Obstetric LA (transferred)' : '⏱ Prior (by others)'}</div>`;
       html += `<div class="work-drug-name">${r.d.label} <span style="font-size:11px;color:var(--sub2);font-weight:400">${r.d.sub}</span></div>`;
       if (isPed) {
         html += `<div class="work-note" style="margin-bottom:4px;color:var(--purple)">⚠ Paediatric ceiling applied (${eff.pedMode})</div>`;
@@ -2732,7 +2734,7 @@ function doPrint(suppressPrint = false) {
   for (const e of drugs) {
     const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
     const mg = e.conc * 10 * e.vol;
-    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
     drugRows.push({ d, e, mg, max, frac });
@@ -2817,7 +2819,7 @@ function doPrint(suppressPrint = false) {
       const dc = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#16a34a';
       const bg = pd >= 100 ? '#fef2f2' : pd >= 80 ? '#fffbeb' : '#fff';
       const borderL = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#d1fae5';
-      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : '⏱ Prior') : '';
+      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : r.e.obsSource ? '🍼 Obs' : '⏱ Prior') : '';
       const barW = Math.min(100, pd);
       html += `<tr style="border-bottom:1px solid #f3f4f6;background:${bg}">
         <td style="padding:10px 14px;border-left:3px solid ${borderL}">
@@ -2906,6 +2908,48 @@ function doPrint(suppressPrint = false) {
 }
 
 // ── AFOi → BLOCKS BRIDGE ──────────────────────────────────────────────────
+function obsToBlocks() {
+  const wt = getWt();
+  const lidoEpiMax = Math.min(wt * 5, 400);
+  const entries = [];
+
+  if(obsTrk.spinal && obsSp.vol) {
+    entries.push({ did:'bupi_p', conc:0.5, mg:obsSp.vol * 5 });
+  }
+  if(obsTrk.topup) {
+    const r = obsTop.recipe;
+    if(r === 'levoLido') {
+      if(obsTop.levoVol > 0) entries.push({ did:'levo_p', conc:0.5, mg:obsTop.levoVol * 5 });
+      if(obsTop.lidoVol > 0) {
+        if(obsTop.lidoAdr) entries.push({ did:'lido_a2', conc:2, mg:obsTop.lidoVol * 20 });
+        else entries.push({ did:'lido_p', conc:2, mg:obsTop.lidoVol * 20, obsMax:lidoEpiMax });
+      }
+    } else if(r === 'levoOnly') {
+      if(obsTop.loVol > 0) entries.push({ did:'levo_p', conc:0.5, mg:obsTop.loVol * 5 });
+    } else if(r === 'fizzy') {
+      entries.push({ did:'lido_a2', conc:2, mg:340 });
+    } else if(r === 'ropi') {
+      if(obsTop.ropiVol > 0) entries.push({ did:'ropi', conc:obsTop.ropiConc, mg:obsTop.ropiVol * obsTop.ropiConc * 10 });
+    }
+  }
+  if(obsTrk.epi && obsEpi.totalVol) {
+    const mix = OBS_EPI_MIXES[obsEpi.mix];
+    const mg = obsEpi.totalVol * mix.concPct * 10;
+    entries.push({ did: obsEpi.mix === '01bupi' ? 'bupi_p' : 'levo_p', conc: mix.concPct * 100, mg });
+  }
+
+  if(entries.length === 0) { alert('No LA doses recorded in the tracker. Enable sources and enter values first.'); return; }
+
+  for(const e of entries) {
+    const vol = parseFloat((e.mg / (e.conc * 10)).toFixed(1));
+    const entry = { id:uid++, did:e.did, conc:e.conc, vol, prior:true, obsSource:true };
+    if(e.obsMax) entry.obsMax = e.obsMax;
+    drugs.push(entry);
+  }
+  renderDrugs(); syncRopiToggle(); calc();
+  showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
+}
+
 function afoiToBlocks() {
   // Always use FULL administered dose regardless of bioavailability setting — conservative for safety
   let fullDose = 0;
