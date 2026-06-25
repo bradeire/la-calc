@@ -540,6 +540,7 @@ tbody td:not(:first-child){text-align:right}
     <div class="footer" style="text-align:left">Literature doses · verify locally · 6 h window</div>
     <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
   <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
 </div>
@@ -641,6 +642,7 @@ tbody td:not(:first-child){text-align:right}
     <div class="footer" style="text-align:left">Topical max: 9 mg/kg · Verify locally</div>
     <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
   <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
 </div>
@@ -890,6 +892,20 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div class="modal-body" style="padding:14px 16px 28px">
       <div class="disclaimer-body" id="changelogBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SOURCES MODAL -->
+<div class="modal-backdrop" id="sourcesModal" onclick="onSourcesBgClick(event)">
+  <div class="modal-sheet" style="max-height:92vh;max-height:92dvh">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <span class="modal-title">📚 Sources &amp; Citations</span>
+      <button class="modal-close" onclick="closeSources()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:14px 16px 28px">
+      <div class="disclaimer-body" id="sourcesBody"></div>
     </div>
   </div>
 </div>
@@ -1699,6 +1715,50 @@ function openDisclaimer(){
 }
 function closeDisclaimer(){document.getElementById('disclaimerModal').classList.remove('open');document.body.style.overflow='';}
 function onDiscModalBgClick(e){if(e.target===document.getElementById('disclaimerModal'))closeDisclaimer();}
+
+function openSources(){
+  document.getElementById('sourcesModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('sourcesBody').innerHTML=`
+<h3>Local anaesthetic toxicity &amp; maximum doses</h3>
+<ol>
+  <li><strong><a href="https://anaesthetists.org/Home/Resources-publications/Guidelines/Archived-guidelines/Management-of-severe-local-anaesthetic-toxicity" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">AAGBI Safety Guideline — Management of Severe Local Anaesthetic Toxicity ↗</a></strong><br>Association of Anaesthetists of Great Britain &amp; Ireland, 2010. Primary source for maximum mg/kg dose limits used throughout LASTCalc.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/30122981/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">El-Boghdadly K et al. — Local anaesthetic systemic toxicity: current perspectives ↗</a></strong><br><em>Local and Regional Anesthesia</em> 2018; 11: 35–44. Fractional dose mixture rationale and clinical risk stratification.</li>
+</ol>
+<hr>
+<h3>AFOi topical lidocaine ceiling (9 mg/kg)</h3>
+<ol>
+  <li><strong><a href="https://das.uk.com/guidelines/das-guidelines-for-awake-tracheal-intubation-ati-in-adults/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">DAS Guidelines for awake tracheal intubation in adults ↗</a></strong><br>Difficult Airway Society, <em>Anaesthesia</em> 2020; 75: 509–528. Source for 9 mg/kg topical lidocaine ceiling.</li>
+  <li><strong><a href="https://academic.oup.com/bja/article/95/4/549/302696" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Williams KA, Woodall NM et al. — Combined nebulisation and spray-as-you-go topical LA ↗</a></strong><br><em>BJA</em> 2005; 95(4): 549–553. Demonstrated 9 mg/kg topical lidocaine does not produce toxic plasma concentrations.</li>
+</ol>
+<hr>
+<h3>Obesity-adjusted dosing</h3>
+<ol>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/16176118/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Janmahasatian M et al. — Quantification of lean bodyweight ↗</a></strong><br><em>Clinical Pharmacokinetics</em> 2005; 44(10): 1051–1065. Formula used to calculate LBW when BMI ≥ 30.</li>
+  <li><strong>Devine BJ — Ideal Body Weight formula</strong><br><em>Drug Intelligence &amp; Clinical Pharmacy</em> 1974; 8: 650–655. IBW formula used in LASTCalc.</li>
+</ol>
+<hr>
+<h3>Paediatric dosing</h3>
+<ol>
+  <li><strong><a href="https://bnfc.nice.org.uk/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">BNF for Children — Local anaesthetics ↗</a></strong><br>Current edition. Age-banded maximum dose ceilings for neonates, infants, and children.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/29319604/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Suresh S et al. (ESRA/ASRA) — Recommendations on LA dosage in paediatric regional anaesthesia ↗</a></strong><br><em>Regional Anesthesia and Pain Medicine</em> 2018; 43(2): 211–216.</li>
+</ol>
+<hr>
+<h3>IV lidocaine infusion</h3>
+<ol>
+  <li><strong><a href="https://www.bjaed.org/article/S2058-5349(17)30039-2/fulltext" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Eipe N et al. — Intravenous lidocaine for acute pain: an evidence-based clinical update ↗</a></strong><br><em>BJA Education</em> 2016; 16(9): 292–298. Bolus 1–2 mg/kg, infusion 0.5–3 mg/kg/hr.</li>
+  <li><strong><a href="https://www.bjanaesthesia.org.uk/article/S0007-0912(17)30243-X/fulltext" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Weibel S et al. — Efficacy and safety of IV lidocaine for postoperative analgesia ↗</a></strong><br><em>BJA</em> 2018; 120(6): 1215–1226. Meta-analysis supporting use in abdominal and laparoscopic surgery.</li>
+  <li><strong><a href="https://www.researchgate.net/publication/345308265" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Foo I et al. — International consensus statement on IV lidocaine ↗</a></strong><br><em>BJA</em> 2021; 126(1): 24–36. Endorsed by ESRA, ASRA, APA, and ESAIC.</li>
+</ol>
+<hr>
+<h3>Nerve block volumes &amp; drug selection</h3>
+<ol>
+  <li><strong><a href="https://www.nysora.com/topics/pharmacology/clinical-pharmacology-local-anesthetics/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">NYSORA — Clinical Pharmacology of Local Anesthetics ↗</a></strong><br>Hadzic A (ed.). Volumes, concentrations, and expected durations for individual nerve blocks.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/11945112/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Bardsley H et al. — Cardiac and CNS toxicity of levobupivacaine ↗</a></strong><br><em>Drug Safety</em> 2002; 25(3): 153–163. Evidence basis for preferring levobupivacaine at vascular-adjacent blocks.</li>
+</ol>`;
+}
+function closeSources(){document.getElementById('sourcesModal').classList.remove('open');document.body.style.overflow='';}
+function onSourcesBgClick(e){if(e.target===document.getElementById('sourcesModal'))closeSources();}
 
 function openChangelog(){
   document.getElementById('changelogModal').classList.add('open');
