@@ -49,7 +49,7 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .hdr h1{font-size:15px;font-weight:700;letter-spacing:-.3px;background:linear-gradient(90deg,#f9fafb,#9ca3af);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .wt-pill{display:flex;align-items:center;gap:6px;background:var(--s0);border:1px solid var(--border2);border-radius:99px;padding:4px 10px 4px 14px;flex-shrink:0}
 .wt-pill label{font-size:11px;font-weight:500;color:var(--sub);white-space:nowrap}
-.wt-pill input{width:44px;background:none;border:none;color:var(--text);font-family:var(--font);font-size:15px;font-weight:700;text-align:right;outline:none;-moz-appearance:textfield}
+.wt-pill input{width:34px;background:none;border:none;color:var(--text);font-family:var(--font);font-size:15px;font-weight:700;text-align:right;outline:none;-moz-appearance:textfield}
 .wt-pill input::-webkit-inner-spin-button{-webkit-appearance:none}
 .wt-unit{font-size:11px;color:var(--sub);font-weight:500}
 
@@ -276,7 +276,7 @@ tbody td:not(:first-child){text-align:right}
 #printReport { display: none; font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; color: #111; font-size: 13px; line-height: 1.5; }
 
 /* ── DISCLAIMER MODAL ── */
-.disc-footer{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:0 2px}
+.disc-footer{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;flex-shrink:0;padding:2px 2px}
 .disc-btn{background:none;border:1px solid var(--border);border-radius:99px;color:var(--sub2);font-family:var(--font);font-size:10px;font-weight:500;padding:3px 10px;cursor:pointer}
 .disc-btn:active{background:var(--s1)}
 /* Install modal */
@@ -384,6 +384,7 @@ tbody td:not(:first-child){text-align:right}
         <button class="tbtn" id="tb300" onclick="setRopi(300)">300 mg</button>
       </div>
     </div>
+    <div id="ropiNote" style="display:none;font-size:10px;color:var(--sub);padding:4px 10px 2px;line-height:1.5"></div>
     <div class="row-btns">
       <button class="btn-add" onclick="addDrug(false)">+ Add Drug</button>
       <button class="btn-add" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3);color:var(--amber)" onclick="addDrug(true)">+ Prior LA</button>
@@ -423,7 +424,10 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
-      <button class="btn-print" onclick="doPrint()">🖨 Print / Export</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
+        <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
+      </div>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
     <div class="dur-proj" id="durProj" style="display:none">
@@ -510,7 +514,7 @@ tbody td:not(:first-child){text-align:right}
   </div>
 
   <div class="disc-footer">
-    <div class="footer" style="text-align:left">Literature doses · verify locally · 6 h window</div>
+    <div class="footer" style="text-align:left;flex:1 1 auto">Literature doses · 6 h window</div>
     <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
@@ -613,7 +617,7 @@ tbody td:not(:first-child){text-align:right}
   </div>
 
   <div class="disc-footer">
-    <div class="footer" style="text-align:left">Topical max: 9 mg/kg · Verify locally</div>
+    <div class="footer" style="text-align:left;flex:1 1 auto">Topical max: 9 mg/kg · Verify locally</div>
     <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
@@ -745,19 +749,19 @@ function showTab(t, btn) {
 let ropiMax = 225;
 
 const DRUGS = [
-  {id:'lido_p',   label:'Lidocaine',       sub:'Plain',                          route:'Injectable', adr:false, concs:[0.5,1,1.5,2],        mpk:3,   abs:200, h24:null},
-  {id:'lido_a2',  label:'Lidocaine',       sub:'+ Adr 1:200,000',                route:'Injectable', adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
-  {id:'lido_a4',  label:'Lidocaine',       sub:'+ Adr 1:400,000',                route:'Injectable', adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
-  {id:'lido_mix', label:'Lidocaine 1.5%',  sub:'1% plain + 2%/1:200k → 1:400k', route:'Injectable', adr:true,  concs:[1.5],                mpk:7,   abs:500, h24:null},
-  {id:'bupi_p',   label:'Bupivacaine',     sub:'Plain',                          route:'Injectable', adr:false, concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
-  {id:'bupi_a',   label:'Bupivacaine',     sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
-  {id:'levo_p',   label:'Levobupivacaine', sub:'Plain',                          route:'Injectable', adr:false, concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
-  {id:'levo_a',   label:'Levobupivacaine', sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[0.25,0.375,0.5,0.75],      mpk:2.5, abs:150, h24:400},
-  {id:'ropi',     label:'Ropivacaine',     sub:'Plain',                          route:'Injectable', adr:false, concs:[0.2,0.375,0.5,0.6,0.75,1], mpk:3,   abs:null,h24:770},
-  {id:'prilo_p',  label:'Prilocaine',      sub:'Plain',                          route:'Injectable', adr:false, concs:[0.5,1,2,3],          mpk:6,   abs:400, h24:null},
-  {id:'prilo_a',  label:'Prilocaine',      sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[0.5,1,2,3],          mpk:8,   abs:600, h24:null},
-  {id:'mepi_p',   label:'Mepivacaine',     sub:'Plain',                          route:'Injectable', adr:false, concs:[1,1.5,2,3],          mpk:5,   abs:400, h24:null},
-  {id:'mepi_a',   label:'Mepivacaine',     sub:'+ Adrenaline',                   route:'Injectable', adr:true,  concs:[1,1.5,2,3],          mpk:7,   abs:550, h24:null},
+  {id:'lido_p',   label:'Lidocaine',       sub:'Plain',                          route:'LA injection', adr:false, concs:[0.5,1,1.5,2],        mpk:3,   abs:200, h24:null},
+  {id:'lido_a2',  label:'Lidocaine',       sub:'+ Adr 1:200,000',                route:'LA injection', adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
+  {id:'lido_a4',  label:'Lidocaine',       sub:'+ Adr 1:400,000',                route:'LA injection', adr:true,  concs:[0.5,1,1.5,2],        mpk:7,   abs:500, h24:null},
+  {id:'lido_mix', label:'Lidocaine 1.5%',  sub:'1% plain + 2%/1:200k → 1:400k', route:'LA injection', adr:true,  concs:[1.5],                mpk:7,   abs:500, h24:null},
+  {id:'bupi_p',   label:'Bupivacaine',     sub:'Plain',                          route:'LA injection', adr:false, concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'bupi_a',   label:'Bupivacaine',     sub:'+ Adrenaline',                   route:'LA injection', adr:true,  concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'levo_p',   label:'Levobupivacaine', sub:'Plain',                          route:'LA injection', adr:false, concs:[0.25,0.375,0.5,0.75],      mpk:2,   abs:150, h24:400},
+  {id:'levo_a',   label:'Levobupivacaine', sub:'+ Adrenaline',                   route:'LA injection', adr:true,  concs:[0.25,0.375,0.5,0.75],      mpk:2.5, abs:150, h24:400},
+  {id:'ropi',     label:'Ropivacaine',     sub:'Plain',                          route:'LA injection', adr:false, concs:[0.2,0.375,0.5,0.6,0.75,1], mpk:3,   abs:null,h24:770},
+  {id:'prilo_p',  label:'Prilocaine',      sub:'Plain',                          route:'LA injection', adr:false, concs:[0.5,1,2,3],          mpk:6,   abs:400, h24:null},
+  {id:'prilo_a',  label:'Prilocaine',      sub:'+ Adrenaline',                   route:'LA injection', adr:true,  concs:[0.5,1,2,3],          mpk:8,   abs:600, h24:null},
+  {id:'mepi_p',   label:'Mepivacaine',     sub:'Plain',                          route:'LA injection', adr:false, concs:[1,1.5,2,3],          mpk:5,   abs:400, h24:null},
+  {id:'mepi_a',   label:'Mepivacaine',     sub:'+ Adrenaline',                   route:'LA injection', adr:true,  concs:[1,1.5,2,3],          mpk:7,   abs:550, h24:null},
   {id:'cocaine',  label:'Cocaine',         sub:'Topical (ENT)',                   route:'Topical',    adr:false, concs:[4,5,10],             mpk:1.5, abs:150, h24:null},
 ];
 
@@ -834,7 +838,7 @@ const ADDITIVES = [
 // Dose state per additive — persists across expand/collapse
 const addDose = {
   adr:   { conc:'1:200,000', vol:20 },
-  dex:   { mg:8, route:'perineural' },
+  dex:   { mg:6, route:'perineural' },
   clon:  { mcg:100 },
   dmed:  { mode:'mpk', mpk:0.5 },   // mode: 'mpk' (mcg/kg) | 'fixed'
   bicarb:{ vol:20 },
@@ -1103,7 +1107,7 @@ function updateAnthroUI() {
 }
 
 function getWt(){ return Math.max(1,parseFloat(document.getElementById('wt').value)||70); }
-function setRopi(v){ ropiMax=v; document.getElementById('tb225').classList.toggle('active',v===225); document.getElementById('tb300').classList.toggle('active',v===300); calc(); }
+function setRopi(v){ ropiMax=v; document.getElementById('tb225').classList.toggle('active',v===225); document.getElementById('tb300').classList.toggle('active',v===300); updateRopiNote(); calc(); }
 
 function renderDrugs(){
   const el=document.getElementById('drugList');
@@ -1123,14 +1127,24 @@ function renderDrugs(){
     </div>`;
   }).join('');
 }
-function syncRopiToggle(){
-  document.getElementById('ropiToggleRow').style.display =
-    drugs.some(e => e.did === 'ropi') ? 'flex' : 'none';
+function updateRopiNote(){
+  document.getElementById('ropiNote').textContent = ropiMax === 225
+    ? '225 mg — standard limit for peripheral nerve blocks and neuraxial use (single-shot or catheter)'
+    : '300 mg — supported for large-volume single-injection techniques (e.g. bilateral QL, FICB, tumescent infiltration). Verify against local guidelines.';
 }
-function addDrug(prior=false){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();plausible('Drug Added', {props:{prior:prior?'yes':'no'}});}
+function syncRopiToggle(){
+  const has = drugs.some(e => e.did === 'ropi');
+  document.getElementById('ropiToggleRow').style.display = has ? 'flex' : 'none';
+  const n = document.getElementById('ropiNote');
+  n.style.display = has ? 'block' : 'none';
+  if (has) updateRopiNote();
+}
+const DEF_CONCS = {lido_p:1, lido_a2:1, lido_a4:1, ropi:0.75};
+function defConc(d){ return DEF_CONCS[d.id] ?? d.concs[0]; }
+function addDrug(prior=false){const d=DRUGS[0];drugs.push({id:uid++,did:d.id,conc:defConc(d),vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();plausible('Drug Added', {props:{prior:prior?'yes':'no'}});}
 function rmDrug(id){drugs=drugs.filter(e=>e.id!==id);renderDrugs();syncRopiToggle();calc();}
 function clearDrugs(){drugs=[];renderDrugs();syncRopiToggle();calc();}
-function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=d.concs[0];renderDrugs();syncRopiToggle();calc();}
+function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=defConc(d);renderDrugs();syncRopiToggle();calc();}
 function onConc(id,v){const e=drugs.find(x=>x.id===id);if(e){e.conc=parseFloat(v);calc();}}
 function onVol(id,v){const e=drugs.find(x=>x.id===id);if(e){e.vol=Math.max(0,parseFloat(v)||0);calc();}}
 
