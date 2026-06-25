@@ -453,7 +453,7 @@ tbody td:not(:first-child){text-align:right}
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
       <div style="display:flex;gap:6px">
         <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
-        <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
+        <button class="btn-png" onclick="doExportPNG()">💾 Save as PNG</button>
       </div>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
@@ -2498,12 +2498,11 @@ function applyOCRValues() {
 
 // ── PNG EXPORT ────────────────────────────────────────────────────────────
 async function doExportPNG() {
-  // Build the same report HTML as doPrint() but inject into a temp div
   const btn = document.querySelector('.btn-png');
-  btn.textContent = '⏳ Building…';
+  const origLabel = btn.textContent;
+  btn.textContent = '⏳ Generating…';
   btn.disabled = true;
 
-  // Lazy-load html2canvas
   if (!window.html2canvas) {
     await new Promise((resolve, reject) => {
       const s = document.createElement('script');
@@ -2513,24 +2512,46 @@ async function doExportPNG() {
     });
   }
 
-  // Trigger the print report build (reuses doPrint logic) into #printReport
-  doPrint(true); // pass flag to suppress window.print()
-
+  doPrint(true);
   const el = document.getElementById('printReport');
   el.style.display = 'block';
-  el.style.width = '794px'; // A4 width in px at 96dpi
+  el.style.width = '794px';
 
   try {
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' });
-    const link = document.createElement('a');
-    link.download = `LASTCalc-report-${new Date().toISOString().slice(0,10)}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const filename = `LASTCalc-report-${new Date().toISOString().slice(0,10)}.png`;
+
+    if (window.showSaveFilePicker) {
+      // Modern browsers (Chrome/Edge): show native save dialog
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      try {
+        const fh = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'PNG image', accept: { 'image/png': ['.png'] } }],
+        });
+        const writable = await fh.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        btn.textContent = '✓ Saved';
+      } catch (e) {
+        if (e.name !== 'AbortError') throw e;
+        btn.textContent = origLabel;
+      }
+    } else {
+      // Fallback: open in new tab so user can long-press / right-click → Save
+      const tab = window.open();
+      tab.document.write(`<title>${filename}</title><body style="margin:0;background:#111"><img src="${canvas.toDataURL('image/png')}" style="max-width:100%"></body>`);
+      tab.document.close();
+      btn.textContent = '✓ Opened';
+    }
+  } catch(e) {
+    console.error('PNG export failed', e);
+    btn.textContent = '✗ Error';
   } finally {
     el.style.display = 'none';
     el.style.width = '';
-    btn.textContent = '💾 PNG';
     btn.disabled = false;
+    setTimeout(() => { btn.textContent = origLabel; }, 2500);
   }
 }
 
