@@ -336,6 +336,50 @@ tbody td:not(:first-child){text-align:right}
   <button class="tab-btn" onclick="showTab('dilutions',this)">🧪 Dilutions</button>
 </div>
 
+<!-- SHARED ANTHROPOMETRICS PANEL (shared across all tabs) -->
+<div class="anthro-panel collapsed" id="anthroPanel" style="margin:0 10px">
+  <div class="card-title">Body Metrics <span style="font-weight:400;color:var(--sub2);text-transform:none;letter-spacing:0">(optional — refines dose weight)</span></div>
+  <div class="anthro-grid">
+    <div class="anthro-field">
+      <span class="anthro-label">Sex (for LBW/IBW)</span>
+      <div class="toggle-btns" style="width:fit-content">
+        <button class="tbtn active" id="sexM" onclick="setSex('M')">Male</button>
+        <button class="tbtn" id="sexF" onclick="setSex('F')">Female</button>
+      </div>
+    </div>
+    <div class="anthro-field">
+      <span class="anthro-label">Height</span>
+      <div class="vol-wrap" style="max-width:100px">
+        <input type="number" id="heightInput" inputmode="decimal" min="30" max="250" placeholder="" oninput="onAnthroChange()">
+        <span class="u">cm</span>
+      </div>
+    </div>
+    <div class="anthro-field">
+      <span class="anthro-label">Age</span>
+      <div style="display:flex;gap:4px;align-items:center">
+        <div class="vol-wrap" style="max-width:80px">
+          <input type="number" id="ageInput" inputmode="decimal" min="0" max="120" placeholder="" oninput="onAnthroChange()">
+        </div>
+        <div class="toggle-btns">
+          <button class="tbtn active" id="ageYrs" onclick="setAgeUnit('yrs')">yrs</button>
+          <button class="tbtn" id="ageMos" onclick="setAgeUnit('mos')">mos</button>
+        </div>
+      </div>
+    </div>
+    <div class="anthro-field">
+      <span class="anthro-label">BMI</span>
+      <div style="font-size:15px;font-weight:700;color:var(--text);padding:5px 0" id="bmiDisplay">—</div>
+    </div>
+  </div>
+  <div class="anthro-results" id="anthroResults"></div>
+  <div id="pedbanner"></div>
+  <button class="scan-btn" onclick="openScanner()">
+    <span>📷</span>
+    <span>Scan patient label / EPR</span>
+    <span class="scan-exp">EXPERIMENTAL</span>
+  </button>
+</div>
+
 <!-- ═══════════════════════════════════════════
      TAB 1 — BLOCKS
 ═══════════════════════════════════════════ -->
@@ -353,50 +397,6 @@ tbody td:not(:first-child){text-align:right}
       <span class="wt-unit">kg</span>
       <span id="anthroChevron" style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none;transition:transform .25s">⌄</span>
     </div>
-  </div>
-
-  <!-- ANTHROPOMETRIC EXPANSION -->
-  <div class="anthro-panel collapsed" id="anthroPanel">
-    <div class="card-title">Body Metrics <span style="font-weight:400;color:var(--sub2);text-transform:none;letter-spacing:0">(optional — refines dose weight)</span></div>
-    <div class="anthro-grid">
-      <div class="anthro-field">
-        <span class="anthro-label">Sex (for LBW/IBW)</span>
-        <div class="toggle-btns" style="width:fit-content">
-          <button class="tbtn active" id="sexM" onclick="setSex('M')">Male</button>
-          <button class="tbtn" id="sexF" onclick="setSex('F')">Female</button>
-        </div>
-      </div>
-      <div class="anthro-field">
-        <span class="anthro-label">Height</span>
-        <div class="vol-wrap" style="max-width:100px">
-          <input type="number" id="heightInput" inputmode="decimal" min="30" max="250" placeholder="" oninput="onAnthroChange()">
-          <span class="u">cm</span>
-        </div>
-      </div>
-      <div class="anthro-field">
-        <span class="anthro-label">Age</span>
-        <div style="display:flex;gap:4px;align-items:center">
-          <div class="vol-wrap" style="max-width:80px">
-            <input type="number" id="ageInput" inputmode="decimal" min="0" max="120" placeholder="" oninput="onAnthroChange()">
-          </div>
-          <div class="toggle-btns">
-            <button class="tbtn active" id="ageYrs" onclick="setAgeUnit('yrs')">yrs</button>
-            <button class="tbtn" id="ageMos" onclick="setAgeUnit('mos')">mos</button>
-          </div>
-        </div>
-      </div>
-      <div class="anthro-field">
-        <span class="anthro-label">BMI</span>
-        <div style="font-size:15px;font-weight:700;color:var(--text);padding:5px 0" id="bmiDisplay">—</div>
-      </div>
-    </div>
-    <div class="anthro-results" id="anthroResults"></div>
-    <div id="pedbanner"></div>
-    <button class="scan-btn" onclick="openScanner()">
-      <span>📷</span>
-      <span>Scan patient label / EPR</span>
-      <span class="scan-exp">EXPERIMENTAL</span>
-    </button>
   </div>
 
   <!-- DRUGS GIVEN -->
@@ -578,10 +578,11 @@ tbody td:not(:first-child){text-align:right}
       <div class="hdr-icon" style="background:linear-gradient(135deg,#0ea5e9,#6366f1)">🫁</div>
       <h1>AFOi Topical LA</h1>
     </div>
-    <div class="wt-pill">
-      <label>Wt</label>
-      <input type="number" id="afoi-wt" min="1" max="250" value="70" inputmode="decimal">
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+      <label style="cursor:pointer">Wt</label>
+      <span id="afoiWtDisplay" style="font-size:15px;font-weight:700;color:var(--text);min-width:28px;text-align:right">70</span>
       <span class="wt-unit">kg</span>
+      <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
     </div>
   </div>
 
@@ -657,10 +658,11 @@ tbody td:not(:first-child){text-align:right}
       <div class="hdr-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">💧</div>
       <h1>Lidocaine IV</h1>
     </div>
-    <div class="wt-pill">
-      <label>Wt</label>
-      <input type="number" id="lidoiv-wt" min="1" max="250" value="70" inputmode="decimal" oninput="calcLidoIV()">
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+      <label style="cursor:pointer">Wt</label>
+      <span id="lidoivWtDisplay" style="font-size:15px;font-weight:700;color:var(--text);min-width:28px;text-align:right">70</span>
       <span class="wt-unit">kg</span>
+      <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
     </div>
   </div>
 
@@ -1542,7 +1544,7 @@ const AFOI_AGENTS = [
 
 let afoiEntries=[], auid=0, bioavail='full';
 
-function getAWt(){ return Math.max(1,parseFloat(document.getElementById('afoi-wt').value)||70); }
+function getAWt(){ return getWt(); }
 
 function setBioavail(v){
   bioavail=v;
@@ -2115,11 +2117,17 @@ async function doExportPNG() {
 // setTimeout defers select() until after iOS Safari finishes its focus handling
 document.addEventListener('focus', e => { if(e.target.type === 'number') setTimeout(() => e.target.select(), 0); }, true);
 document.getElementById('wt').addEventListener('input', () => {
+  const v = document.getElementById('wt').value || '70';
+  const afoiEl = document.getElementById('afoiWtDisplay');
+  const lidoEl = document.getElementById('lidoivWtDisplay');
+  if (afoiEl) afoiEl.textContent = v;
+  if (lidoEl) lidoEl.textContent = v;
   selAdditives.forEach(id => refreshAdd(id));
   updateAnthroUI();
   calc();
+  calcAFOi();
+  calcLidoIV();
 });
-document.getElementById('afoi-wt').addEventListener('input',calcAFOi);
 buildAdditives();
 updateAnthroUI();
 calc();
@@ -2446,7 +2454,7 @@ let lidoBolusMin  = 2;    // minutes
 let lidoInfRate   = 1;    // mg/kg/hr
 let lidoInfConc   = 0.2;  // %
 
-function getLidoIVWt() { return Math.max(1, parseFloat(document.getElementById('lidoiv-wt').value) || 70); }
+function getLidoIVWt() { return getWt(); }
 
 function setBolusRate(r) {
   lidoBolusRate = r;
