@@ -452,7 +452,7 @@ tbody td:not(:first-child){text-align:right}
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
       <div style="display:flex;gap:6px">
-        <button class="btn-print" onclick="doPrint()">🖨 Print / PDF</button>
+        <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
         <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
       </div>
     </div>
@@ -886,7 +886,6 @@ tbody td:not(:first-child){text-align:right}
   <!-- CARD 1: Spinal for CS -->
   <div class="card">
     <div class="card-title">Spinal for Caesarean Section</div>
-
     <div style="display:flex;flex-direction:column;gap:10px">
 
       <div style="display:flex;align-items:center;gap:8px">
@@ -897,93 +896,220 @@ tbody td:not(:first-child){text-align:right}
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Volume</span>
         <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
           <button class="tbtn" id="obsSpV16" onclick="setObsSpVol(1.6)">1.6</button>
           <button class="tbtn" id="obsSpV18" onclick="setObsSpVol(1.8)">1.8</button>
           <button class="tbtn active" id="obsSpV20" onclick="setObsSpVol(2.0)">2.0</button>
           <button class="tbtn" id="obsSpV22" onclick="setObsSpVol(2.2)">2.2</button>
+          <button class="tbtn" id="obsSpV23" onclick="setObsSpVol(2.3)">2.3</button>
           <button class="tbtn" id="obsSpV25" onclick="setObsSpVol(2.5)">2.5</button>
         </div>
         <input type="number" id="obsSpVolInput" min="0.5" max="5" step="0.1" value="2.0" inputmode="decimal"
           oninput="setObsSpVolCustom(parseFloat(this.value))"
-          style="width:52px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
         <span style="font-size:11px;color:var(--sub2)">ml</span>
       </div>
 
       <div style="display:flex;align-items:flex-start;gap:8px">
         <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px;padding-top:3px">Adjuvant</span>
-        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
-          <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
-            <button class="tbtn" id="obsSpAdjnone" onclick="setObsSpAdj('none')">None</button>
-            <button class="tbtn active" id="obsSpAdjdiamorphine" onclick="setObsSpAdj('diamorphine')">Diamorphine</button>
-            <button class="tbtn" id="obsSpAdjfentanyl" onclick="setObsSpAdj('fentanyl')">Fentanyl</button>
-            <button class="tbtn" id="obsSpAdjmorphine" onclick="setObsSpAdj('morphine')">Morphine PF</button>
+        <div style="display:flex;flex-direction:column;gap:7px;flex:1">
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpAdjNone" onclick="setObsSpAdjExcl('none')">None</button>
+              <button class="tbtn active" id="obsSpAdjDia" onclick="setObsSpAdjExcl('diamorphine')">Diamorphine</button>
+            </div>
+            <span style="font-size:9.5px;color:var(--sub2)">solo only</span>
           </div>
-          <div id="obsSpAdjDoseRow" style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:11px;color:var(--sub2)">Dose</span>
-            <div class="toggle-btns" id="obsSpAdjPresets"></div>
-            <input type="number" id="obsSpAdjCustom" min="1" max="1000" step="1" inputmode="decimal"
-              oninput="calcObs()"
-              style="width:52px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
-            <span style="font-size:11px;color:var(--sub2)">mcg</span>
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpAdjMorph" onclick="toggleObsSpAdjCombi('morphinePF')">Morphine PF</button>
+              <button class="tbtn" id="obsSpAdjFent" onclick="toggleObsSpAdjCombi('fentanyl')">Fentanyl</button>
+            </div>
+            <span style="font-size:9.5px;color:var(--sub2)">can combine</span>
           </div>
+
+          <div id="obsSpDiaDoseRow" style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--sub2);width:80px">Diamorphine</span>
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpDia200" onclick="setObsSpAdjDose('diamorphine',200)">200</button>
+              <button class="tbtn active" id="obsSpDia300" onclick="setObsSpAdjDose('diamorphine',300)">300</button>
+              <button class="tbtn" id="obsSpDia400" onclick="setObsSpAdjDose('diamorphine',400)">400</button>
+            </div>
+            <input type="number" id="obsSpDiaInput" value="300" min="0" max="1000" step="1" inputmode="decimal"
+              oninput="obsSpAdj.doses.diamorphine=parseFloat(this.value)||0;calcObsSpinal()"
+              style="width:46px;padding:3px 5px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:12px;font-weight:600;font-family:var(--font);text-align:right">
+            <span style="font-size:10.5px;color:var(--sub2)">mcg</span>
+          </div>
+
+          <div id="obsSpMorphDoseRow" style="display:none;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--sub2);width:80px">Morphine PF</span>
+            <div class="toggle-btns">
+              <button class="tbtn active" id="obsSpMorph100" onclick="setObsSpAdjDose('morphinePF',100)">100</button>
+              <button class="tbtn" id="obsSpMorph150" onclick="setObsSpAdjDose('morphinePF',150)">150</button>
+              <button class="tbtn" id="obsSpMorph200" onclick="setObsSpAdjDose('morphinePF',200)">200</button>
+            </div>
+            <input type="number" id="obsSpMorphInput" value="100" min="0" max="500" step="1" inputmode="decimal"
+              oninput="obsSpAdj.doses.morphinePF=parseFloat(this.value)||0;calcObsSpinal()"
+              style="width:46px;padding:3px 5px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:12px;font-weight:600;font-family:var(--font);text-align:right">
+            <span style="font-size:10.5px;color:var(--sub2)">mcg</span>
+          </div>
+
+          <div id="obsSpFentDoseRow" style="display:none;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--sub2);width:80px">Fentanyl</span>
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpFent15" onclick="setObsSpAdjDose('fentanyl',15)">15</button>
+              <button class="tbtn" id="obsSpFent20" onclick="setObsSpAdjDose('fentanyl',20)">20</button>
+              <button class="tbtn active" id="obsSpFent25" onclick="setObsSpAdjDose('fentanyl',25)">25</button>
+            </div>
+            <input type="number" id="obsSpFentInput" value="25" min="0" max="100" step="1" inputmode="decimal"
+              oninput="obsSpAdj.doses.fentanyl=parseFloat(this.value)||0;calcObsSpinal()"
+              style="width:46px;padding:3px 5px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:12px;font-weight:600;font-family:var(--font);text-align:right">
+            <span style="font-size:10.5px;color:var(--sub2)">mcg</span>
+          </div>
+
         </div>
       </div>
     </div>
-
     <div id="obs-sp-result" style="margin-top:12px;padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border)"></div>
   </div>
 
   <!-- CARD 2: Epidural top-up for CS -->
   <div class="card">
     <div class="card-title">Epidural Top-up for CS</div>
-    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px;line-height:1.4">Levo 0.5% + Lido 2% (with adr) given in 3–5 ml increments. Verify with local protocol.</div>
 
-    <div style="display:flex;flex-direction:column;gap:10px">
-
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
-        <div class="toggle-btns">
-          <button class="tbtn" id="obsTopLevo5" onclick="setObsTopLevo(5)">5</button>
-          <button class="tbtn active" id="obsTopLevo10" onclick="setObsTopLevo(10)">10</button>
-          <button class="tbtn" id="obsTopLevo15" onclick="setObsTopLevo(15)">15</button>
-        </div>
-        <input type="number" id="obsTopLevoInput" min="0" max="30" step="1" value="10" inputmode="decimal"
-          oninput="obsTop.levoVol=parseFloat(this.value)||0;clearObsTopLevoPresets();calcObsTopup()"
-          style="width:52px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
-        <span style="font-size:11px;color:var(--sub2)">ml</span>
+    <!-- Pre-existing block height -->
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px;flex-shrink:0;padding-top:3px">Existing block</span>
+      <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
+        <button class="tbtn active" id="obsBlknone" onclick="setObsBlockHeight('none')">Not assessed</button>
+        <button class="tbtn" id="obsBlkT10" onclick="setObsBlockHeight('T10')">T10</button>
+        <button class="tbtn" id="obsBlkT8" onclick="setObsBlockHeight('T8')">T8</button>
+        <button class="tbtn" id="obsBlkT6" onclick="setObsBlockHeight('T6')">T6</button>
+        <button class="tbtn" id="obsBlkT4" onclick="setObsBlockHeight('T4')">T4</button>
+        <button class="tbtn" id="obsBlkT2plus" onclick="setObsBlockHeight('T2plus')">T2+</button>
       </div>
+    </div>
+    <div id="obsBlockWarn" style="display:none;margin-bottom:12px;padding:8px 10px;border-radius:var(--rsm);font-size:10.5px;line-height:1.5"></div>
 
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Lido 2% + adr</span>
-        <div class="toggle-btns">
-          <button class="tbtn" id="obsTopLido0" onclick="setObsTopLido(0)">0</button>
-          <button class="tbtn" id="obsTopLido5" onclick="setObsTopLido(5)">5</button>
-          <button class="tbtn active" id="obsTopLido10" onclick="setObsTopLido(10)">10</button>
-        </div>
-        <input type="number" id="obsTopLidoInput" min="0" max="30" step="1" value="10" inputmode="decimal"
-          oninput="obsTop.lidoVol=parseFloat(this.value)||0;clearObsTopLidoPresets();calcObsTopup()"
-          style="width:52px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
-        <span style="font-size:11px;color:var(--sub2)">ml</span>
+    <!-- Recipe selector -->
+    <div style="margin-bottom:12px">
+      <div class="toggle-btns" style="flex-wrap:wrap;gap:3px">
+        <button class="tbtn active" id="obsTopRLevoLido" onclick="setObsTopRecipe('levoLido')">Levo + Lido</button>
+        <button class="tbtn" id="obsTopRLevoOnly" onclick="setObsTopRecipe('levoOnly')">Levo only</button>
+        <button class="tbtn" id="obsTopRFizzy" onclick="setObsTopRecipe('fizzy')">Fizzy Mix</button>
+        <button class="tbtn" id="obsTopRRopi" onclick="setObsTopRecipe('ropi')">Ropivacaine</button>
       </div>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button id="obsTopFentBtn" onclick="toggleObsTopAdd('fentanyl')"
-          style="font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">+ Fentanyl 100 mcg</button>
-        <button id="obsTopBicarbBtn" onclick="toggleObsTopAdd('bicarb')"
-          style="font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">+ Bicarb 1 ml 8.4%</button>
-      </div>
-
     </div>
 
-    <div id="obs-top-result" style="margin-top:12px;padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border)"></div>
-
-    <div style="margin-top:10px;padding:8px 10px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:var(--rsm)">
-      <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Alkalinised / "Fizzy" Mix</div>
-      <div style="font-size:10.5px;color:var(--sub);line-height:1.5">Adding NaHCO₃ 1 ml 8.4% raises LA pH → faster onset (5–10 min quicker). Do not mix bicarb with bupivacaine (precipitation risk). Check your trust protocol — some use 3% chloroprocaine (Ampres) as an alternative.</div>
+    <!-- PANEL: Levo + Lido -->
+    <div id="obsTopPanelLevoLido">
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLLLevo5" onclick="setObsLL('levo',5)">5</button>
+            <button class="tbtn active" id="obsLLLevo10" onclick="setObsLL('levo',10)">10</button>
+            <button class="tbtn" id="obsLLLevo15" onclick="setObsLL('levo',15)">15</button>
+          </div>
+          <input type="number" id="obsLLLevoInput" min="0" max="30" step="1" value="10" inputmode="decimal"
+            oninput="obsTop.levoVol=parseFloat(this.value)||0;clearObsLLPresets('levo');calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="obsLLLevoNoAdr" onclick="setObsLLAdr('levo',false)">No adr</button>
+            <button class="tbtn" id="obsLLLevoAdr" onclick="setObsLLAdr('levo',true)">+ Adr</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Lido 2%</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLLLido0" onclick="setObsLL('lido',0)">0</button>
+            <button class="tbtn" id="obsLLLido5" onclick="setObsLL('lido',5)">5</button>
+            <button class="tbtn active" id="obsLLLido10" onclick="setObsLL('lido',10)">10</button>
+          </div>
+          <input type="number" id="obsLLLidoInput" min="0" max="30" step="1" value="10" inputmode="decimal"
+            oninput="obsTop.lidoVol=parseFloat(this.value)||0;clearObsLLPresets('lido');calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="obsLLLidoNoAdr" onclick="setObsLLAdr('lido',false)">No adr</button>
+            <button class="tbtn" id="obsLLLidoAdr" onclick="setObsLLAdr('lido',true)">+ Adr</button>
+          </div>
+        </div>
+        <div>
+          <button id="obsLLFentBtn" onclick="toggleObsLLFent()"
+            style="font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">+ Fentanyl 100 mcg</button>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>15–20 min</strong>. Give in 3–5 ml increments with 5 min between doses.</div>
     </div>
+
+    <!-- PANEL: Levo only -->
+    <div id="obsTopPanelLevoOnly" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLOVol15" onclick="setObsLO(15)">15</button>
+            <button class="tbtn active" id="obsLOVol20" onclick="setObsLO(20)">20</button>
+          </div>
+          <input type="number" id="obsLOInput" min="0" max="30" step="1" value="20" inputmode="decimal"
+            oninput="obsTop.loVol=parseFloat(this.value)||0;[15,20].forEach(x=>document.getElementById('obsLOVol'+x).classList.remove('active'));calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="obsLONoAdr" onclick="setObsLOAdr(false)">No adr</button>
+            <button class="tbtn" id="obsLOAdr" onclick="setObsLOAdr(true)">+ Adr</button>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>20–25 min</strong>. Slower onset than levo/lido mix — allow adequate time before reassessing block height.</div>
+    </div>
+
+    <!-- PANEL: Fizzy Mix -->
+    <div id="obsTopPanelFizzy" style="display:none">
+      <div style="padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border);margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">Local recipe — 20 ml total</div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--sub)">
+          <div style="display:flex;justify-content:space-between"><span>Lidocaine 2%</span><strong style="color:var(--text)">17 ml → 340 mg</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Adrenaline 1:10,000</span><strong style="color:var(--text)">1 ml → 100 mcg</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>NaHCO₃ 8.4%</span><strong style="color:var(--text)">2 ml</strong></div>
+          <div style="border-top:1px solid var(--border);padding-top:5px;display:flex;justify-content:space-between"><span>Total</span><strong style="color:var(--text)">20 ml</strong></div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>10–12 min</strong> (alkalinisation + adrenaline accelerate onset). Do <strong>not</strong> substitute bupivacaine or levobupivacaine — NaHCO₃ causes precipitation. Give in 3–5 ml increments.</div>
+    </div>
+
+    <!-- PANEL: Ropivacaine -->
+    <div id="obsTopPanelRopi" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Concentration</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsRopiConc05" onclick="setObsRopi('conc',0.5)">0.5%</button>
+            <button class="tbtn active" id="obsRopiConc075" onclick="setObsRopi('conc',0.75)">0.75%</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Volume</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsRopiVol15" onclick="setObsRopi('vol',15)">15</button>
+            <button class="tbtn active" id="obsRopiVol20" onclick="setObsRopi('vol',20)">20</button>
+          </div>
+          <input type="number" id="obsRopiInput" min="0" max="30" step="1" value="20" inputmode="decimal"
+            oninput="obsTop.ropiVol=parseFloat(this.value)||0;[15,20].forEach(x=>document.getElementById('obsRopiVol'+x).classList.remove('active'));calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>15–20 min</strong> at 0.75%; <strong>20–25 min</strong> at 0.5%. Verify ropivacaine is approved for epidural CS top-up at your centre.</div>
+    </div>
+
+    <div id="obs-top-result" style="margin-top:10px;padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border)"></div>
   </div>
 
   <!-- CARD 3: Labour epidural — running dose -->
@@ -2150,13 +2276,23 @@ async function captureAndOCR() {
   video.style.display = 'none';
   document.getElementById('camFreeze').style.display = 'block';
 
-  // Downscale to max 1000px wide for OCR speed — Tesseract doesn't need full res
-  const maxW = 1000;
+  // Downscale to 700px wide — Tesseract doesn't need full res; smaller = faster
+  const maxW = 700;
   const scale = vw > maxW ? maxW / vw : 1;
   const ocrCanvas = document.createElement('canvas');
   ocrCanvas.width = Math.round(vw * scale);
   ocrCanvas.height = Math.round(vh * scale);
-  ocrCanvas.getContext('2d').drawImage(freezeCanvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+  const ocrCtx = ocrCanvas.getContext('2d');
+  ocrCtx.drawImage(freezeCanvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+  // Preprocess: grayscale + contrast boost → cleaner text for OCR
+  const imgData = ocrCtx.getImageData(0, 0, ocrCanvas.width, ocrCanvas.height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+    const c = Math.min(255, Math.max(0, (gray - 128) * 1.5 + 128));
+    d[i] = d[i+1] = d[i+2] = c;
+  }
+  ocrCtx.putImageData(imgData, 0, 0);
   const canvas = ocrCanvas;
 
   try {
@@ -2172,7 +2308,12 @@ async function captureAndOCR() {
     }
     if (!tesseractWorker) {
       status.textContent = '⏳ Initialising OCR worker…';
-      tesseractWorker = await Tesseract.createWorker('eng');
+      // OEM 1 = LSTM neural net only (fastest); legacy engine disabled
+      tesseractWorker = await Tesseract.createWorker('eng', 1);
+      await tesseractWorker.setParameters({
+        tessedit_pageseg_mode: '6',  // Assume single uniform block of text
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;/\' ',
+      });
     }
     status.textContent = '🔍 Scanning text…';
     const { data: { text } } = await tesseractWorker.recognize(canvas);
@@ -2963,17 +3104,24 @@ function initDilPresets() {
 // OBS TAB
 // ═══════════════════════════════════════════════════════════
 
-const obsSp  = { drug:'heavy', vol:2.0, adj:'diamorphine' };
-const obsTop = { levoVol:10, lidoVol:10, fentanyl:false, bicarb:false };
+const obsSp  = { drug:'heavy', vol:2.0 };
+const obsSpAdj = {
+  excl: 'diamorphine', // 'none' | 'diamorphine'
+  morphinePF: false,
+  fentanyl: false,
+  doses: { diamorphine:300, morphinePF:100, fentanyl:25 }
+};
+const obsTop = {
+  recipe: 'levoLido',
+  levoVol:10, levoAdr:false,
+  lidoVol:10, lidoAdr:false,
+  llFentanyl:false,
+  loVol:20, loAdr:false,
+  ropiConc:0.75, ropiVol:20,
+  blockHeight:'none'
+};
 const obsEpi = { mix:'01bupi', totalVol:0 };
 const obsTrk = { spinal:false, topup:true, epi:true };
-
-const OBS_ADJ = {
-  none:        { presets:[],              default:0,   unit:'mcg', name:'—' },
-  diamorphine: { presets:[200,300,400],   default:300, unit:'mcg', name:'Diamorphine' },
-  fentanyl:    { presets:[15,20,25],      default:25,  unit:'mcg', name:'Fentanyl' },
-  morphine:    { presets:[100,150,200],   default:100, unit:'mcg', name:'Morphine (PF)' },
-};
 const OBS_EPI_MIXES = {
   '01bupi':   { drug:'Bupivacaine',     concPct:0.1   },
   '01levo':   { drug:'Levobupivacaine', concPct:0.1   },
@@ -2984,70 +3132,142 @@ function setObsSpDrug(d) {
   obsSp.drug = d;
   document.getElementById('obsSpHeavy').classList.toggle('active', d==='heavy');
   document.getElementById('obsSpPlain').classList.toggle('active', d==='plain');
-  calcObs();
+  calcObsSpinal();
 }
 function setObsSpVol(v) {
   obsSp.vol = v;
   document.getElementById('obsSpVolInput').value = v;
-  ['1.6','1.8','2.0','2.2','2.5'].forEach(x => {
-    const el = document.getElementById('obsSpV'+x.replace('.',''));
-    if(el) el.classList.toggle('active', parseFloat(x)===v);
+  ['16','18','20','22','23','25'].forEach(x => {
+    const el = document.getElementById('obsSpV'+x);
+    if(el) el.classList.toggle('active', parseFloat(x)/10===v);
   });
-  calcObs();
+  calcObsSpinal();
 }
 function setObsSpVolCustom(v) {
   if(isNaN(v)) return;
   obsSp.vol = v;
-  ['16','18','20','22','25'].forEach(x => {
-    const el = document.getElementById('obsSpV'+x);
-    if(el) el.classList.remove('active');
-  });
-  calcObs();
-}
-function setObsSpAdj(a) {
-  obsSp.adj = a;
-  Object.keys(OBS_ADJ).forEach(k => {
-    const el = document.getElementById('obsSpAdj'+k);
-    if(el) el.classList.toggle('active', k===a);
-  });
-  const cfg = OBS_ADJ[a];
-  document.getElementById('obsSpAdjDoseRow').style.display = a==='none' ? 'none' : 'flex';
-  // Build presets
-  document.getElementById('obsSpAdjPresets').innerHTML = cfg.presets.map(p =>
-    `<button class="tbtn${p===cfg.default?' active':''}" onclick="setObsSpAdjPreset(${p})">${p}</button>`
-  ).join('');
-  document.getElementById('obsSpAdjCustom').value = cfg.default || '';
-  calcObs();
-}
-function setObsSpAdjPreset(v) {
-  document.getElementById('obsSpAdjCustom').value = v;
-  document.querySelectorAll('#obsSpAdjPresets .tbtn').forEach(b =>
-    b.classList.toggle('active', parseInt(b.textContent)===v));
-  calcObs();
+  ['16','18','20','22','23','25'].forEach(x => { const el=document.getElementById('obsSpV'+x); if(el) el.classList.remove('active'); });
+  calcObsSpinal();
 }
 
-function setObsTopLevo(v) {
-  obsTop.levoVol = v;
-  document.getElementById('obsTopLevoInput').value = v;
-  [5,10,15].forEach(x => document.getElementById('obsTopLevo'+x).classList.toggle('active',x===v));
+function setObsSpAdjExcl(v) {
+  obsSpAdj.excl = v;
+  obsSpAdj.morphinePF = false;
+  obsSpAdj.fentanyl = false;
+  updateObsSpAdjUI();
+  calcObsSpinal();
+}
+function toggleObsSpAdjCombi(k) {
+  obsSpAdj.excl = 'none';
+  obsSpAdj[k] = !obsSpAdj[k];
+  updateObsSpAdjUI();
+  calcObsSpinal();
+}
+function setObsSpAdjDose(drug, val) {
+  obsSpAdj.doses[drug] = val;
+  const idMap   = { diamorphine:['200','300','400'], morphinePF:['100','150','200'], fentanyl:['15','20','25'] };
+  const prefMap = { diamorphine:'obsSpDia', morphinePF:'obsSpMorph', fentanyl:'obsSpFent' };
+  const inputMap= { diamorphine:'obsSpDiaInput', morphinePF:'obsSpMorphInput', fentanyl:'obsSpFentInput' };
+  idMap[drug].forEach(x => { const el=document.getElementById(prefMap[drug]+x); if(el) el.classList.toggle('active', parseFloat(x)===val); });
+  const inp = document.getElementById(inputMap[drug]); if(inp) inp.value = val;
+  calcObsSpinal();
+}
+function updateObsSpAdjUI() {
+  const isNone = obsSpAdj.excl==='none' && !obsSpAdj.morphinePF && !obsSpAdj.fentanyl;
+  document.getElementById('obsSpAdjNone').classList.toggle('active', isNone);
+  document.getElementById('obsSpAdjDia').classList.toggle('active', obsSpAdj.excl==='diamorphine');
+  document.getElementById('obsSpAdjMorph').classList.toggle('active', obsSpAdj.morphinePF);
+  document.getElementById('obsSpAdjFent').classList.toggle('active', obsSpAdj.fentanyl);
+  document.getElementById('obsSpDiaDoseRow').style.display  = obsSpAdj.excl==='diamorphine' ? 'flex' : 'none';
+  document.getElementById('obsSpMorphDoseRow').style.display= obsSpAdj.morphinePF ? 'flex' : 'none';
+  document.getElementById('obsSpFentDoseRow').style.display = obsSpAdj.fentanyl   ? 'flex' : 'none';
+}
+
+function setObsTopRecipe(r) {
+  obsTop.recipe = r;
+  const keys = ['levoLido','levoOnly','fizzy','ropi'];
+  keys.forEach(k => {
+    const cap = k.charAt(0).toUpperCase()+k.slice(1);
+    document.getElementById('obsTopR'+cap).classList.toggle('active', k===r);
+    const panel = document.getElementById('obsTopPanel'+cap);
+    if(panel) panel.style.display = k===r ? '' : 'none';
+  });
   calcObsTopup();
 }
-function clearObsTopLevoPresets() { [5,10,15].forEach(x => document.getElementById('obsTopLevo'+x).classList.remove('active')); }
-function setObsTopLido(v) {
-  obsTop.lidoVol = v;
-  document.getElementById('obsTopLidoInput').value = v;
-  [0,5,10].forEach(x => document.getElementById('obsTopLido'+x).classList.toggle('active',x===v));
+function setObsBlockHeight(h) {
+  obsTop.blockHeight = h;
+  ['none','T10','T8','T6','T4','T2plus'].forEach(x => document.getElementById('obsBlk'+x).classList.toggle('active', x===h));
+  const warnEl = document.getElementById('obsBlockWarn');
+  const W = {
+    none:   null,
+    T10:    { bg:'rgba(52,211,153,.1)', bd:'rgba(52,211,153,.3)', col:'var(--green)',  txt:'Block to T10: standard top-up volumes appropriate. Give in 3–5 ml increments as normal.' },
+    T8:     { bg:'rgba(52,211,153,.1)', bd:'rgba(52,211,153,.3)', col:'var(--green)',  txt:'Block to T8: standard volumes usually adequate. Monitor spread carefully.' },
+    T6:     { bg:'rgba(251,191,36,.1)', bd:'rgba(251,191,36,.3)', col:'var(--amber)',  txt:'⚠ Block to T6: higher pre-existing block. Consider reducing volume by 20–30% or giving in smaller increments (2–3 ml). Monitor for unexpected high spread.' },
+    T4:     { bg:'rgba(248,113,113,.1)',bd:'rgba(248,113,113,.3)',col:'var(--red)',    txt:'🚨 Block at T4: at or near surgical target level. High risk of further extension with standard volumes. Reduce dose significantly or consider GA. Senior review recommended.' },
+    T2plus: { bg:'rgba(248,113,113,.1)',bd:'rgba(248,113,113,.3)',col:'var(--red)',    txt:'🚨 Block at T2 or above: DO NOT top up — unacceptable risk of total spinal / cardiovascular collapse. Convert to GA.' },
+  };
+  const w = W[h];
+  if(!w) { warnEl.style.display='none'; return; }
+  warnEl.style.cssText = `display:block;margin-bottom:12px;padding:8px 10px;border-radius:var(--rsm);font-size:10.5px;line-height:1.5;background:${w.bg};border:1px solid ${w.bd};color:${w.col}`;
+  warnEl.textContent = w.txt;
+}
+function setObsLL(comp, v) {
+  if(comp==='levo') {
+    obsTop.levoVol=v; document.getElementById('obsLLLevoInput').value=v;
+    [5,10,15].forEach(x=>document.getElementById('obsLLLevo'+x).classList.toggle('active',x===v));
+  } else {
+    obsTop.lidoVol=v; document.getElementById('obsLLLidoInput').value=v;
+    [0,5,10].forEach(x=>document.getElementById('obsLLLido'+x).classList.toggle('active',x===v));
+  }
   calcObsTopup();
 }
-function clearObsTopLidoPresets() { [0,5,10].forEach(x => document.getElementById('obsTopLido'+x).classList.remove('active')); }
-function toggleObsTopAdd(k) {
-  obsTop[k] = !obsTop[k];
-  const btn = document.getElementById(k==='fentanyl'?'obsTopFentBtn':'obsTopBicarbBtn');
-  btn.style.background = obsTop[k] ? 'rgba(96,165,250,.15)' : 'var(--s1)';
-  btn.style.borderColor = obsTop[k] ? 'rgba(96,165,250,.4)' : 'var(--border)';
-  btn.style.color = obsTop[k] ? 'var(--blue)' : 'var(--sub2)';
+function clearObsLLPresets(comp) {
+  if(comp==='levo') [5,10,15].forEach(x=>document.getElementById('obsLLLevo'+x).classList.remove('active'));
+  else [0,5,10].forEach(x=>document.getElementById('obsLLLido'+x).classList.remove('active'));
+}
+function setObsLLAdr(comp, on) {
+  if(comp==='levo') {
+    obsTop.levoAdr=on;
+    document.getElementById('obsLLLevoNoAdr').classList.toggle('active',!on);
+    document.getElementById('obsLLLevoAdr').classList.toggle('active',on);
+  } else {
+    obsTop.lidoAdr=on;
+    document.getElementById('obsLLLidoNoAdr').classList.toggle('active',!on);
+    document.getElementById('obsLLLidoAdr').classList.toggle('active',on);
+  }
   calcObsTopup();
 }
+function toggleObsLLFent() {
+  obsTop.llFentanyl=!obsTop.llFentanyl;
+  const btn=document.getElementById('obsLLFentBtn');
+  btn.style.background  = obsTop.llFentanyl ? 'rgba(96,165,250,.15)' : 'var(--s1)';
+  btn.style.borderColor = obsTop.llFentanyl ? 'rgba(96,165,250,.4)'  : 'var(--border)';
+  btn.style.color       = obsTop.llFentanyl ? 'var(--blue)'          : 'var(--sub2)';
+  calcObsTopup();
+}
+function setObsLO(v) {
+  obsTop.loVol=v; document.getElementById('obsLOInput').value=v;
+  [15,20].forEach(x=>document.getElementById('obsLOVol'+x).classList.toggle('active',x===v));
+  calcObsTopup();
+}
+function setObsLOAdr(on) {
+  obsTop.loAdr=on;
+  document.getElementById('obsLONoAdr').classList.toggle('active',!on);
+  document.getElementById('obsLOAdr').classList.toggle('active',on);
+  calcObsTopup();
+}
+function setObsRopi(k, v) {
+  if(k==='conc') {
+    obsTop.ropiConc=v;
+    document.getElementById('obsRopiConc05').classList.toggle('active',v===0.5);
+    document.getElementById('obsRopiConc075').classList.toggle('active',v===0.75);
+  } else {
+    obsTop.ropiVol=v; document.getElementById('obsRopiInput').value=v;
+    [15,20].forEach(x=>document.getElementById('obsRopiVol'+x).classList.toggle('active',x===v));
+  }
+  calcObsTopup();
+}
+
 function setObsEpiMix(m) {
   obsEpi.mix = m;
   Object.keys(OBS_EPI_MIXES).forEach(k => document.getElementById('obsEpiMix'+k).classList.toggle('active',k===m));
@@ -3069,9 +3289,9 @@ function toggleObsTrk(k) {
   obsTrk[k] = !obsTrk[k];
   const btn = document.getElementById('obsTrk'+k.charAt(0).toUpperCase()+k.slice(1));
   const on = obsTrk[k];
-  btn.style.background    = on ? 'rgba(96,165,250,.1)'  : 'var(--s1)';
-  btn.style.borderColor   = on ? 'rgba(96,165,250,.4)'  : 'var(--border)';
-  btn.style.color         = on ? 'var(--blue)' : 'var(--sub2)';
+  btn.style.background  = on ? 'rgba(96,165,250,.1)' : 'var(--s1)';
+  btn.style.borderColor = on ? 'rgba(96,165,250,.4)' : 'var(--border)';
+  btn.style.color       = on ? 'var(--blue)'         : 'var(--sub2)';
   btn.textContent = { spinal:'Spinal bupi', topup:'Epi top-up', epi:'Labour epi' }[k] + (on?' ✓':'');
   calcObsTracker();
 }
@@ -3080,42 +3300,58 @@ function calcObs() { calcObsSpinal(); calcObsTopup(); calcObsEpi(); calcObsTrack
 
 function calcObsSpinal() {
   const el = document.getElementById('obs-sp-result'); if(!el) return;
-  const mg = obsSp.vol * 0.5 * 10;
+  const mg = obsSp.vol * 5;
   const drugLabel = obsSp.drug==='heavy' ? 'Heavy bupivacaine 0.5% (hyperbaric)' : 'Plain bupivacaine 0.5%';
-  const cfg = OBS_ADJ[obsSp.adj];
-  const mcg = obsSp.adj==='none' ? 0 : (parseFloat(document.getElementById('obsSpAdjCustom')?.value) || cfg.default);
-  const adjNotes = {
-    none:        'No intrathecal opioid — ensure alternative analgesia plan.',
-    diamorphine: '12–24 h analgesia. Standard UK practice for elective and emergency CS.',
-    fentanyl:    'Fast onset, ~4 h duration. Use when diamorphine unavailable or for rapid-sequence spinal.',
-    morphine:    'PF morphine 100–200 mcg. Long analgesia but higher PONV/itch risk; requires extended monitoring (12–24 h).',
-  };
-  const adjLine = obsSp.adj!=='none'
-    ? `<div style="font-size:12px;color:var(--sub);margin-top:3px">+ ${cfg.name} <strong style="color:var(--text)">${mcg} mcg</strong></div>`
-    : '';
-  el.innerHTML = `
-    <div style="font-size:15px;font-weight:700;color:var(--text)">${mg.toFixed(1)} mg ${drugLabel}</div>
-    ${adjLine}
-    <div style="font-size:10.5px;color:var(--sub2);margin-top:7px;line-height:1.4">${adjNotes[obsSp.adj]}</div>`;
+  let adjLines=[], notes=[];
+  if(obsSpAdj.excl==='diamorphine') {
+    adjLines.push(`+ Diamorphine <strong style="color:var(--text)">${obsSpAdj.doses.diamorphine} mcg</strong>`);
+    notes.push('Diamorphine: 12–24 h analgesia. Standard UK practice for elective and emergency CS.');
+  }
+  if(obsSpAdj.morphinePF) {
+    adjLines.push(`+ Morphine PF <strong style="color:var(--text)">${obsSpAdj.doses.morphinePF} mcg</strong>`);
+    notes.push('Morphine PF: long-acting analgesia; higher PONV/itch risk. Requires extended monitoring (12–24 h).');
+  }
+  if(obsSpAdj.fentanyl) {
+    adjLines.push(`+ Fentanyl <strong style="color:var(--text)">${obsSpAdj.doses.fentanyl} mcg</strong>`);
+    notes.push('Fentanyl: rapid onset, ~4 h duration. Combined with morphine PF for dual-action analgesia.');
+  }
+  if(!obsSpAdj.morphinePF && !obsSpAdj.fentanyl && obsSpAdj.excl==='none')
+    notes.push('No intrathecal opioid selected — ensure alternative analgesia plan.');
+  const adjHTML  = adjLines.map(l=>`<div style="font-size:12px;color:var(--sub);margin-top:3px">${l}</div>`).join('');
+  const noteHTML = notes.length ? `<div style="font-size:10.5px;color:var(--sub2);margin-top:7px;line-height:1.4">${notes.join('<br>')}</div>` : '';
+  el.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--text)">${mg.toFixed(1)} mg ${drugLabel}</div>${adjHTML}${noteHTML}`;
 }
 
 function calcObsTopup() {
   const el = document.getElementById('obs-top-result'); if(!el) return;
-  const levoVol = parseFloat(document.getElementById('obsTopLevoInput').value)||0;
-  const lidoVol = parseFloat(document.getElementById('obsTopLidoInput').value)||0;
-  obsTop.levoVol = levoVol; obsTop.lidoVol = lidoVol;
-  const levoMg = levoVol * 5;   // 0.5% = 5 mg/ml
-  const lidoMg = lidoVol * 20;  // 2%   = 20 mg/ml
-  const totalVol = levoVol + lidoVol;
-  let extras = [];
-  if(obsTop.fentanyl) extras.push('Fentanyl 100 mcg');
-  if(obsTop.bicarb)   extras.push('NaHCO₃ 1 ml 8.4%');
-  const extrasLine = extras.length ? `<div style="font-size:11px;color:var(--sub);margin-top:3px">+ ${extras.join(' · ')}</div>` : '';
-  el.innerHTML = `
-    <div style="font-size:14px;font-weight:700;color:var(--text)">Total ${totalVol} ml</div>
-    <div style="font-size:11.5px;color:var(--sub);margin-top:3px">
-      ${levoVol>0?`${levoMg.toFixed(0)} mg levobupivacaine 0.5%`:''}${levoVol>0&&lidoVol>0?' · ':''}${lidoVol>0?`${lidoMg.toFixed(0)} mg lidocaine 2% + adr`:''}
-    </div>${extrasLine}`;
+  const r = obsTop.recipe;
+  let html='';
+  if(r==='levoLido') {
+    const lv=parseFloat(document.getElementById('obsLLLevoInput').value)||0;
+    const li=parseFloat(document.getElementById('obsLLLidoInput').value)||0;
+    obsTop.levoVol=lv; obsTop.lidoVol=li;
+    const lvoMg=lv*5, lidMg=li*20, tot=lv+li;
+    const parts=[];
+    if(lv>0) parts.push(`${lvoMg.toFixed(0)} mg levo 0.5%${obsTop.levoAdr?' + adr':''}`);
+    if(li>0) parts.push(`${lidMg.toFixed(0)} mg lido 2%${obsTop.lidoAdr?' + adr':''}`);
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${tot} ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${parts.join(' · ')}</div>
+      ${obsTop.llFentanyl?'<div style="font-size:11px;color:var(--sub);margin-top:2px">+ Fentanyl 100 mcg</div>':''}`;
+  } else if(r==='levoOnly') {
+    const lv=parseFloat(document.getElementById('obsLOInput').value)||0;
+    obsTop.loVol=lv;
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${lv} ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(lv*5).toFixed(0)} mg levobupivacaine 0.5%${obsTop.loAdr?' + adr':''}</div>`;
+  } else if(r==='fizzy') {
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total 20 ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">340 mg lidocaine · 100 mcg adrenaline · NaHCO₃ 2 ml</div>`;
+  } else if(r==='ropi') {
+    const rv=parseFloat(document.getElementById('obsRopiInput').value)||0;
+    obsTop.ropiVol=rv;
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${rv} ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(rv*obsTop.ropiConc*10).toFixed(0)} mg ropivacaine ${obsTop.ropiConc}%</div>`;
+  }
+  el.innerHTML=html;
   calcObsTracker();
 }
 
@@ -3133,65 +3369,79 @@ function calcObsTracker() {
   const el = document.getElementById('obs-tracker-result'); if(!el) return;
   const BUPI   = DRUGS.find(d=>d.id==='bupi_p');
   const LEVO   = DRUGS.find(d=>d.id==='levo_p');
-  const LIDO_A = DRUGS.find(d=>d.id==='lido_a2');
   const LIDO_P = DRUGS.find(d=>d.id==='lido_p');
-  const bupiMax = drugMax(BUPI); const levoMax = drugMax(LEVO);
-  const lidoMax = drugMax(LIDO_A); const lidoPMax = drugMax(LIDO_P);
+  const LIDO_A = DRUGS.find(d=>d.id==='lido_a2');
+  const ROPI   = DRUGS.find(d=>d.id==='ropi');
+  const bupiMax=drugMax(BUPI), levoMax=drugMax(LEVO);
+  const lidoPMax=drugMax(LIDO_P), lidoAMax=drugMax(LIDO_A), ropiMaxD=drugMax(ROPI);
 
-  let bupiMg=0, levoMg=0, lidoMg=0;
+  let bupiMg=0, levoMg=0, lidoPMg=0, lidoAMg=0, ropiMgT=0;
   if(obsTrk.spinal) bupiMg += obsSp.vol * 5;
   if(obsTrk.topup) {
-    const lv = parseFloat(document.getElementById('obsTopLevoInput').value)||0;
-    const li = parseFloat(document.getElementById('obsTopLidoInput').value)||0;
-    levoMg += lv * 5; lidoMg += li * 20;
+    const r=obsTop.recipe;
+    if(r==='levoLido') {
+      levoMg += obsTop.levoVol*5;
+      if(obsTop.lidoAdr) lidoAMg += obsTop.lidoVol*20; else lidoPMg += obsTop.lidoVol*20;
+    } else if(r==='levoOnly') {
+      levoMg += obsTop.loVol*5;
+    } else if(r==='fizzy') {
+      lidoAMg += 340;
+    } else if(r==='ropi') {
+      ropiMgT += obsTop.ropiVol*obsTop.ropiConc*10;
+    }
   }
   if(obsTrk.epi && obsEpi.totalVol) {
-    const mix = OBS_EPI_MIXES[obsEpi.mix];
-    const mg = obsEpi.totalVol * mix.concPct * 10;
-    if(obsEpi.mix==='01bupi') bupiMg += mg; else levoMg += mg;
+    const mix=OBS_EPI_MIXES[obsEpi.mix];
+    const mg=obsEpi.totalVol*mix.concPct*10;
+    if(obsEpi.mix==='01bupi') bupiMg+=mg; else levoMg+=mg;
   }
 
-  const fBupi = bupiMg/bupiMax, fLevo = levoMg/levoMax, fLido = lidoMg/lidoMax;
-  const fTotal = fBupi + fLevo + fLido;
-  const pct = Math.min(100, fTotal*100);
-  const remFrac = Math.max(0, 1-fTotal);
-  const col = pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
-  const statusText = pct>=100?'AT MAXIMUM':pct>=80?'APPROACHING MAX':pct>=50?'CAUTION':'WITHIN LIMITS';
-  const chipCls   = pct>=100?'chip-over':pct>=80?'chip-warn':'chip-safe';
+  const fBupi=bupiMg/bupiMax, fLevo=levoMg/levoMax;
+  const fLidoP=lidoPMg/lidoPMax, fLidoA=lidoAMg/lidoAMax, fRopi=ropiMgT/ropiMaxD;
+  const fTotal=fBupi+fLevo+fLidoP+fLidoA+fRopi;
+  const pct=Math.min(100,fTotal*100);
+  const remFrac=Math.max(0,1-fTotal);
+  const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+  const statusText=pct>=100?'AT MAXIMUM':pct>=80?'APPROACHING MAX':pct>=50?'CAUTION':'WITHIN LIMITS';
+  const chipCls=pct>=100?'chip-over':pct>=80?'chip-warn':'chip-safe';
 
-  const mkRow = (name,mg,max,f) => mg>0
-    ? `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--sub)">${name}</span>
-        <span><strong style="color:var(--text)">${mg.toFixed(0)}</strong> / ${max.toFixed(0)} mg <span style="color:${f>=1?'var(--red)':f>=0.8?'var(--amber)':'var(--sub2)'}">(${(f*100).toFixed(0)}%)</span></span>
-       </div>` : '';
+  const mkRow=(name,mg,max,f)=>mg>0?`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--sub)">${name}</span>
+      <span><strong style="color:var(--text)">${mg.toFixed(0)}</strong> / ${max.toFixed(0)} mg <span style="color:${f>=1?'var(--red)':f>=0.8?'var(--amber)':'var(--sub2)'}">(${(f*100).toFixed(0)}%)</span></span>
+    </div>`:'';
 
-  const rows = mkRow('Bupivacaine',bupiMg,bupiMax,fBupi)
-             + mkRow('Levobupivacaine',levoMg,levoMax,fLevo)
-             + mkRow('Lidocaine + adr',lidoMg,lidoMax,fLido);
+  const rows=mkRow('Bupivacaine',bupiMg,bupiMax,fBupi)
+           +mkRow('Levobupivacaine',levoMg,levoMax,fLevo)
+           +mkRow('Lidocaine (plain)',lidoPMg,lidoPMax,fLidoP)
+           +mkRow('Lidocaine + adr',lidoAMg,lidoAMax,fLidoA)
+           +mkRow('Ropivacaine',ropiMgT,ropiMaxD,fRopi);
 
-  const remSection = remFrac>0 ? `
+  const remSection=remFrac>0?`
     <div style="margin-top:12px">
-      <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Remaining capacity for further LA</div>
+      <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Remaining capacity</div>
       <div style="font-size:12px;color:var(--sub);line-height:1.8">
-        Bupivacaine: <strong style="color:var(--text)">${(remFrac*bupiMax).toFixed(0)} mg</strong><br>
-        Levobupivacaine: <strong style="color:var(--text)">${(remFrac*levoMax).toFixed(0)} mg</strong><br>
-        Lidocaine (plain): <strong style="color:var(--text)">${(remFrac*lidoPMax).toFixed(0)} mg</strong>
+        Bupivacaine / Levobupivacaine: <strong style="color:var(--text)">${(remFrac*bupiMax).toFixed(0)} mg</strong><br>
+        Lidocaine (plain): <strong style="color:var(--text)">${(remFrac*lidoPMax).toFixed(0)} mg</strong><br>
+        Ropivacaine: <strong style="color:var(--text)">${(remFrac*ropiMaxD).toFixed(0)} mg</strong>
       </div>
-    </div>` : `<div style="margin-top:10px;font-size:12px;color:var(--red);font-weight:700">No remaining capacity — do not give further LA</div>`;
+    </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--red);font-weight:700">No remaining capacity — do not give further LA</div>`;
 
-  el.innerHTML = `
+  el.innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div style="font-size:26px;font-weight:800;color:${col}">${pct.toFixed(0)}<span style="font-size:14px">%</span> <span style="font-size:11px;font-weight:500;color:var(--sub)">used</span></div>
       <span class="chip ${chipCls}">${statusText}</span>
     </div>
-    ${rows || '<div style="font-size:12px;color:var(--sub2)">Enable at least one source above</div>'}
+    ${rows||'<div style="font-size:12px;color:var(--sub2)">Enable at least one source above</div>'}
     ${remSection}
     ${bupiMg>0&&obsTrk.spinal?'<div style="margin-top:8px;font-size:10px;color:var(--sub2);line-height:1.4">Spinal bupivacaine included conservatively — systemic absorption is low but counts within the 6-hour LAST window.</div>':''}`;
 }
 
 // Init obs tab
 function initObs() {
-  setObsSpAdj('diamorphine');
+  updateObsSpAdjUI();
+  setObsSpVol(2.0);
+  setObsTopRecipe('levoLido');
+  setObsBlockHeight('none');
   calcObs();
 }
 
