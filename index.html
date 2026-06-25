@@ -3400,13 +3400,18 @@ function calcObsEpi() {
 
 function calcObsTracker() {
   const el = document.getElementById('obs-tracker-result'); if(!el) return;
-  const BUPI   = DRUGS.find(d=>d.id==='bupi_p');
-  const LEVO   = DRUGS.find(d=>d.id==='levo_p');
-  const LIDO_P = DRUGS.find(d=>d.id==='lido_p');
+  const BUPI = DRUGS.find(d=>d.id==='bupi_p');
+  const LEVO = DRUGS.find(d=>d.id==='levo_p');
   const LIDO_A = DRUGS.find(d=>d.id==='lido_a2');
-  const ROPI   = DRUGS.find(d=>d.id==='ropi');
-  const bupiMax=drugMax(BUPI), levoMax=drugMax(LEVO);
-  const lidoPMax=drugMax(LIDO_P), lidoAMax=drugMax(LIDO_A), ropiMaxD=drugMax(ROPI);
+  const ROPI  = DRUGS.find(d=>d.id==='ropi');
+  const bupiMax  = drugMax(BUPI);
+  const levoMax  = drugMax(LEVO);
+  const lidoAMax = drugMax(LIDO_A);
+  const ropiMaxD = drugMax(ROPI);
+  // Epidural lidocaine (plain) uses 5 mg/kg (max 400 mg) — higher than the
+  // nerve-block limit (3 mg/kg / 200 mg) to reflect slower epidural absorption.
+  // OAA CS top-up protocols routinely accept 300–400 mg plain lidocaine epidurally.
+  const lidoEpiMax = Math.min(calcEffectiveWt() * 5, 400);
 
   let bupiMg=0, levoMg=0, lidoPMg=0, lidoAMg=0, ropiMgT=0;
   if(obsTrk.spinal) bupiMg += obsSp.vol * 5;
@@ -3429,9 +3434,12 @@ function calcObsTracker() {
     if(obsEpi.mix==='01bupi') bupiMg+=mg; else levoMg+=mg;
   }
 
-  const fBupi=bupiMg/bupiMax, fLevo=levoMg/levoMax;
-  const fLidoP=lidoPMg/lidoPMax, fLidoA=lidoAMg/lidoAMax, fRopi=ropiMgT/ropiMaxD;
-  const fTotal=fBupi+fLevo+fLidoP+fLidoA+fRopi;
+  const fBupi  = bupiMg/bupiMax;
+  const fLevo  = levoMg/levoMax;
+  const fLidoP = lidoPMg/lidoEpiMax;
+  const fLidoA = lidoAMg/lidoAMax;
+  const fRopi  = ropiMgT/ropiMaxD;
+  const fTotal = fBupi+fLevo+fLidoP+fLidoA+fRopi;
   const pct=Math.min(100,fTotal*100);
   const remFrac=Math.max(0,1-fTotal);
   const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
@@ -3445,8 +3453,8 @@ function calcObsTracker() {
 
   const rows=mkRow('Bupivacaine',bupiMg,bupiMax,fBupi)
            +mkRow('Levobupivacaine',levoMg,levoMax,fLevo)
-           +mkRow('Lidocaine (plain)',lidoPMg,lidoPMax,fLidoP)
-           +mkRow('Lidocaine + adr',lidoAMg,lidoAMax,fLidoA)
+           +mkRow('Lidocaine plain (epidural)',lidoPMg,lidoEpiMax,fLidoP)
+           +mkRow('Lidocaine + adr (epidural)',lidoAMg,lidoAMax,fLidoA)
            +mkRow('Ropivacaine',ropiMgT,ropiMaxD,fRopi);
 
   const remSection=remFrac>0?`
@@ -3454,7 +3462,7 @@ function calcObsTracker() {
       <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Remaining capacity</div>
       <div style="font-size:12px;color:var(--sub);line-height:1.8">
         Bupivacaine / Levobupivacaine: <strong style="color:var(--text)">${(remFrac*bupiMax).toFixed(0)} mg</strong><br>
-        Lidocaine (plain): <strong style="color:var(--text)">${(remFrac*lidoPMax).toFixed(0)} mg</strong><br>
+        Lidocaine plain (epidural): <strong style="color:var(--text)">${(remFrac*lidoEpiMax).toFixed(0)} mg</strong><br>
         Ropivacaine: <strong style="color:var(--text)">${(remFrac*ropiMaxD).toFixed(0)} mg</strong>
       </div>
     </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--red);font-weight:700">No remaining capacity — do not give further LA</div>`;
@@ -3466,7 +3474,7 @@ function calcObsTracker() {
     </div>
     ${rows||'<div style="font-size:12px;color:var(--sub2)">Enable at least one source above</div>'}
     ${remSection}
-    ${bupiMg>0&&obsTrk.spinal?'<div style="margin-top:8px;font-size:10px;color:var(--sub2);line-height:1.4">Spinal bupivacaine included conservatively — systemic absorption is low but counts within the 6-hour LAST window.</div>':''}`;
+    <div style="margin-top:8px;font-size:10px;color:var(--sub2);line-height:1.5">Lidocaine plain epidural limit: 5 mg/kg (max 400 mg) — higher than the nerve-block ceiling (3 mg/kg) reflecting slower epidural absorption. OAA CS top-up protocols routinely use 300–400 mg.${bupiMg>0&&obsTrk.spinal?' Spinal bupivacaine included conservatively.':''}</div>`;
 }
 
 // Init obs tab
