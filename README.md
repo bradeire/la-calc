@@ -2,7 +2,9 @@
 
 A mobile-optimised Progressive Web App (PWA) for calculating maximum safe doses of local anaesthetic drugs, with obesity-adjusted and paediatric dosing, mixture calculations, nerve block duration estimates, additive dosing, and awake fibreoptic intubation (AFOi) topical dosing.
 
-**Live app:** https://bradeire.github.io/la-calc
+**Live app:** https://app.periopdigital.uk  
+**Beta:** https://beta.periopdigital.uk  
+**Landing page:** https://periopdigital.uk
 
 ---
 
@@ -24,13 +26,13 @@ A mobile-optimised Progressive Web App (PWA) for calculating maximum safe doses 
 ## Installing on your phone
 
 ### Android (Chrome)
-1. Open https://bradeire.github.io/la-calc in Chrome
+1. Open https://app.periopdigital.uk in Chrome
 2. Tap the **⋮ menu → Add to Home Screen**
 3. Tap **Install** when prompted
 4. The app appears on your home screen and opens fullscreen with no browser chrome
 
 ### iPhone / iPad (Safari)
-1. Open https://bradeire.github.io/la-calc in **Safari** (must be Safari, not Chrome)
+1. Open https://app.periopdigital.uk in **Safari** (must be Safari, not Chrome)
 2. Tap the **Share icon** (box with arrow pointing up)
 3. Scroll down and tap **Add to Home Screen**
 4. Tap **Add**
@@ -89,6 +91,11 @@ la-calc/
 └── icon-512.png    # App icon (large)
 ```
 
+Branch strategy:
+- `main` → `app.periopdigital.uk` (production)
+- `beta` → `beta.periopdigital.uk` (beta testing)
+- `landing` → `periopdigital.uk` (landing page)
+
 To update and deploy:
 ```bash
 git add .
@@ -96,8 +103,8 @@ git commit -m "Description of change"
 git push
 ```
 
-GitHub Pages deploys automatically within ~60 seconds of each push.
+Cloudflare Pages deploys automatically within ~60 seconds of each push.
 
 ---
 
-© 2026 Ó Brolcháin · LASTCalc Version 1.1
+© 2026 Ó Brolcháin · LASTCalc Version 1.2
