@@ -449,8 +449,10 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
-      <button class="btn-print" onclick="doPrint()">🖨 Print / PDF</button>
-      <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn-print" onclick="doPrint()">🖨 Print / PDF</button>
+        <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
+      </div>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
     <div class="dur-proj" id="durProj" style="display:none">
@@ -1332,10 +1334,12 @@ function syncRopiToggle(){
   document.getElementById('ropiToggleRow').style.display =
     drugs.some(e => e.did === 'ropi') ? 'flex' : 'none';
 }
-function addDrug(prior=false){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();plausible('Drug Added', {props:{prior:prior?'yes':'no'}});}
+const DEF_CONCS = {lido_p:1, lido_a2:1, lido_a4:1, ropi:0.75};
+function defConc(d){ return DEF_CONCS[d.id] ?? d.concs[0]; }
+function addDrug(prior=false){const d=DRUGS[0];drugs.push({id:uid++,did:d.id,conc:defConc(d),vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();plausible('Drug Added', {props:{prior:prior?'yes':'no'}});}
 function rmDrug(id){drugs=drugs.filter(e=>e.id!==id);renderDrugs();syncRopiToggle();calc();}
 function clearDrugs(){drugs=[];renderDrugs();syncRopiToggle();calc();}
-function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=d.concs[0];renderDrugs();syncRopiToggle();calc();}
+function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=defConc(d);renderDrugs();syncRopiToggle();calc();}
 function onConc(id,v){const e=drugs.find(x=>x.id===id);if(e){e.conc=parseFloat(v);calc();}}
 function onVol(id,v){const e=drugs.find(x=>x.id===id);if(e){e.vol=Math.max(0,parseFloat(v)||0);calc();}}
 
