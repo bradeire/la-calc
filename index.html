@@ -742,36 +742,40 @@ tbody td:not(:first-child){text-align:right}
   </div>
 
   <div class="card">
-    <div class="card-title">Mixing Calculator</div>
-    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px">How to achieve a target concentration by mixing two available strengths</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin-bottom:0">Mixing / Dilution Calculator</div>
+      <button onclick="clearDilution()" style="font-size:11px;font-weight:600;color:var(--sub2);background:var(--s1);border:1px solid var(--border);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:var(--font)">✕ Clear</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px">Mix two strengths, or dilute with saline — set Conc 1 to 0 for saline</div>
 
     <div style="display:flex;flex-direction:column;gap:10px">
 
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Low conc (%)</span>
-        <input type="number" id="dil-low" min="0.01" max="20" step="0.01" value="0.25" inputmode="decimal" oninput="calcDilution()"
-          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Conc 1 (%)</span>
+        <input type="number" id="dil-low" min="0" max="20" step="0.01" placeholder="e.g. 0.25" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+        <button onclick="setDilSaline()" id="dil-saline-btn" style="font-size:10px;font-weight:700;color:var(--sub2);background:var(--s1);border:1px solid var(--border);border-radius:99px;padding:3px 8px;cursor:pointer;font-family:var(--font);white-space:nowrap">🧂 Saline</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Conc 2 (%)</span>
+        <input type="number" id="dil-high" min="0.01" max="20" step="0.01" placeholder="e.g. 0.5" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
         <span style="font-size:11px;color:var(--sub2)">%</span>
       </div>
 
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">High conc (%)</span>
-        <input type="number" id="dil-high" min="0.01" max="20" step="0.01" value="0.5" inputmode="decimal" oninput="calcDilution()"
-          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
-        <span style="font-size:11px;color:var(--sub2)">%</span>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Target conc (%)</span>
-        <input type="number" id="dil-target" min="0.01" max="20" step="0.01" value="0.375" inputmode="decimal" oninput="calcDilution()"
-          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Target (%)</span>
+        <input type="number" id="dil-target" min="0.001" max="20" step="0.001" placeholder="e.g. 0.375" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
         <span style="font-size:11px;color:var(--sub2)">%</span>
       </div>
 
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Total volume</span>
-        <input type="number" id="dil-vol" min="1" max="500" step="1" value="20" inputmode="decimal" oninput="calcDilution()"
-          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <input type="number" id="dil-vol" min="1" max="500" step="1" placeholder="e.g. 20" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
         <span style="font-size:11px;color:var(--sub2)">ml</span>
       </div>
     </div>
@@ -2589,29 +2593,59 @@ function calcLidoIV() {
 // TAB 4 — DILUTIONS
 // ═══════════════════════════════════════════════════════════
 const DIL_PRESETS = [
-  { label:'Lidocaine 1.5% from 1% + 2%',       low:1,    high:2,    target:1.5  },
-  { label:'Bupi/Levo 0.375% from 0.25% + 0.5%',low:0.25, high:0.5,  target:0.375},
-  { label:'Bupi/Levo 0.125% from 0.25% + saline',low:0, high:0.25, target:0.125},
-  { label:'Ropivacaine 0.375% from 0.2% + 0.5%',low:0.2, high:0.5,  target:0.375},
-  { label:'Lidocaine 1% from 2% + saline',      low:0,    high:2,    target:1    },
+  { label:'Lidocaine 1.5% from 1% + 2%',            low:1,    high:2,    target:1.5   },
+  { label:'Bupi/Levo 0.375% from 0.25% + 0.5%',     low:0.25, high:0.5,  target:0.375 },
+  { label:'Bupi/Levo 0.125% from 0.25% + saline',   low:0,    high:0.25, target:0.125 },
+  { label:'Ropivacaine 0.375% from 0.2% + 0.5%',    low:0.2,  high:0.5,  target:0.375 },
+  { label:'Ropivacaine 0.5% from 0.75% + saline',   low:0,    high:0.75, target:0.5   },
+  { label:'Ropivacaine 0.6% from 0.75% + saline',   low:0,    high:0.75, target:0.6   },
+  { label:'Lidocaine 1% from 2% + saline',           low:0,    high:2,    target:1     },
 ];
 
 function applyDilPreset(p) {
   document.getElementById('dil-low').value    = p.low;
   document.getElementById('dil-high').value   = p.high;
   document.getElementById('dil-target').value = p.target;
+  updateSalineBtn();
   calcDilution();
 }
 
+function setDilSaline() {
+  document.getElementById('dil-low').value = '0';
+  updateSalineBtn();
+  calcDilution();
+}
+
+function updateSalineBtn() {
+  const btn = document.getElementById('dil-saline-btn');
+  if (!btn) return;
+  const isSaline = document.getElementById('dil-low').value === '0';
+  btn.style.color = isSaline ? 'var(--blue)' : 'var(--sub2)';
+  btn.style.borderColor = isSaline ? 'var(--blue)' : 'var(--border)';
+}
+
+function clearDilution() {
+  ['dil-low','dil-high','dil-target','dil-vol'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  updateSalineBtn();
+  document.getElementById('dil-result').innerHTML = '';
+}
+
 function calcDilution() {
-  const low    = parseFloat(document.getElementById('dil-low').value);
+  updateSalineBtn();
+  const lowRaw = document.getElementById('dil-low').value;
+  const low    = lowRaw === '' ? NaN : parseFloat(lowRaw);
   const high   = parseFloat(document.getElementById('dil-high').value);
   const target = parseFloat(document.getElementById('dil-target').value);
   const vol    = parseFloat(document.getElementById('dil-vol').value) || 20;
   const res    = document.getElementById('dil-result');
 
-  if (isNaN(low)||isNaN(high)||isNaN(target)||high<=low||target<=low||target>=high) {
-    res.innerHTML = `<span style="font-size:12px;color:var(--sub);font-style:italic">Target must be between low and high concentration.</span>`;
+  // Stay silent if fields not yet filled in
+  if (isNaN(low) || isNaN(high) || isNaN(target)) { res.innerHTML = ''; return; }
+
+  if (high <= low || target <= low || target >= high) {
+    res.innerHTML = `<span style="font-size:12px;color:var(--amber);font-style:italic">Target must be between Conc 1 and Conc 2.</span>`;
     return;
   }
 
@@ -2654,7 +2688,6 @@ if ('serviceWorker' in navigator) {
 window.addEventListener('load', () => {
   calcLidoIV();
   initDilPresets();
-  calcDilution();
 });
 </script>
 </body>
