@@ -933,6 +933,7 @@ function showTab(t, btn) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   btn.classList.add('active');
+  plausible('Tab Switch', {props: {tab: t}});
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1323,7 +1324,7 @@ function syncRopiToggle(){
   document.getElementById('ropiToggleRow').style.display =
     drugs.some(e => e.did === 'ropi') ? 'flex' : 'none';
 }
-function addDrug(prior=false){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();}
+function addDrug(prior=false){drugs.push({id:uid++,did:DRUGS[0].id,conc:DRUGS[0].concs[0],vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();plausible('Drug Added', {props:{prior:prior?'yes':'no'}});}
 function rmDrug(id){drugs=drugs.filter(e=>e.id!==id);renderDrugs();syncRopiToggle();calc();}
 function clearDrugs(){drugs=[];renderDrugs();syncRopiToggle();calc();}
 function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=d.concs[0];renderDrugs();syncRopiToggle();calc();}
@@ -1408,6 +1409,7 @@ function onBlockChange(){
   noteEl.style.display = 'block';
   noteEl.innerHTML = `<strong>Suggested:</strong> ${b.suggest}<br><span style="color:var(--sub)">${b.note}</span>`;
   updateBlockDur(v);
+  plausible('Block Selected', {props: {block: v}});
 }
 
 function updateBlockDur(v) {
@@ -2234,6 +2236,7 @@ function onWorkingsBgClick(e) { if (e.target === document.getElementById('workin
 
 // ── PRINT/PDF REPORT ───────────────────────────────────────────────────────
 function doPrint(suppressPrint = false) {
+  plausible('Print Report');
   const wt = getWt();
   const eff = calcEffectiveWt();
   const now = new Date();
