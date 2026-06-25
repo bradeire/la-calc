@@ -2935,7 +2935,7 @@ function obsToBlocks() {
   if(obsTrk.epi && obsEpi.totalVol) {
     const mix = OBS_EPI_MIXES[obsEpi.mix];
     const mg = obsEpi.totalVol * mix.concPct * 10;
-    entries.push({ did: obsEpi.mix === '01bupi' ? 'bupi_p' : 'levo_p', conc: mix.concPct * 100, mg });
+    entries.push({ did: obsEpi.mix === '01bupi' ? 'bupi_p' : 'levo_p', conc: mix.concPct, mg });
   }
 
   if(entries.length === 0) { alert('No LA doses recorded in the tracker. Enable sources and enter values first.'); return; }
