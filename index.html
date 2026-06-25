@@ -424,10 +424,7 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
-      <div style="display:flex;gap:6px">
-        <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
-        <button class="btn-png" onclick="doExportPNG()">💾 PNG</button>
-      </div>
+      <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
     <div class="dur-proj" id="durProj" style="display:none">
@@ -557,7 +554,7 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
       <label style="cursor:pointer">Wt</label>
-      <span id="afoiWtDisplay" style="font-size:15px;font-weight:700;color:var(--text);min-width:28px;text-align:right">70</span>
+      <span id="afoiWtDisplay" style="font-size:15px;font-weight:700;color:var(--text);width:34px;display:inline-block;text-align:right">70</span>
       <span class="wt-unit">kg</span>
       <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
     </div>
