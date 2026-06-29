@@ -1635,8 +1635,12 @@ function drugMax(d, _wt) {
 
   // Paediatric overrides (PNB single-shot)
   if (eff.pedMode && mos !== null) {
-    if (mos < 1 || mos < 6) {
-      // Neonate / <6m: ropivacaine only, ≤0.5 mg/kg
+    if (mos < 1) {
+      // Neonate: ropivacaine only, ≤0.5 mg/kg
+      return d.id === 'ropi' ? Math.min(0.5 * wt, 20) : 0;
+    }
+    if (mos < 6) {
+      // <6m: ropivacaine only, ≤0.5 mg/kg
       return d.id === 'ropi' ? Math.min(0.5 * wt, 20) : 0;
     }
     if (mos < 12) return Math.min(1.0 * wt, 50);   // 6–12m: 0.5–1.0 mg/kg
@@ -2604,7 +2608,7 @@ function runWtCalcs() {
   calc();
   calcAFOi();
   calcLidoIV();
-  calcObsTracker();
+  calcObs();
 }
 function syncWtMirror(triggerEl) {
   // Parse the raw value — number inputs return "" for incomplete entries like "81."
@@ -2663,7 +2667,7 @@ function openWorkings() {
     const max = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
-    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource });
+    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource, obsSource: e.obsSource, obsMax: e.obsMax });
   }
   const totalPct = Math.min(100, Math.round(totalFrac * 100));
   const col = totalPct >= 100 ? 'var(--red)' : totalPct >= 80 ? 'var(--amber)' : 'var(--green)';
@@ -3590,11 +3594,11 @@ function calcObsTracker() {
     if(obsEpi.mix==='01bupi') bupiMg+=mg; else levoMg+=mg;
   }
 
-  const fBupi  = bupiMg/bupiMax;
-  const fLevo  = levoMg/levoMax;
-  const fLidoP = lidoPMg/lidoEpiMax;
-  const fLidoA = lidoAMg/lidoAMax;
-  const fRopi  = ropiMgT/ropiMaxD;
+  const fBupi  = bupiMax  > 0 ? bupiMg/bupiMax   : 0;
+  const fLevo  = levoMax  > 0 ? levoMg/levoMax   : 0;
+  const fLidoP = lidoEpiMax > 0 ? lidoPMg/lidoEpiMax : 0;
+  const fLidoA = lidoAMax > 0 ? lidoAMg/lidoAMax : 0;
+  const fRopi  = ropiMaxD > 0 ? ropiMgT/ropiMaxD : 0;
   const fTotal = fBupi+fLevo+fLidoP+fLidoA+fRopi;
   const pct=Math.min(100,fTotal*100);
   const remFrac=Math.max(0,1-fTotal);
