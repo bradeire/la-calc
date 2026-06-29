@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "uk.periopdigital.app.twa",
+        "sha256_cert_fingerprints": ["2A:79:2A:35:4E:AD:A9:31:4D:8F:2D:11:F9:AD:96:6E:0C:E5:E8:7D:DA:02:3F:C9:A4:E0:4F:8F:87:39:3E:39"]
+      }
+    }]
