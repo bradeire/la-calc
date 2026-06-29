@@ -1013,7 +1013,9 @@ tbody td:not(:first-child){text-align:right}
 
     <!-- PANEL: Levo + Lido -->
     <div id="obsTopPanelLevoLido">
-      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:6px">
+      <!-- Mix preparation -->
+      <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Prepared mix</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
           <div class="toggle-btns">
@@ -1046,12 +1048,29 @@ tbody td:not(:first-child){text-align:right}
             <button class="tbtn" id="obsLLLidoAdr" onclick="setObsLLAdr('lido',true)">+ Adr</button>
           </div>
         </div>
-        <div>
+        <div style="display:flex;align-items:center;gap:8px">
           <button id="obsLLFentBtn" onclick="toggleObsLLFent()"
             style="font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">+ Fentanyl 100 mcg</button>
+          <span id="obsLLMixTotal" style="font-size:11px;color:var(--sub2)"></span>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>15–20 min</strong>. Give in 3–5 ml increments with 5 min between doses.</div>
+      <!-- Volume administered -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Volume administered</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLLGiven5" onclick="setObsLLGiven(5)">5</button>
+            <button class="tbtn" id="obsLLGiven10" onclick="setObsLLGiven(10)">10</button>
+            <button class="tbtn" id="obsLLGiven15" onclick="setObsLLGiven(15)">15</button>
+            <button class="tbtn" id="obsLLGivenAll" onclick="setObsLLGivenAll()">All</button>
+          </div>
+          <input type="number" id="obsLLGivenInput" min="0" max="50" step="1" placeholder="0" inputmode="decimal"
+            oninput="obsTop.llGiven=parseFloat(this.value)||0;clearObsLLGivenPresets();calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:6px 2px 0;line-height:1.4">⏱ Onset to T4: <strong>15–20 min</strong>. Give in 3–5 ml increments with 5 min between doses.</div>
     </div>
 
     <!-- PANEL: Levo only -->
@@ -2919,10 +2938,16 @@ function obsToBlocks() {
   if(obsTrk.topup) {
     const r = obsTop.recipe;
     if(r === 'levoLido') {
-      if(obsTop.levoVol > 0) entries.push({ did:'levo_p', conc:0.5, mg:obsTop.levoVol * 5 });
-      if(obsTop.lidoVol > 0) {
-        if(obsTop.lidoAdr) entries.push({ did:'lido_a2', conc:2, mg:obsTop.lidoVol * 20 });
-        else entries.push({ did:'lido_p', conc:2, mg:obsTop.lidoVol * 20, obsMax:lidoEpiMax });
+      const llMixTotal=obsTop.levoVol+obsTop.lidoVol;
+      if(obsTop.llGiven>0 && llMixTotal>0) {
+        const llF=Math.min(obsTop.llGiven,llMixTotal)/llMixTotal;
+        const llLevoMg=llF*obsTop.levoVol*5;
+        const llLidoMg=llF*obsTop.lidoVol*20;
+        if(llLevoMg>0) entries.push({ did:'levo_p', conc:0.5, mg:llLevoMg });
+        if(llLidoMg>0) {
+          if(obsTop.lidoAdr) entries.push({ did:'lido_a2', conc:2, mg:llLidoMg });
+          else entries.push({ did:'lido_p', conc:2, mg:llLidoMg, obsMax:lidoEpiMax });
+        }
       }
     } else if(r === 'levoOnly') {
       if(obsTop.loVol > 0) entries.push({ did:'levo_p', conc:0.5, mg:obsTop.loVol * 5 });
@@ -3210,6 +3235,7 @@ const obsTop = {
   recipe: 'levoLido',
   levoVol:10, levoAdr:false,
   lidoVol:10, lidoAdr:false,
+  llGiven:0,
   llFentanyl:false,
   loVol:20, loAdr:false,
   ropiConc:0.75, ropiVol:20,
@@ -3320,6 +3346,24 @@ function clearObsLLPresets(comp) {
   if(comp==='levo') [5,10,15].forEach(x=>document.getElementById('obsLLLevo'+x).classList.remove('active'));
   else [0,5,10].forEach(x=>document.getElementById('obsLLLido'+x).classList.remove('active'));
 }
+function setObsLLGiven(v) {
+  obsTop.llGiven=v; document.getElementById('obsLLGivenInput').value=v;
+  [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.toggle('active',x===v));
+  document.getElementById('obsLLGivenAll').classList.remove('active');
+  calcObsTopup();
+}
+function setObsLLGivenAll() {
+  const total = obsTop.levoVol + obsTop.lidoVol;
+  obsTop.llGiven = total;
+  document.getElementById('obsLLGivenInput').value = total;
+  [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.toggle('active',x===total));
+  document.getElementById('obsLLGivenAll').classList.toggle('active', ![5,10,15].includes(total));
+  calcObsTopup();
+}
+function clearObsLLGivenPresets() {
+  [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.remove('active'));
+  document.getElementById('obsLLGivenAll').classList.remove('active');
+}
 function setObsLLAdr(comp, on) {
   if(comp==='levo') {
     obsTop.levoAdr=on;
@@ -3406,8 +3450,11 @@ function clearObsSp() {
 function clearObsTop() {
   setObsTopRecipe('levoLido');
   setObsBlockHeight('none');
-  setObsLL('levo', 10); setObsLLAdr('levo', false);
-  setObsLL('lido', 10); setObsLLAdr('lido', false);
+  setObsLL('levo', 0); setObsLLAdr('levo', false);
+  setObsLL('lido', 0); setObsLLAdr('lido', false);
+  obsTop.llGiven = 0;
+  document.getElementById('obsLLGivenInput').value = '';
+  clearObsLLGivenPresets();
   obsTop.llFentanyl = false;
   const fb = document.getElementById('obsLLFentBtn');
   if(fb){ fb.style.background='var(--s1)'; fb.style.borderColor='var(--border)'; fb.style.color='var(--sub2)'; }
@@ -3458,13 +3505,23 @@ function calcObsTopup() {
     const lv=parseFloat(document.getElementById('obsLLLevoInput').value)||0;
     const li=parseFloat(document.getElementById('obsLLLidoInput').value)||0;
     obsTop.levoVol=lv; obsTop.lidoVol=li;
-    const lvoMg=lv*5, lidMg=li*20, tot=lv+li;
-    const parts=[];
-    if(lv>0) parts.push(`${lvoMg.toFixed(0)} mg levo 0.5%${obsTop.levoAdr?' + adr':''}`);
-    if(li>0) parts.push(`${lidMg.toFixed(0)} mg lido 2%${obsTop.lidoAdr?' + adr':''}`);
-    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${tot} ml</div>
-      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${parts.join(' · ')}</div>
-      ${obsTop.llFentanyl?'<div style="font-size:11px;color:var(--sub);margin-top:2px">+ Fentanyl 100 mcg</div>':''}`;
+    const mixTotal=lv+li;
+    const given=obsTop.llGiven;
+    // Update mix total label
+    const mixLbl=document.getElementById('obsLLMixTotal');
+    if(mixLbl) mixLbl.textContent=mixTotal>0?`= ${mixTotal} ml total mix`:'';
+    if(!given || mixTotal<=0) {
+      html=`<div style="font-size:12px;color:var(--sub2)">Enter volume administered below</div>`;
+    } else {
+      const f=Math.min(given,mixTotal)/mixTotal;
+      const lvoMg=(f*lv*5), lidMg=(f*li*20);
+      const parts=[];
+      if(lv>0) parts.push(`${lvoMg.toFixed(1)} mg levo 0.5%${obsTop.levoAdr?' + adr':''}`);
+      if(li>0) parts.push(`${lidMg.toFixed(1)} mg lido 2%${obsTop.lidoAdr?' + adr':''}`);
+      html=`<div style="font-size:14px;font-weight:700;color:var(--text)">${given} ml given of ${mixTotal} ml mix</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${parts.join(' · ')}</div>
+        ${obsTop.llFentanyl?'<div style="font-size:11px;color:var(--sub);margin-top:2px">+ Fentanyl 100 mcg</div>':''}`;
+    }
   } else if(r==='levoOnly') {
     const lv=parseFloat(document.getElementById('obsLOInput').value)||0;
     obsTop.loVol=lv;
@@ -3513,8 +3570,12 @@ function calcObsTracker() {
   if(obsTrk.topup) {
     const r=obsTop.recipe;
     if(r==='levoLido') {
-      levoMg += obsTop.levoVol*5;
-      if(obsTop.lidoAdr) lidoAMg += obsTop.lidoVol*20; else lidoPMg += obsTop.lidoVol*20;
+      const mixTotal=obsTop.levoVol+obsTop.lidoVol;
+      if(obsTop.llGiven>0 && mixTotal>0) {
+        const f=Math.min(obsTop.llGiven,mixTotal)/mixTotal;
+        levoMg += f*obsTop.levoVol*5;
+        if(obsTop.lidoAdr) lidoAMg += f*obsTop.lidoVol*20; else lidoPMg += f*obsTop.lidoVol*20;
+      }
     } else if(r==='levoOnly') {
       levoMg += obsTop.loVol*5;
     } else if(r==='fizzy') {
