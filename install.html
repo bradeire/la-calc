@@ -67,7 +67,7 @@ h1{font-size:24px;font-weight:800;text-align:center;letter-spacing:-.5px}
     </div>
     <div class="step">
       <div class="step-num">2</div>
-      <div class="step-text">Follow the install prompt or use Share → Add to Home Screen</div>
+      <div class="step-text">Follow the install prompt or use the Share → Add to Home Screen option</div>
     </div>
   </div>
 
@@ -82,10 +82,16 @@ const isAndroid = /Android/.test(ua);
 const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
 const fromApp = new URLSearchParams(window.location.search).get('from') === 'app';
 
-// Continue button always goes to calculator
+// Always return to index relative to this page
 document.getElementById('continueBtn').addEventListener('click', () => {
   window.location.href = './';
 });
+
+// If launched from first-run redirect, update label
+if (fromApp) {
+  document.getElementById('continueBtn').textContent = 'I\'ve installed it — Open Calculator →';
+  document.querySelector('.sub').textContent = 'Install the app first, then return here to open LASTCalc.';
+}
 
 let deferredPrompt = null;
 
@@ -94,7 +100,6 @@ window.addEventListener('beforeinstallprompt', e => {
   deferredPrompt = e;
   document.getElementById('androidSection').classList.remove('hidden');
   document.getElementById('installBtn').disabled = false;
-  document.getElementById('installBtn').textContent = 'Install App';
 });
 
 document.getElementById('installBtn').addEventListener('click', async () => {
@@ -106,21 +111,15 @@ document.getElementById('installBtn').addEventListener('click', async () => {
 });
 
 if (isIOS && isSafari) {
-  // iOS Safari: manual steps only
   document.getElementById('iosSection').classList.remove('hidden');
+} else if (isAndroid) {
+  if (!deferredPrompt) {
+    document.getElementById('androidSection').classList.remove('hidden');
+    document.getElementById('installBtn').textContent = 'Waiting for install prompt…';
+    document.getElementById('installBtn').disabled = true;
+  }
 } else {
-  // Android Chrome, desktop Chrome, Edge etc — all support beforeinstallprompt
-  // Show the install button and wait for the event; fall back after 8s if it never fires
-  document.getElementById('androidSection').classList.remove('hidden');
-  document.getElementById('installBtn').textContent = 'Install App';
-  document.getElementById('installBtn').disabled = true;
-  setTimeout(() => {
-    if (!deferredPrompt) {
-      // Prompt didn't fire — likely incognito, already installed, or unsupported browser
-      document.getElementById('installBtn').textContent = 'Already installed or not supported';
-      document.getElementById('installBtn').disabled = true;
-    }
-  }, 8000);
+  document.getElementById('otherSection').classList.remove('hidden');
 }
 </script>
 </body>

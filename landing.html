@@ -160,37 +160,172 @@ footer .copy{font-size:12px;color:var(--text3)}
       <div class="feat-desc">Age-based dose limits for neonates, &lt;6 m, 6–12 m, and &gt;1 yr</div>
     </div>
     <div class="feat">
-      <div class="feat-icon">📷</div>
-      <div class="feat-title">EPR scanning</div>
-      <div class="feat-desc">Camera OCR reads weight, height, age, and sex directly from an EPR sidebar</div>
-    </div>
-    <div class="feat">
       <div class="feat-icon">🖨️</div>
       <div class="feat-title">Print to EPR</div>
-      <div class="feat-desc">White-background PDF or PNG report with gauge and per-drug table — paste straight into clinical notes</div>
+      <div class="feat-desc">White-background report with gauge and per-drug table — paste straight into clinical notes. PDF and PNG export available.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🫁</div>
       <div class="feat-title">AFOi topical dosing</div>
       <div class="feat-desc">Per-agent bioavailability calculator for awake fibreoptic intubation, with transfer to blocks tab</div>
     </div>
+    <div class="feat">
+      <div class="feat-icon">📷</div>
+      <div class="feat-title">EPR scanning</div>
+      <div class="feat-desc">Camera OCR reads weight, height, age, and sex directly from an EPR sidebar</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💧</div>
+      <div class="feat-title">Lidocaine IV infusion</div>
+      <div class="feat-desc">Bolus and maintenance infusion calculator with syringe driver prep and pre-mixed 0.1% bag rates. Reference: Oxford Handbook of Anaesthesia.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🧪</div>
+      <div class="feat-title">Dilutions calculator</div>
+      <div class="feat-desc">Mix any two concentrations to a clinical target — e.g. 0.375% bupivacaine from 0.25% + 0.5%, or 1.5% lidocaine from 1% + 2%. Includes common presets.</div>
+    </div>
   </div>
 
   <div class="cred-box">
     <p>Doses are based on <strong>AAGBI, DAS, and standard published references</strong>. LASTCalc is an educational and decision-support aid — it does not replace clinical judgement or local formulary guidance. Always verify doses against your departmental protocols.</p>
+    <button onclick="document.getElementById('sourcesModal').style.display='flex'" style="margin-top:14px;display:inline-flex;align-items:center;gap:6px;background:var(--blue-dim);border:1px solid var(--blue-border);border-radius:99px;color:var(--info);font-family:inherit;font-size:12px;font-weight:500;padding:5px 14px;cursor:pointer">📚 Sources &amp; citations</button>
   </div>
 </section>
 
 <hr class="divider">
 
 <footer>
-  <span class="copy">© 2026 PeriOp Digital</span>
+  <span class="copy">© 2026 PeriOp Digital / Ó Brolcháin</span>
   <div class="footer-links">
     <a href="https://app.periopdigital.uk">LASTCalc</a>
     <a href="mailto:periop.digital@gmail.com">Contact</a>
-    <a href="https://app.periopdigital.uk">Disclaimer</a>
+    <a href="#" onclick="document.getElementById('discModal').style.display='flex';return false">Disclaimer</a>
   </div>
 </footer>
+
+<!-- Sources modal -->
+<div id="sourcesModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center">
+  <div style="background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:20px 20px 0 0;padding:28px 24px 40px;max-width:520px;width:100%;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <span style="font-size:16px;font-weight:700;color:#f8fafc">Sources &amp; citations</span>
+      <button onclick="document.getElementById('sourcesModal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;font-size:13px;color:#94a3b8;line-height:1.65">
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Local anaesthetic toxicity &amp; maximum doses</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://anaesthetists.org/Home/Resources-publications/Guidelines/Archived-guidelines/Management-of-severe-local-anaesthetic-toxicity" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">AAGBI Safety Guideline — Management of Severe Local Anaesthetic Toxicity ↗</a></div>
+            <div>Association of Anaesthetists of Great Britain &amp; Ireland, 2010. Primary source for maximum mg/kg dose limits used throughout LASTCalc.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://pubmed.ncbi.nlm.nih.gov/30122981/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">El-Boghdadly K et al. — Local anaesthetic systemic toxicity: current perspectives ↗</a></div>
+            <div><em>Local and Regional Anesthesia</em>, 2018; 11: 35–44. doi:10.2147/LRA.S154512. Fractional dose mixture rationale and clinical risk stratification.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">AFOi topical lidocaine ceiling (9 mg/kg)</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://das.uk.com/guidelines/das-guidelines-for-awake-tracheal-intubation-ati-in-adults/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">DAS Guidelines for awake tracheal intubation in adults ↗</a></div>
+            <div>Difficult Airway Society, <em>Anaesthesia</em> 2020; 75: 509–528. Source for 9 mg/kg topical lidocaine ceiling used in AFOi calculations.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://academic.oup.com/bja/article/95/4/549/302696" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Williams KA, Woodall NM et al. — Combined nebulisation and spray-as-you-go topical local anaesthesia ↗</a></div>
+            <div><em>BJA</em> 2005; 95(4): 549–553. Demonstrated 9 mg/kg topical lidocaine does not produce toxic plasma concentrations; basis for AFOi ceiling.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Obesity-adjusted dosing</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://pubmed.ncbi.nlm.nih.gov/16176118/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Janmahasatian M et al. — Quantification of lean bodyweight ↗</a></div>
+            <div><em>Clinical Pharmacokinetics</em> 2005; 44(10): 1051–1065. doi:10.2165/00003088-200544100-00004. Formula used to calculate lean body weight (LBW) when BMI ≥ 30.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://clincalc.com/kinetics/idealbw.aspx" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Devine BJ — Ideal Body Weight formula (ClinCalc reference) ↗</a></div>
+            <div>Original: <em>Drug Intelligence &amp; Clinical Pharmacy</em> 1974; 8: 650–655 (pre-digital, no direct URL). ClinCalc provides the validated formula and clinical context used for IBW calculation in LASTCalc.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Paediatric dosing</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://bnfc.nice.org.uk/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">BNF for Children — Local anaesthetics ↗</a></div>
+            <div>British National Formulary for Children (current edition). Age-banded maximum dose ceilings for neonates, infants, and children.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://pubmed.ncbi.nlm.nih.gov/29319604/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Suresh S et al. (ESRA/ASRA) — Recommendations on local anaesthetic dosage in paediatric regional anaesthesia ↗</a></div>
+            <div><em>Regional Anesthesia and Pain Medicine</em> 2018; 43(2): 211–216. doi:10.1097/AAP.0000000000000702. Joint ESRA/ASRA committee recommendations informing age-banded dose ceilings used in LASTCalc.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">IV lidocaine infusion</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://www.bjaed.org/article/S2058-5349(17)30039-2/fulltext" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Eipe N, Gupta S, Penning J — Intravenous lidocaine for acute pain: an evidence-based clinical update ↗</a></div>
+            <div><em>BJA Education</em> 2016; 16(9): 292–298. Perioperative dosing: bolus 1–2 mg/kg, infusion 0.5–3 mg/kg/hr (most effective 1–2 mg/kg/hr). Analgesic, anti-hyperalgesic, and anti-inflammatory mechanisms reviewed. Primary source for Lido IV calculator dosing.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://www.bjanaesthesia.org.uk/article/S0007-0912(17)30243-X/fulltext" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Weibel S et al. — Efficacy and safety of IV lidocaine for postoperative analgesia and recovery: systematic review with trial sequential analysis ↗</a></div>
+            <div><em>BJA</em> 2018; 120(6): 1215–1226. Meta-analysis of RCTs demonstrating reduced pain scores, opioid consumption, and PONV in the first 24–48 h, particularly for abdominal surgery.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10719458/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Honarbakhsh S et al. — Lidocaine as an anti-arrhythmic drug: are there any indications left? ↗</a></div>
+            <div><em>European Heart Journal Supplements</em> 2023. Antiarrhythmic dosing: bolus 1–1.5 mg/kg IV (repeat 0.5 mg/kg q8–10 min, max 3 mg/kg), maintenance infusion 1–4 mg/min. AHA/ACC Class IIa for shock-refractory VF/pVT.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://www.researchgate.net/publication/345308265_The_use_of_intravenous_lidocaine_for_postoperative_pain_and_recovery_international_consensus_statement_on_efficacy_and_safety" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Foo I et al. — International consensus statement on IV lidocaine for postoperative pain and recovery ↗</a></div>
+            <div><em>BJA</em> 2021; 126(1): 24–36. Endorsed by ESRA, ASRA, APA, and ESAIC. Recommends IV lidocaine as part of multimodal analgesia; supports use in abdominal and laparoscopic surgery with appropriate monitoring.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:#64748b;margin-bottom:10px">Nerve block volumes &amp; drug selection</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://www.nysora.com/topics/pharmacology/clinical-pharmacology-local-anesthetics/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">NYSORA — Clinical Pharmacology of Local Anesthetics ↗</a></div>
+            <div>Hadzic A (ed.). Volumes, concentrations, and expected durations for individual nerve blocks; maximum dose guidance by agent.</div>
+          </div>
+          <div style="background:#0f172a;border-radius:8px;padding:10px 12px">
+            <div style="margin-bottom:2px"><a href="https://pubmed.ncbi.nlm.nih.gov/11945112/" target="_blank" rel="noopener" style="color:#60a5fa;font-weight:500">Bardsley H et al. — Cardiac and CNS toxicity of levobupivacaine: strengths of evidence for advantage over bupivacaine ↗</a></div>
+            <div><em>Drug Safety</em> 2002; 25(3): 153–163. Evidence basis for preferring levobupivacaine at vascular-adjacent blocks where inadvertent IV injection is a risk.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <button onclick="document.getElementById('sourcesModal').style.display='none'" style="margin-top:22px;width:100%;background:#334155;border:none;border-radius:10px;color:#f8fafc;font-family:inherit;font-size:14px;font-weight:600;padding:12px;cursor:pointer">Close</button>
+  </div>
+</div>
+
+<!-- Disclaimer modal -->
+<div id="discModal" style="display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.7);align-items:flex-end;justify-content:center">
+  <div style="background:#1e293b;border:1px solid rgba(255,255,255,.08);border-radius:20px 20px 0 0;padding:28px 24px 40px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <span style="font-size:16px;font-weight:700;color:#f8fafc">Disclaimer</span>
+      <button onclick="document.getElementById('discModal').style.display='none'" style="background:none;border:none;color:#64748b;font-size:22px;cursor:pointer;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <div style="font-size:13px;color:#94a3b8;line-height:1.75;display:flex;flex-direction:column;gap:12px">
+      <p><strong style="color:#f8fafc">Educational and decision-support use only.</strong> PeriOp Digital tools, including LASTCalc, are intended to assist trained clinicians in calculating drug doses based on published reference data. They do not replace clinical judgement, institutional protocols, or the guidance of a responsible consultant.</p>
+      <p><strong style="color:#f8fafc">Dose references.</strong> Maximum doses are derived from AAGBI, DAS, and standard published anaesthetic references. Local formularies and departmental protocols may differ — always verify doses against your own institution's guidance before administering any drug.</p>
+      <p><strong style="color:#f8fafc">Patient safety.</strong> No calculator can account for all individual patient factors. Clinical decisions must be made by a qualified practitioner who has assessed the patient directly. If in doubt, seek senior advice.</p>
+      <p><strong style="color:#f8fafc">No liability.</strong> PeriOp Digital and its developers accept no liability for clinical decisions made using these tools. Use is entirely at the clinician's own risk.</p>
+      <p><strong style="color:#f8fafc">Data privacy.</strong> No patient data is collected, stored, or transmitted. All calculations run locally in your browser.</p>
+    </div>
+    <button onclick="document.getElementById('discModal').style.display='none'" style="margin-top:22px;width:100%;background:#334155;border:none;border-radius:10px;color:#f8fafc;font-family:inherit;font-size:14px;font-weight:600;padding:12px;cursor:pointer">Close</button>
+  </div>
+</div>
 
 </body>
 </html>

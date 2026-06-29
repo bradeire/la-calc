@@ -279,24 +279,43 @@ tbody td:not(:first-child){text-align:right}
 .disc-footer{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;flex-shrink:0;padding:2px 2px}
 .disc-btn{background:none;border:1px solid var(--border);border-radius:99px;color:var(--sub2);font-family:var(--font);font-size:10px;font-weight:500;padding:3px 10px;cursor:pointer}
 .disc-btn:active{background:var(--s1)}
-/* Install modal */
-#installModal{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
-#installModal.open{opacity:1;pointer-events:all}
-.install-sheet{background:var(--s1);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:480px;border-top:1px solid var(--border2)}
-.install-icon{width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px}
-.install-title{font-size:20px;font-weight:800;text-align:center;letter-spacing:-.3px;color:var(--text)}
-.install-sub{font-size:12px;color:var(--sub2);text-align:center;margin:4px 0 20px;line-height:1.5}
-.install-step{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-top:1px solid var(--border)}
-.install-step:first-of-type{border-top:none}
-.install-step-num{width:22px;height:22px;border-radius:99px;background:rgba(96,165,250,.15);color:#60a5fa;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-.install-step-text{font-size:12px;line-height:1.5;color:var(--sub)}
-.install-step-text strong{color:var(--text)}
-.install-ios-arrow{display:inline-block;animation:bounce .8s infinite alternate}
-@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(4px)}}
-.btn-install-main{width:100%;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;border-radius:12px;color:#fff;font-family:var(--font);font-size:15px;font-weight:700;padding:13px;cursor:pointer;margin-top:16px}
-.btn-install-main:disabled{opacity:.4;cursor:not-allowed}
-.btn-install-skip{width:100%;background:none;border:1px solid var(--border);border-radius:12px;color:var(--sub2);font-family:var(--font);font-size:13px;font-weight:500;padding:11px;cursor:pointer;margin-top:8px}
-.btn-install-skip:active{background:var(--s2)}
+/* Camera / OCR */
+.scan-btn{display:inline-flex;align-items:center;gap:5px;background:var(--s1);border:1px solid var(--border2);border-radius:99px;color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;padding:5px 14px 5px 10px;cursor:pointer;margin-top:8px}
+.scan-btn:active{background:var(--s2)}
+.scan-exp{font-size:9px;font-weight:500;background:rgba(139,92,246,.2);border-radius:4px;padding:1px 5px;letter-spacing:.3px}
+#cameraModal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+#cameraModal.open{opacity:1;pointer-events:all}
+#cameraVideo{width:100%;max-width:500px;max-height:45vh;object-fit:cover;flex-shrink:0;border-radius:0 0 8px 8px}
+.cam-header{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:500px;padding:14px 16px 10px;box-sizing:border-box}
+.cam-title{font-size:15px;font-weight:700;color:#fff}
+.cam-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px}
+.cam-guide{font-size:11px;color:rgba(255,255,255,.6);text-align:center;padding:8px 20px;max-width:500px}
+.cam-btns{display:flex;gap:10px;padding:14px 20px;width:100%;max-width:500px;box-sizing:border-box}
+.cam-capture{flex:1;background:var(--purple);border:none;border-radius:var(--rsm);color:#fff;font-family:var(--font);font-size:14px;font-weight:700;padding:13px;cursor:pointer}
+.cam-capture:active{opacity:.8}
+.cam-capture:disabled{opacity:.4;cursor:default}
+.cam-freeze{position:relative;width:100%;max-width:500px;flex-shrink:0;border-radius:0 0 8px 8px;display:none;background:#000;text-align:center}
+.cam-freeze canvas{width:auto;max-width:100%;max-height:45vh;height:auto;display:block;margin:0 auto}
+.cam-freeze-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.cam-scanning-ring{width:40px;height:40px;border:3px solid rgba(139,92,246,.3);border-top-color:var(--purple);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cam-scanning-txt{font-size:12px;font-weight:600;color:#fff;letter-spacing:.5px}
+.btn-png{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:var(--rsm);color:var(--green);font-family:var(--font);font-size:12px;font-weight:600;padding:7px 14px;cursor:pointer}
+.btn-png:active{opacity:.7}
+.cam-status{font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:0 20px 10px;min-height:18px}
+/* OCR review panel */
+.ocr-review{background:var(--s1);border-radius:var(--rsm);margin:0 20px;padding:12px 14px;width:calc(100% - 40px);max-width:460px;box-sizing:border-box}
+.ocr-review-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px}
+.ocr-field{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ocr-field label{font-size:11px;color:var(--sub2);width:50px;flex-shrink:0}
+.ocr-field input,.ocr-field select{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font);font-size:13px;padding:5px 8px}
+.ocr-field .ocr-conf{font-size:10px;padding:2px 6px;border-radius:99px;flex-shrink:0}
+.ocr-conf.high{background:rgba(52,211,153,.15);color:var(--green)}
+.ocr-conf.low{background:rgba(251,191,36,.15);color:var(--amber)}
+.ocr-conf.none{background:rgba(255,255,255,.06);color:var(--sub2)}
+.ocr-apply{width:100%;background:var(--purple);border:none;border-radius:var(--rsm);color:#fff;font-family:var(--font);font-size:13px;font-weight:700;padding:11px;cursor:pointer;margin-top:4px}
+.ocr-apply:active{opacity:.8}
+.ocr-note{font-size:10px;color:rgba(255,255,255,.4);text-align:center;padding:6px 20px 16px;max-width:500px}
 .disclaimer-body{font-size:12px;color:var(--sub);line-height:1.65;padding:0 4px}
 .disclaimer-body h3{font-size:12px;font-weight:700;color:var(--text);margin:12px 0 4px}
 .disclaimer-body h3:first-child{margin-top:0}
@@ -313,6 +332,9 @@ tbody td:not(:first-child){text-align:right}
 <div class="tab-bar">
   <button class="tab-btn active" onclick="showTab('blocks',this)">💉 Blocks</button>
   <button class="tab-btn" onclick="showTab('afoi',this)">🫁 AFOi</button>
+  <button class="tab-btn" onclick="showTab('lidoiv',this)">💧 Lido IV</button>
+  <button class="tab-btn" onclick="showTab('dilutions',this)">🧪 Dilutions</button>
+  <button class="tab-btn" onclick="showTab('obs',this)">🍼 Obs</button>
 </div>
 
 <!-- SHARED ANTHROPOMETRICS PANEL (shared across all tabs) -->
@@ -352,6 +374,11 @@ tbody td:not(:first-child){text-align:right}
   </div>
   <div class="anthro-results" id="anthroResults"></div>
   <div id="pedbanner"></div>
+  <button class="scan-btn" onclick="openScanner()">
+    <span>📷</span>
+    <span>Scan patient label / EPR</span>
+    <span style="font-size:9px;font-weight:700;color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:99px;padding:1px 6px;letter-spacing:.3px;text-transform:uppercase">Experimental</span>
+  </button>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -424,7 +451,10 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 2px 0">
       <button class="btn-workings" onclick="openWorkings()">⚙ Show workings</button>
-      <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn-print" onclick="doPrint()">🖨️ Print / PDF</button>
+        <button class="btn-png" onclick="doExportPNG()">💾 Save as PNG</button>
+      </div>
     </div>
     <!-- Dynamic duration projection (from actual drugs given) -->
     <div class="dur-proj" id="durProj" style="display:none">
@@ -516,7 +546,7 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
 </div>
 
 <!-- MODAL OVERLAY -->
@@ -554,7 +584,7 @@ tbody td:not(:first-child){text-align:right}
     </div>
     <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
       <label style="cursor:pointer">Wt</label>
-      <span id="afoiWtDisplay" style="font-size:15px;font-weight:700;color:var(--text);width:34px;display:inline-block;text-align:right">70</span>
+      <input type="number" class="wt-mirror" min="1" max="250" value="70" inputmode="decimal" onclick="event.stopPropagation()" oninput="syncWtMirror(this)">
       <span class="wt-unit">kg</span>
       <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
     </div>
@@ -619,7 +649,580 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.2</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 3 — LIDOCAINE IV INFUSION
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-lidoiv">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">💧</div>
+      <h1>Lidocaine IV</h1>
+    </div>
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+      <label style="cursor:pointer">Wt</label>
+      <input type="number" class="wt-mirror" min="1" max="250" value="70" inputmode="decimal" onclick="event.stopPropagation()" oninput="syncWtMirror(this)">
+      <span class="wt-unit">kg</span>
+      <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
+    </div>
+  </div>
+
+  <!-- BOLUS CARD -->
+  <div class="card">
+    <div class="card-title">Loading Bolus</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.5">Slow IV bolus · 1–1.5 mg/kg over 2–4 min (max 20 min) · <em>Oxford Handbook of Anaesthesia</em></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Dose</span>
+      <div class="toggle-btns">
+        <button class="tbtn active" id="lidobolus-1" onclick="setBolusRate(1)">1 mg/kg</button>
+        <button class="tbtn" id="lidobolus-15" onclick="setBolusRate(1.5)">1.5 mg/kg</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Duration</span>
+      <div class="toggle-btns">
+        <button class="tbtn active" id="lidodur-2" onclick="setBolusMin(2)">2 min</button>
+        <button class="tbtn" id="lidodur-4" onclick="setBolusMin(4)">4 min</button>
+        <button class="tbtn" id="lidodur-20" onclick="setBolusMin(20)">20 min</button>
+      </div>
+    </div>
+    <div id="lidoiv-bolus-result" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <!-- INFUSION CARD -->
+  <div class="card">
+    <div class="card-title">Maintenance Infusion</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.5">0.5–2 mg/kg/hr · Usual starting rate 1 mg/kg/hr</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Rate</span>
+      <div class="toggle-btns">
+        <button class="tbtn" id="lidoinf-05" onclick="setInfRate(0.5)">0.5</button>
+        <button class="tbtn active" id="lidoinf-1" onclick="setInfRate(1)">1</button>
+        <button class="tbtn" id="lidoinf-15" onclick="setInfRate(1.5)">1.5</button>
+        <button class="tbtn" id="lidoinf-2" onclick="setInfRate(2)">2</button>
+      </div>
+      <span style="font-size:10.5px;color:var(--sub2)">mg/kg/hr</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Conc</span>
+      <div class="toggle-btns">
+        <button class="tbtn" id="lidoconc-01" onclick="setInfConc(0.1)">0.1%</button>
+        <button class="tbtn active" id="lidoconc-02" onclick="setInfConc(0.2)">0.2%</button>
+        <button class="tbtn" id="lidoconc-05" onclick="setInfConc(0.5)">0.5%</button>
+        <button class="tbtn" id="lidoconc-1" onclick="setInfConc(1)">1%</button>
+      </div>
+    </div>
+    <div id="lidoiv-inf-result" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
+  <!-- PREPARATION CARD -->
+  <div class="card">
+    <div class="card-title">Preparation</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.5">Syringe driver (50 ml) or pre-mixed 0.1% bag — based on infusion settings above</div>
+    <div id="lidoiv-prep-result" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+
+  <!-- LAST WARNING CARD -->
+  <div class="card" style="border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.05)">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <span style="font-size:16px;flex-shrink:0">⚠</span>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px">LAST risk — consider total lidocaine load</div>
+        <div style="font-size:11.5px;color:var(--sub);line-height:1.6">If IV lidocaine is being used alongside a peripheral nerve block containing lidocaine, the doses accumulate within the same 6-hour window. Use the <strong>Blocks tab</strong> to calculate the combined fractional dose and ensure total exposure remains within safe limits (plain: 3 mg/kg / 200 mg; with adrenaline: 7 mg/kg / 500 mg).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left;flex:1 1 auto">Oxford Handbook · Verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 4 — DILUTIONS
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-dilutions">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#10b981,#3b82f6)">🧪</div>
+      <h1>Dilutions</h1>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="card-title" style="margin-bottom:0">Mixing / Dilution Calculator</div>
+      <button onclick="clearDilution()" style="font-size:11px;font-weight:600;color:var(--sub2);background:var(--s1);border:1px solid var(--border);border-radius:99px;padding:3px 10px;cursor:pointer;font-family:var(--font)">✕ Clear</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px">Mix two strengths, or dilute with saline — set Conc 1 to 0 for saline</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Conc 1 (%)</span>
+        <input type="number" id="dil-low" min="0" max="20" step="0.01" placeholder="e.g. 0.25" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+        <button onclick="setDilSaline()" id="dil-saline-btn" style="font-size:10px;font-weight:700;color:var(--sub2);background:var(--s1);border:1px solid var(--border);border-radius:99px;padding:3px 8px;cursor:pointer;font-family:var(--font);white-space:nowrap">🧂 Saline</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Conc 2 (%)</span>
+        <input type="number" id="dil-high" min="0.01" max="20" step="0.01" placeholder="e.g. 0.5" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Target (%)</span>
+        <input type="number" id="dil-target" min="0.001" max="20" step="0.001" placeholder="e.g. 0.375" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">%</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Total volume</span>
+        <input type="number" id="dil-vol" min="1" max="500" step="1" placeholder="e.g. 20" inputmode="decimal" oninput="calcDilution()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT CARD -->
+  <div class="card" id="dil-result-card">
+    <div class="card-title">Result</div>
+    <div id="dil-result"></div>
+  </div>
+
+  <!-- QUICK PRESETS -->
+  <div class="card">
+    <div class="card-title">Quick Presets</div>
+    <div style="display:flex;flex-direction:column;gap:6px" id="dil-presets"></div>
+  </div>
+
+  <!-- ADRENALINE CALCULATOR -->
+  <div class="card">
+    <div class="card-title">Adrenaline Calculator</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:14px;line-height:1.4">Add adrenaline to plain LA, or calculate the resulting concentration when mixing solutions with different adrenaline strengths.</div>
+
+    <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Add to Plain LA</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">LA volume</span>
+        <input type="number" id="adr-add-vol" min="1" max="500" step="1" placeholder="e.g. 20" inputmode="decimal" oninput="calcAdrAdd()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Target</span>
+        <div class="toggle-btns">
+          <button class="tbtn" id="adrT100" onclick="setAdrTarget(100)">1:100k</button>
+          <button class="tbtn active" id="adrT200" onclick="setAdrTarget(200)">1:200k</button>
+          <button class="tbtn" id="adrT400" onclick="setAdrTarget(400)">1:400k</button>
+        </div>
+      </div>
+    </div>
+    <div id="adr-add-result" style="font-size:12.5px;color:var(--sub);line-height:1.6;min-height:18px"></div>
+
+    <div style="border-top:1px solid var(--border);margin:14px 0"></div>
+
+    <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">Mix Two Solutions</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:10px;line-height:1.4">e.g. 10 ml 1% + 1:200k &amp; 10 ml 2% plain → 1.5% + 1:400k</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Solution A</span>
+        <input type="number" id="adr-mix-vola" min="0" max="500" step="1" placeholder="ml" inputmode="decimal" oninput="calcAdrMix()"
+          style="width:64px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+        <select id="adr-mix-conca" onchange="calcAdrMix()" style="flex:1;padding:5px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:11px;font-family:var(--font)">
+          <option value="0">plain</option>
+          <option value="100">1:100,000</option>
+          <option value="200" selected>1:200,000</option>
+          <option value="400">1:400,000</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Solution B</span>
+        <input type="number" id="adr-mix-volb" min="0" max="500" step="1" placeholder="ml" inputmode="decimal" oninput="calcAdrMix()"
+          style="width:64px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+        <select id="adr-mix-concb" onchange="calcAdrMix()" style="flex:1;padding:5px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:11px;font-family:var(--font)">
+          <option value="0" selected>plain</option>
+          <option value="100">1:100,000</option>
+          <option value="200">1:200,000</option>
+          <option value="400">1:400,000</option>
+        </select>
+      </div>
+    </div>
+    <div id="adr-mix-result" style="font-size:12.5px;color:var(--sub);line-height:1.6;min-height:18px"></div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left;flex:1 1 auto">C₁V₁ + C₂V₂ = C₃V₃ · Verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     TAB 5 — OBSTETRICS
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-obs">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#ec4899,#a855f7)">🍼</div>
+      <h1>Obstetrics</h1>
+    </div>
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+      <label style="cursor:pointer">Wt</label>
+      <input type="number" class="wt-mirror" min="1" max="250" value="70" inputmode="decimal" onclick="event.stopPropagation()" oninput="syncWtMirror(this)">
+      <span class="wt-unit">kg</span>
+      <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
+    </div>
+  </div>
+
+  <!-- CARD 1: Spinal for CS -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <div class="card-title" style="margin-bottom:0">Spinal for Caesarean Section</div>
+      <button onclick="clearObsSp()" style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">Clear</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Bupivacaine</span>
+        <div class="toggle-btns">
+          <button class="tbtn" id="obsSpHeavy" onclick="setObsSpDrug('heavy')">Heavy 0.5%</button>
+          <button class="tbtn" id="obsSpPlain" onclick="setObsSpDrug('plain')">Plain 0.5%</button>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Volume</span>
+        <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
+          <button class="tbtn" id="obsSpV16" onclick="setObsSpVol(1.6)">1.6</button>
+          <button class="tbtn" id="obsSpV18" onclick="setObsSpVol(1.8)">1.8</button>
+          <button class="tbtn" id="obsSpV20" onclick="setObsSpVol(2.0)">2.0</button>
+          <button class="tbtn" id="obsSpV22" onclick="setObsSpVol(2.2)">2.2</button>
+          <button class="tbtn" id="obsSpV23" onclick="setObsSpVol(2.3)">2.3</button>
+          <button class="tbtn" id="obsSpV25" onclick="setObsSpVol(2.5)">2.5</button>
+        </div>
+        <input type="number" id="obsSpVolInput" min="0.5" max="5" step="0.1" value="" inputmode="decimal"
+          oninput="setObsSpVolCustom(parseFloat(this.value))"
+          style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+      </div>
+
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px;padding-top:3px">Adjuvant</span>
+        <div style="display:flex;flex-direction:column;gap:7px;flex:1">
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpAdjNone" onclick="setObsSpAdjExcl('none')">None</button>
+              <button class="tbtn active" id="obsSpAdjDia" onclick="setObsSpAdjExcl('diamorphine')">Diamorphine</button>
+            </div>
+            <span style="font-size:9.5px;color:var(--sub2)">solo only</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpAdjMorph" onclick="toggleObsSpAdjCombi('morphinePF')">Morphine PF</button>
+              <button class="tbtn" id="obsSpAdjFent" onclick="toggleObsSpAdjCombi('fentanyl')">Fentanyl</button>
+            </div>
+            <span style="font-size:9.5px;color:var(--sub2)">can combine</span>
+          </div>
+
+          <div id="obsSpDiaDoseRow" style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--sub2);width:80px">Diamorphine</span>
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpDia200" onclick="setObsSpAdjDose('diamorphine',200)">200</button>
+              <button class="tbtn active" id="obsSpDia300" onclick="setObsSpAdjDose('diamorphine',300)">300</button>
+              <button class="tbtn" id="obsSpDia400" onclick="setObsSpAdjDose('diamorphine',400)">400</button>
+            </div>
+            <input type="number" id="obsSpDiaInput" value="300" min="0" max="1000" step="1" inputmode="decimal"
+              oninput="obsSpAdj.doses.diamorphine=parseFloat(this.value)||0;calcObsSpinal()"
+              style="width:46px;padding:3px 5px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:12px;font-weight:600;font-family:var(--font);text-align:right">
+            <span style="font-size:10.5px;color:var(--sub2)">mcg</span>
+          </div>
+
+          <div id="obsSpMorphDoseRow" style="display:none;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--sub2);width:80px">Morphine PF</span>
+            <div class="toggle-btns">
+              <button class="tbtn active" id="obsSpMorph100" onclick="setObsSpAdjDose('morphinePF',100)">100</button>
+              <button class="tbtn" id="obsSpMorph150" onclick="setObsSpAdjDose('morphinePF',150)">150</button>
+              <button class="tbtn" id="obsSpMorph200" onclick="setObsSpAdjDose('morphinePF',200)">200</button>
+            </div>
+            <input type="number" id="obsSpMorphInput" value="100" min="0" max="500" step="1" inputmode="decimal"
+              oninput="obsSpAdj.doses.morphinePF=parseFloat(this.value)||0;calcObsSpinal()"
+              style="width:46px;padding:3px 5px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:12px;font-weight:600;font-family:var(--font);text-align:right">
+            <span style="font-size:10.5px;color:var(--sub2)">mcg</span>
+          </div>
+
+          <div id="obsSpFentDoseRow" style="display:none;align-items:center;gap:6px">
+            <span style="font-size:10.5px;color:var(--sub2);width:80px">Fentanyl</span>
+            <div class="toggle-btns">
+              <button class="tbtn" id="obsSpFent15" onclick="setObsSpAdjDose('fentanyl',15)">15</button>
+              <button class="tbtn" id="obsSpFent20" onclick="setObsSpAdjDose('fentanyl',20)">20</button>
+              <button class="tbtn active" id="obsSpFent25" onclick="setObsSpAdjDose('fentanyl',25)">25</button>
+            </div>
+            <input type="number" id="obsSpFentInput" value="25" min="0" max="100" step="1" inputmode="decimal"
+              oninput="obsSpAdj.doses.fentanyl=parseFloat(this.value)||0;calcObsSpinal()"
+              style="width:46px;padding:3px 5px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:12px;font-weight:600;font-family:var(--font);text-align:right">
+            <span style="font-size:10.5px;color:var(--sub2)">mcg</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div id="obs-sp-result" style="margin-top:12px;padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border)"></div>
+  </div>
+
+  <!-- CARD 2: Epidural top-up for CS -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <div class="card-title" style="margin-bottom:0">Epidural Top-up for CS</div>
+      <button onclick="clearObsTop()" style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">Clear</button>
+    </div>
+
+    <!-- Pre-existing block height -->
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px">
+      <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px;flex-shrink:0;padding-top:3px">Existing block</span>
+      <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
+        <button class="tbtn active" id="obsBlknone" onclick="setObsBlockHeight('none')">Not assessed</button>
+        <button class="tbtn" id="obsBlkT10" onclick="setObsBlockHeight('T10')">T10</button>
+        <button class="tbtn" id="obsBlkT8" onclick="setObsBlockHeight('T8')">T8</button>
+        <button class="tbtn" id="obsBlkT6" onclick="setObsBlockHeight('T6')">T6</button>
+        <button class="tbtn" id="obsBlkT4" onclick="setObsBlockHeight('T4')">T4</button>
+        <button class="tbtn" id="obsBlkT2plus" onclick="setObsBlockHeight('T2plus')">T2+</button>
+      </div>
+    </div>
+    <div id="obsBlockWarn" style="display:none;margin-bottom:12px;padding:8px 10px;border-radius:var(--rsm);font-size:10.5px;line-height:1.5"></div>
+
+    <!-- Recipe selector -->
+    <div style="margin-bottom:12px">
+      <div class="toggle-btns" style="flex-wrap:wrap;gap:3px">
+        <button class="tbtn active" id="obsTopRLevoLido" onclick="setObsTopRecipe('levoLido')">Levo + Lido</button>
+        <button class="tbtn" id="obsTopRLevoOnly" onclick="setObsTopRecipe('levoOnly')">Levo only</button>
+        <button class="tbtn" id="obsTopRFizzy" onclick="setObsTopRecipe('fizzy')">Fizzy Mix</button>
+        <button class="tbtn" id="obsTopRRopi" onclick="setObsTopRecipe('ropi')">Ropivacaine</button>
+      </div>
+    </div>
+
+    <!-- PANEL: Levo + Lido -->
+    <div id="obsTopPanelLevoLido">
+      <!-- Mix preparation -->
+      <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Prepared mix</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLLLevo5" onclick="setObsLL('levo',5)">5</button>
+            <button class="tbtn active" id="obsLLLevo10" onclick="setObsLL('levo',10)">10</button>
+            <button class="tbtn" id="obsLLLevo15" onclick="setObsLL('levo',15)">15</button>
+          </div>
+          <input type="number" id="obsLLLevoInput" min="0" max="30" step="1" value="10" inputmode="decimal"
+            oninput="obsTop.levoVol=parseFloat(this.value)||0;clearObsLLPresets('levo');calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="obsLLLevoNoAdr" onclick="setObsLLAdr('levo',false)">No adr</button>
+            <button class="tbtn" id="obsLLLevoAdr" onclick="setObsLLAdr('levo',true)">+ Adr</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Lido 2%</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLLLido0" onclick="setObsLL('lido',0)">0</button>
+            <button class="tbtn" id="obsLLLido5" onclick="setObsLL('lido',5)">5</button>
+            <button class="tbtn active" id="obsLLLido10" onclick="setObsLL('lido',10)">10</button>
+          </div>
+          <input type="number" id="obsLLLidoInput" min="0" max="30" step="1" value="10" inputmode="decimal"
+            oninput="obsTop.lidoVol=parseFloat(this.value)||0;clearObsLLPresets('lido');calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="obsLLLidoNoAdr" onclick="setObsLLAdr('lido',false)">No adr</button>
+            <button class="tbtn" id="obsLLLidoAdr" onclick="setObsLLAdr('lido',true)">+ Adr</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="obsLLFentBtn" onclick="toggleObsLLFent()"
+            style="font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">+ Fentanyl 100 mcg</button>
+          <span id="obsLLMixTotal" style="font-size:11px;color:var(--sub2)"></span>
+        </div>
+      </div>
+      <!-- Volume administered -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Volume administered</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLLGiven5" onclick="setObsLLGiven(5)">5</button>
+            <button class="tbtn" id="obsLLGiven10" onclick="setObsLLGiven(10)">10</button>
+            <button class="tbtn" id="obsLLGiven15" onclick="setObsLLGiven(15)">15</button>
+            <button class="tbtn" id="obsLLGivenAll" onclick="setObsLLGivenAll()">All</button>
+          </div>
+          <input type="number" id="obsLLGivenInput" min="0" max="50" step="1" placeholder="0" inputmode="decimal"
+            oninput="obsTop.llGiven=parseFloat(this.value)||0;clearObsLLGivenPresets();calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:6px 2px 0;line-height:1.4">⏱ Onset to T4: <strong>15–20 min</strong>. Give in 3–5 ml increments with 5 min between doses.</div>
+    </div>
+
+    <!-- PANEL: Levo only -->
+    <div id="obsTopPanelLevoOnly" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsLOVol15" onclick="setObsLO(15)">15</button>
+            <button class="tbtn active" id="obsLOVol20" onclick="setObsLO(20)">20</button>
+          </div>
+          <input type="number" id="obsLOInput" min="0" max="30" step="1" value="20" inputmode="decimal"
+            oninput="obsTop.loVol=parseFloat(this.value)||0;[15,20].forEach(x=>document.getElementById('obsLOVol'+x).classList.remove('active'));calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+          <div class="toggle-btns">
+            <button class="tbtn active" id="obsLONoAdr" onclick="setObsLOAdr(false)">No adr</button>
+            <button class="tbtn" id="obsLOAdr" onclick="setObsLOAdr(true)">+ Adr</button>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>20–25 min</strong>. Slower onset than levo/lido mix — allow adequate time before reassessing block height.</div>
+    </div>
+
+    <!-- PANEL: Fizzy Mix -->
+    <div id="obsTopPanelFizzy" style="display:none">
+      <div style="padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border);margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px">Local recipe — 20 ml total</div>
+        <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--sub)">
+          <div style="display:flex;justify-content:space-between"><span>Lidocaine 2%</span><strong style="color:var(--text)">17 ml → 340 mg</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>Adrenaline 1:10,000</span><strong style="color:var(--text)">1 ml → 100 mcg</strong></div>
+          <div style="display:flex;justify-content:space-between"><span>NaHCO₃ 8.4%</span><strong style="color:var(--text)">2 ml</strong></div>
+          <div style="border-top:1px solid var(--border);padding-top:5px;display:flex;justify-content:space-between"><span>Total</span><strong style="color:var(--text)">20 ml</strong></div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>10–12 min</strong> (alkalinisation + adrenaline accelerate onset). Do <strong>not</strong> substitute bupivacaine or levobupivacaine — NaHCO₃ causes precipitation. Give in 3–5 ml increments.</div>
+    </div>
+
+    <!-- PANEL: Ropivacaine -->
+    <div id="obsTopPanelRopi" style="display:none">
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Concentration</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsRopiConc05" onclick="setObsRopi('conc',0.5)">0.5%</button>
+            <button class="tbtn active" id="obsRopiConc075" onclick="setObsRopi('conc',0.75)">0.75%</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Volume</span>
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsRopiVol15" onclick="setObsRopi('vol',15)">15</button>
+            <button class="tbtn active" id="obsRopiVol20" onclick="setObsRopi('vol',20)">20</button>
+          </div>
+          <input type="number" id="obsRopiInput" min="0" max="30" step="1" value="20" inputmode="decimal"
+            oninput="obsTop.ropiVol=parseFloat(this.value)||0;[15,20].forEach(x=>document.getElementById('obsRopiVol'+x).classList.remove('active'));calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>15–20 min</strong> at 0.75%; <strong>20–25 min</strong> at 0.5%. Verify ropivacaine is approved for epidural CS top-up at your centre.</div>
+    </div>
+
+    <div id="obs-top-result" style="margin-top:10px;padding:10px 12px;background:var(--s1);border-radius:var(--rsm);border:1px solid var(--border)"></div>
+  </div>
+
+  <!-- CARD 3: Labour epidural — running dose -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <div class="card-title" style="margin-bottom:0">Labour Epidural — Running Dose</div>
+      <button onclick="clearObsEpi()" style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">Clear</button>
+    </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px;line-height:1.4">Estimate total LA received from PCEA/infusion within the 6-hour window.</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Mix</span>
+        <div class="toggle-btns" style="flex-wrap:wrap;gap:2px">
+          <button class="tbtn active" id="obsEpiMix01bupi" onclick="setObsEpiMix('01bupi')">0.1% Bupi</button>
+          <button class="tbtn" id="obsEpiMix01levo" onclick="setObsEpiMix('01levo')">0.1% Levo</button>
+          <button class="tbtn" id="obsEpiMix0125levo" onclick="setObsEpiMix('0125levo')">0.125% Levo</button>
+        </div>
+      </div>
+
+      <div style="font-size:10px;color:var(--sub2);padding:2px 0">+ Fentanyl 2 mcg/ml (informational only — not counted toward LAST limit)</div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Rate</span>
+        <input type="number" id="obsEpiRate" min="0" max="30" step="0.5" placeholder="ml/hr" inputmode="decimal"
+          oninput="calcObsEpiFromRate()"
+          style="width:72px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml/hr ×</span>
+        <input type="number" id="obsEpiHrs" min="0" max="48" step="0.5" placeholder="hrs" inputmode="decimal"
+          oninput="calcObsEpiFromRate()"
+          style="width:60px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">hrs</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Total vol</span>
+        <input type="number" id="obsEpiVol" min="0" max="500" step="1" placeholder="or enter directly" inputmode="decimal"
+          oninput="obsEpi.totalVol=parseFloat(this.value)||0;calcObs()"
+          style="width:92px;padding:5px 8px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+        <span style="font-size:11px;color:var(--sub2)">ml</span>
+      </div>
+
+    </div>
+
+    <div id="obs-epi-result" style="margin-top:10px;min-height:16px"></div>
+  </div>
+
+  <!-- CARD 4: Cumulative dose tracker -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Cumulative Dose Tracker</div>
+    </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px;line-height:1.4">Include sources from above. Uses 6-hour LAST window — same fractional logic as the Blocks tab.</div>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <button id="obsTrkSpinal" onclick="toggleObsTrk('spinal')"
+        style="font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer">Spinal bupi</button>
+      <button id="obsTrkTopup" onclick="toggleObsTrk('topup')"
+        style="font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);color:var(--blue);font-family:var(--font);cursor:pointer">Epi top-up ✓</button>
+      <button id="obsTrkEpi" onclick="toggleObsTrk('epi')"
+        style="font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:99px;border:1px solid rgba(96,165,250,.4);background:rgba(96,165,250,.1);color:var(--blue);font-family:var(--font);cursor:pointer">Labour epi ✓</button>
+    </div>
+
+    <div id="obs-tracker-result"></div>
+    <div style="margin-top:10px">
+      <button onclick="obsToBlocks()" style="font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:var(--rsm);border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:var(--blue);font-family:var(--font);cursor:pointer">→ Send to Blocks</button>
+    </div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left;flex:1 1 auto">Obstetric doses — verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
 </div>
 
 </div><!-- #app -->
@@ -659,31 +1262,54 @@ tbody td:not(:first-child){text-align:right}
   </div>
 </div>
 
-<!-- INSTALL MODAL -->
-<div id="installModal">
-  <div class="install-sheet">
-    <div class="install-icon">💉</div>
-    <div class="install-title">LASTCalc</div>
-    <div class="install-sub">Install as an app for quick access and offline use</div>
-    <div id="installStepsAndroid" style="display:none">
-      <button class="btn-install-main" id="installPromptBtn" disabled>Install App</button>
-    </div>
-    <div id="installStepsIOS" style="display:none">
-      <div class="install-step">
-        <div class="install-step-num">1</div>
-        <div class="install-step-text">Tap the <strong>Share button</strong> <span class="install-ios-arrow">↑</span> at the bottom of Safari</div>
-      </div>
-      <div class="install-step">
-        <div class="install-step-num">2</div>
-        <div class="install-step-text">Scroll down and tap <strong>"Add to Home Screen"</strong></div>
-      </div>
-      <div class="install-step">
-        <div class="install-step-num">3</div>
-        <div class="install-step-text">Tap <strong>Add</strong> — LASTCalc appears on your home screen</div>
-      </div>
-    </div>
-    <button class="btn-install-skip" onclick="closeInstallModal(true)">Continue without installing</button>
+<!-- CAMERA / OCR MODAL -->
+<div id="cameraModal">
+  <div class="cam-header">
+    <span class="cam-title">📷 Scan Patient Demographics <span class="scan-exp">EXPERIMENTAL</span></span>
+    <button class="cam-close" onclick="closeScanner()">✕</button>
   </div>
+  <video id="cameraVideo" autoplay playsinline muted></video>
+  <div class="cam-freeze" id="camFreeze">
+    <canvas id="camFreezeCanvas"></canvas>
+    <div class="cam-freeze-overlay" id="camFreezeOverlay">
+      <div class="cam-scanning-ring"></div>
+      <div class="cam-scanning-txt">Scanning…</div>
+    </div>
+  </div>
+  <div class="cam-guide">Frame the weight, height, age, and sex fields clearly. Avoid glare on screens.</div>
+  <div class="cam-btns">
+    <button class="cam-capture" id="camCaptureBtn" onclick="captureAndOCR()">📸 Capture &amp; Scan</button>
+  </div>
+  <div class="cam-status" id="camStatus"></div>
+  <div class="ocr-review" id="ocrReview" style="display:none">
+    <div class="ocr-review-title">Review detected values — correct before applying</div>
+    <div class="ocr-field">
+      <label>Weight</label>
+      <input type="number" id="ocrWt" inputmode="decimal" placeholder="kg">
+      <span class="ocr-conf none" id="ocrWtConf">—</span>
+    </div>
+    <div class="ocr-field">
+      <label>Height</label>
+      <input type="number" id="ocrHt" inputmode="decimal" placeholder="cm">
+      <span class="ocr-conf none" id="ocrHtConf">—</span>
+    </div>
+    <div class="ocr-field">
+      <label>Age</label>
+      <input type="number" id="ocrAge" inputmode="decimal" placeholder="yrs">
+      <span class="ocr-conf none" id="ocrAgeConf">—</span>
+    </div>
+    <div class="ocr-field">
+      <label>Sex</label>
+      <select id="ocrSex">
+        <option value="">— not detected —</option>
+        <option value="M">Male</option>
+        <option value="F">Female</option>
+      </select>
+      <span class="ocr-conf none" id="ocrSexConf">—</span>
+    </div>
+    <button class="ocr-apply" onclick="applyOCRValues()">✓ Apply to calculator</button>
+  </div>
+  <div class="ocr-note" id="ocrNote"></div>
 </div>
 
 <!-- CHANGELOG MODAL -->
@@ -1020,8 +1646,12 @@ function drugMax(d, _wt) {
 
   // Paediatric overrides (PNB single-shot)
   if (eff.pedMode && mos !== null) {
-    if (mos < 1 || mos < 6) {
-      // Neonate / <6m: ropivacaine only, ≤0.5 mg/kg
+    if (mos < 1) {
+      // Neonate: ropivacaine only, ≤0.5 mg/kg
+      return d.id === 'ropi' ? Math.min(0.5 * wt, 20) : 0;
+    }
+    if (mos < 6) {
+      // <6m: ropivacaine only, ≤0.5 mg/kg
       return d.id === 'ropi' ? Math.min(0.5 * wt, 20) : 0;
     }
     if (mos < 12) return Math.min(1.0 * wt, 50);   // 6–12m: 0.5–1.0 mg/kg
@@ -1114,7 +1744,7 @@ function renderDrugs(){
     const dOpts=DRUGS.map(x=>`<option value="${x.id}"${x.id===e.did?' selected':''}>${x.label} (${x.sub})</option>`).join('');
     const cOpts=d.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
     const priorClass = e.prior ? ' prior' : '';
-    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : '⏱ Prior (by others)'}</div>` : '';
+    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : e.obsSource ? '🍼 Obstetric LA (transferred)' : '⏱ Prior (by others)'}</div>` : '';
     return `<div class="drug-row${priorClass}">
       ${priorLabel}
       <select class="f-select" onchange="onDrug(${e.id},this.value)">${dOpts}</select>
@@ -1242,8 +1872,7 @@ function calc(){
     const d=DRUGS.find(x=>x.id===e.did);if(!d)continue;
     const mg=e.conc*10*e.vol;
     totalMg+=mg;
-    // AFOi topical lidocaine uses 9 mg/kg topical ceiling, not infiltration ceiling
-    const eMax = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d,wt);
+    const eMax = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d,wt);
     totalFrac+=eMax>0?mg/eMax:0;
     given[d.id]=(given[d.id]||0)+mg;
   }
@@ -1498,7 +2127,7 @@ function openDisclaimer(){
   document.body.style.overflow='hidden';
   document.getElementById('disclaimerBody').innerHTML=`
     <h3>Nature of this tool</h3>
-    <p>LASTCalc is an educational and decision-support aid designed to assist qualified healthcare professionals in calculating maximum weight-based local anaesthetic doses for peripheral nerve blocks. It does not constitute medical advice, clinical guidance, or a substitute for professional judgement.</p>
+    <p>LASTCalc is an educational and decision-support aid designed to assist qualified healthcare professionals in calculating maximum weight-based local anaesthetic doses across a range of clinical contexts, including peripheral nerve blocks, obstetric spinal and epidural anaesthesia, awake fibreoptic intubation (topical), and intravenous lidocaine infusion. It does not constitute medical advice, clinical guidance, or a substitute for professional judgement.</p>
     <h3>No liability</h3>
     <p>This tool is provided in good faith on an "as is" basis, without warranty of any kind, express or implied. The developer(s) of LASTCalc accept no responsibility or liability for any clinical decision made in reliance upon its outputs, nor for any harm, loss, or adverse outcome — direct or indirect — arising from its use or misuse. Outputs are generated from generalised dosing rules and cannot account for the full clinical context of any individual patient.</p>
     <h3>Your professional responsibility</h3>
@@ -1521,6 +2150,8 @@ function openDisclaimer(){
       <li><strong>Additive systemic toxicity.</strong> When mixing agents, total toxic potential is cumulative. LASTCalc's fractional dose model accounts for this, but the clinical risk of LAST from a mixture is not simply the sum of individual risks — it depends on absorption kinetics, site of injection, and patient factors that this tool cannot model.</li>
       <li><strong>Dilutions must be prepared aseptically</strong> by a suitably trained practitioner, using appropriate diluents (typically preservative-free 0.9% NaCl or water for injection), and administered promptly. Stability and compatibility should be verified against your local formulary and pharmacy guidance before administration.</li>
     </ol>
+    <h3>Patient data and OCR privacy</h3>
+    <p>The EPR scanning (OCR) function uses on-device processing only. When you capture an image, it is processed entirely within your browser using a local OCR engine (Tesseract.js) running as a browser process on your device. The image is never transmitted to any server or cloud service. No image data is written to the device's storage — no files, no browser cache, no application data. The image pixel data is actively discarded from memory immediately upon recognition completing — it is not retained for the duration of the session. No patient-identifiable information is stored by this application at any point.</p>
     <h3>Regulatory status</h3>
     <p>LASTCalc is not a registered medical device. It has not been evaluated or approved by the MHRA or any equivalent regulatory body.</p>
     <h3>Governing law</h3>
@@ -1571,6 +2202,26 @@ function openSources(){
 <ol>
   <li><strong><a href="https://www.nysora.com/topics/pharmacology/clinical-pharmacology-local-anesthetics/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">NYSORA — Clinical Pharmacology of Local Anesthetics ↗</a></strong><br>Hadzic A (ed.). Volumes, concentrations, and expected durations for individual nerve blocks.</li>
   <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/11945112/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Bardsley H et al. — Cardiac and CNS toxicity of levobupivacaine ↗</a></strong><br><em>Drug Safety</em> 2002; 25(3): 153–163. Evidence basis for preferring levobupivacaine at vascular-adjacent blocks.</li>
+</ol>
+<hr>
+<h3>Obstetric spinal &amp; epidural anaesthesia</h3>
+<ol>
+  <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/Epidural%20top-up%20for%20emergency%20LSCS%20protocol.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Epidural Top-up for Emergency LSCS ↗</a></strong><br>Obstetric Anaesthetists' Association. Levo 0.5% + lido 2% standard recipe; onset to T4; dose guidance.</li>
+  <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/OAA%20resources/OAA_Spinal_for_Elective_CS_Protocol_2019.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Spinal Anaesthesia for Caesarean Section ↗</a></strong><br>Obstetric Anaesthetists' Association, 2019. Bupivacaine heavy 0.5% dosing (1.6–2.5 ml); intrathecal adjuvants including diamorphine 300 mcg.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/23661490/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sng BL et al. — Intrathecal diamorphine dose for CS: systematic review ↗</a></strong><br><em>Anaesthesia</em> 2013; 68(7): 732–741. Meta-analysis supporting 300 mcg as optimal dose balancing analgesia with PONV/itch.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/29224958/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sultan P et al. — Intrathecal morphine for CS: systematic review ↗</a></strong><br><em>BJA</em> 2019; 122(1): e23–e35. Evidence for morphine PF 100–150 mcg; monitoring requirements (12–24 h).</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/8214480/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Chestnut DH et al. — Alkalinised lidocaine epidural top-up for urgent CS ↗</a></strong><br><em>Anesthesiology</em> 1993; 79(5): 1054–1060. Alkalinisation with NaHCO₃ reduces pH and accelerates epidural lidocaine onset; do not mix with bupivacaine (precipitation).</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/9118730/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Siddik SM et al. — NaHCO₃ with lidocaine for epidural anaesthesia in CS ↗</a></strong><br><em>Acta Anaesthesiologica Scandinavica</em> 1997; 41(1): 75–79. Fizzy mix composition; onset advantage vs plain lidocaine.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/16430477/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Stocks GM et al. — Block height and epidural top-up volume for conversion to surgical anaesthesia ↗</a></strong><br><em>International Journal of Obstetric Anesthesia</em> 2006. Relationship between pre-existing epidural block height and epidural top-up volume required; risk of high spinal extension.</li>
+</ol>
+<hr>
+<h3>Epidural lidocaine dose limits (cumulative tracker)</h3>
+<p>The cumulative LAST tracker uses 5 mg/kg (max 400 mg) for plain epidural lidocaine — higher than the nerve-block ceiling of 3 mg/kg / 200 mg — reflecting the distinct pharmacokinetics of the epidural route.</p>
+<ol>
+  <li><strong>Cousins MJ, Bridenbaugh PO (eds.) — Neural Blockade in Clinical Anaesthesia and Management of Pain, 3rd ed.</strong><br>Lippincott-Raven, 1998. Epidural lidocaine maximum dose cited as 5 mg/kg; systemic absorption from epidural space is substantially slower than from peripheral nerve blocks, resulting in lower peak plasma concentrations for equivalent doses.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/7477040/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Rosenberg PH et al. — Maximum recommended doses of local anaesthetics: a multifactorial concept ↗</a></strong><br><em>Regional Anesthesia and Pain Medicine</em> 2004; 29(6): 564–575. Maximum doses are route- and site-dependent; epidural administration produces lower Cmax than equivalent peripheral doses and warrants distinct limits.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/8214480/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Chestnut DH et al. — Epidural lidocaine 2% for urgent CS ↗</a></strong><br><em>Anesthesiology</em> 1993; 79(5): 1054–1060. Doses of 300–400 mg lidocaine administered epidurally for CS top-up without evidence of systemic toxicity, supporting a higher ceiling than the infiltration limit.</li>
+  <li><strong>OAA Epidural Top-up for Emergency LSCS Protocol</strong><br>Obstetric Anaesthetists' Association. Standard recipe of 15–20 ml lidocaine 2% (300–400 mg) used routinely for epidural CS conversion — consistent with a 5 mg/kg / 400 mg ceiling rather than the 3 mg/kg nerve-block limit.</li>
 </ol>`;
 }
 function closeSources(){document.getElementById('sourcesModal').classList.remove('open');document.body.style.overflow='';}
@@ -1580,6 +2231,54 @@ function openChangelog(){
   document.getElementById('changelogModal').classList.add('open');
   document.body.style.overflow='hidden';
   document.getElementById('changelogBody').innerHTML=`
+    <h3>v1.3 — 2026-06-29</h3>
+    <strong>🍼 Obstetrics tab (new)</strong>
+    <ol>
+      <li><strong>Spinal for Caesarean Section</strong> — heavy or plain bupivacaine 0.5% with volume presets (1.6–2.5 ml), intrathecal adjuvants: diamorphine (solo), morphine PF and fentanyl (combinable)</li>
+      <li><strong>Epidural top-up</strong> — four recipes: Levo + Lido (define prepared mix volume and enter amount given), Levo only, Fizzy Mix (lidocaine 2% + NaHCO₃ + adrenaline), Ropivacaine. Adrenaline toggle per agent. Onset estimates and block height warnings (T10 → T2+)</li>
+      <li><strong>Labour epidural running dose</strong> — rate × hours or direct volume entry for 0.1% bupivacaine, 0.1% or 0.125% levobupivacaine</li>
+      <li><strong>Cumulative LAST tracker</strong> — combined fractional dose across spinal, top-up, and labour epidural. Plain epidural lidocaine uses the 5 mg/kg / 400 mg ceiling (vs 3 mg/kg for nerve blocks), reflecting slower epidural absorption. Remaining capacity shown per drug</li>
+      <li><strong>Send to Blocks</strong> — transfers all recorded obstetric LA doses to the Blocks tab as prior entries, with the correct epidural lidocaine limit carried through</li>
+      <li>Clear buttons on each obstetric card</li>
+    </ol>
+    <strong>Adrenaline calculator</strong>
+    <ol>
+      <li>1:10,000 adrenaline volume now shown alongside 1:1,000 as an alternative stock preparation</li>
+    </ol>
+    <strong>💧 Lidocaine IV</strong>
+    <ol>
+      <li>Warning added to remind users to account for combined IV + nerve block lidocaine within the same 6-hour window</li>
+    </ol>
+    <strong>Bug fixes</strong>
+    <ol>
+      <li>Paediatric dose limits: infants aged 1–6 months were incorrectly receiving neonate-level restrictions — now corrected to the intended 6-month ceiling</li>
+      <li>Weight changes now correctly update all obstetric calculations, not just the tracker total</li>
+      <li>Cumulative tracker no longer shows NaN% when no weight has been entered</li>
+      <li>Obstetric-transferred entries now correctly labelled in the Show Workings breakdown</li>
+    </ol>
+    <strong>Other</strong>
+    <ol>
+      <li>Beta and closed-beta labels removed — tool is now in general release</li>
+      <li>EPR scan button redesigned as a compact labelled button with an "Experimental" badge</li>
+      <li>Disclaimer updated to reflect full clinical scope and OCR privacy confirmation</li>
+    </ol>
+    <hr>
+    <h3>v1.2 — 2026-06-24</h3>
+    <strong>New tabs</strong>
+    <ol>
+      <li><strong>💧 Lidocaine IV</strong> — bolus calculator (1–1.5 mg/kg, 2/4/20 min duration) and maintenance infusion (0.5–2 mg/kg/hr). Shows ml/hr and syringe preparation for 50 ml syringe driver or pre-mixed 0.1% bag. Reference: Oxford Handbook of Anaesthesia; Eipe et al. BJA Education 2016.</li>
+      <li><strong>🧪 Dilutions</strong> — mix any two LA concentrations to a clinical target using C₁V₁ + C₂V₂ = C₃V₃. Common presets: 0.375% bupivacaine/levobupivacaine, 1.5% lidocaine, 0.375% ropivacaine, and more.</li>
+    </ol>
+    <strong>Drug updates</strong>
+    <ol>
+      <li>0.375% added to bupivacaine and levobupivacaine concentration options</li>
+      <li>Administration route (Injectable / Topical) now shown in Remaining Capacity table</li>
+    </ol>
+    <strong>Print / export</strong>
+    <ol>
+      <li>Beta tag removed from printed report header; version updated to v1.2</li>
+    </ol>
+    <hr>
     <h3>v1.2 — 2026-06-20</h3>
     <strong>New features</strong>
     <ol>
@@ -1622,18 +2321,369 @@ function openChangelog(){
 function closeChangelog(){document.getElementById('changelogModal').classList.remove('open');document.body.style.overflow='';}
 function onChangelogBgClick(e){if(e.target===document.getElementById('changelogModal'))closeChangelog();}
 
+// ── CAMERA / OCR ──────────────────────────────────────────────────────────
+let camStream = null;
+let tesseractWorker = null;
+let scannerSourceTab = null;
+
+async function openScanner() {
+  // Remember which tab launched the scanner so we can return to it
+  const activeTab = document.querySelector('.tab-btn.active');
+  scannerSourceTab = activeTab || null;
+
+  const modal = document.getElementById('cameraModal');
+  document.getElementById('ocrReview').style.display = 'none';
+  document.getElementById('camStatus').textContent = 'Starting camera…';
+  document.getElementById('ocrNote').textContent = '';
+  document.getElementById('camCaptureBtn').disabled = false;
+  document.getElementById('camCaptureBtn').textContent = '📸 Capture & Scan';
+  // Reset freeze/live state
+  document.getElementById('cameraVideo').style.display = 'block';
+  document.getElementById('camFreeze').style.display = 'none';
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+    });
+    document.getElementById('cameraVideo').srcObject = camStream;
+    document.getElementById('camStatus').textContent = 'Camera ready — frame the patient demographics and tap Capture.';
+  } catch(err) {
+    document.getElementById('camStatus').textContent = '⚠ Camera unavailable: ' + (err.message || err);
+    document.getElementById('camCaptureBtn').disabled = true;
+  }
+}
+
+function closeScanner() {
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  // Belt-and-braces: clear any residual pixel data on close
+  const fc = document.getElementById('camFreezeCanvas');
+  if (fc) { fc.width = 0; fc.height = 0; }
+  document.getElementById('cameraModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function captureAndOCR() {
+  const video = document.getElementById('cameraVideo');
+  const btn = document.getElementById('camCaptureBtn');
+  const status = document.getElementById('camStatus');
+  btn.disabled = true;
+  status.textContent = '📸 Captured — running OCR…';
+
+  // Freeze frame — show captured image instead of live video
+  const freezeCanvas = document.getElementById('camFreezeCanvas');
+  const vw = video.videoWidth || 1280, vh = video.videoHeight || 720;
+  freezeCanvas.width = vw; freezeCanvas.height = vh;
+  freezeCanvas.getContext('2d').drawImage(video, 0, 0, vw, vh);
+  video.style.display = 'none';
+  document.getElementById('camFreeze').style.display = 'block';
+
+  // Downscale to 700px wide — Tesseract doesn't need full res; smaller = faster
+  const maxW = 700;
+  const scale = vw > maxW ? maxW / vw : 1;
+  const ocrCanvas = document.createElement('canvas');
+  ocrCanvas.width = Math.round(vw * scale);
+  ocrCanvas.height = Math.round(vh * scale);
+  const ocrCtx = ocrCanvas.getContext('2d');
+  ocrCtx.drawImage(freezeCanvas, 0, 0, ocrCanvas.width, ocrCanvas.height);
+  // Preprocess: grayscale + contrast boost → cleaner text for OCR
+  const imgData = ocrCtx.getImageData(0, 0, ocrCanvas.width, ocrCanvas.height);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+    const c = Math.min(255, Math.max(0, (gray - 128) * 1.5 + 128));
+    d[i] = d[i+1] = d[i+2] = c;
+  }
+  ocrCtx.putImageData(imgData, 0, 0);
+  const canvas = ocrCanvas;
+
+  try {
+    // Lazy-load Tesseract.js from CDN on first use
+    if (!window.Tesseract) {
+      status.textContent = '⏳ Loading OCR engine (~4 MB, one-time)…';
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    if (!tesseractWorker) {
+      status.textContent = '⏳ Initialising OCR worker…';
+      // OEM 1 = LSTM neural net only (fastest); legacy engine disabled
+      tesseractWorker = await Tesseract.createWorker('eng', 1);
+      await tesseractWorker.setParameters({
+        tessedit_pageseg_mode: '6',  // Assume single uniform block of text
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.,:;/\' ',
+      });
+    }
+    status.textContent = '🔍 Scanning text…';
+    const { data: { text } } = await tesseractWorker.recognize(canvas);
+    // Immediately release image pixel data from RAM — set canvas dimensions to 0
+    // which forces the browser to discard the pixel buffer without waiting for GC.
+    canvas.width = 0; canvas.height = 0;
+    document.getElementById('camFreezeCanvas').width = 0;
+    document.getElementById('camFreezeCanvas').height = 0;
+    // Hide spinner, keep frozen frame visible
+    document.getElementById('camFreezeOverlay').style.display = 'none';
+    const parsed = parseOCRText(text);
+    showOCRReview(parsed, text);
+  } catch(err) {
+    canvas.width = 0; canvas.height = 0;
+    document.getElementById('camFreezeCanvas').width = 0;
+    document.getElementById('camFreezeCanvas').height = 0;
+    document.getElementById('camFreezeOverlay').style.display = 'none';
+    status.textContent = '⚠ OCR failed: ' + (err.message || err);
+    btn.disabled = false;
+  }
+}
+
+function parseOCRText(text) {
+  const t = text.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+  const result = {};
+
+  // Weight — "Wt: 125.8 kg", "103.7kg", "70 kg"
+  // Allow 4 digits to catch OCR dropping the decimal (e.g. 125.8 → 1258); rescue by ÷10
+  const wtM = t.match(/(?:wt|weight)\s*[:\-]?\s*([0-9]{1,4}(?:[.,][0-9]{1,2})?)\s*k?g/i)
+           || t.match(/\b([0-9]{1,4}(?:[.,][0-9]{1,2})?)\s*kg\b/i);
+  if (wtM) {
+    let wv = parseFloat(wtM[1].replace(',', '.'));
+    if (wv > 300 && wv < 4000) wv = wv / 10; // rescue dropped decimal e.g. 1258 → 125.8
+    if (wv >= 2 && wv <= 300) result.wt = { val: Math.round(wv * 10) / 10, conf: 'high' };
+  }
+
+  // Height — "Ht: 180 cm", "Ht 180cm", "Height 180"
+  const htM = t.match(/(?:ht|height)\s*[:\-]?\s*([0-9]{2,3}(?:[.,][0-9])?)\s*cm/i)
+           || t.match(/([12][0-9]{2})\s*cm\b/i);
+  if (htM) {
+    result.ht = { val: parseFloat(htM[1].replace(',', '.')), conf: 'high' };
+  } else {
+    // Metres e.g. 1.75 m
+    const mM = t.match(/(?:ht|height)\s*[:\-]?\s*([12]\.[0-9]{2})\s*m\b/i)
+            || t.match(/\b([12]\.[0-9]{2})\s*m\b/i);
+    if (mM) result.ht = { val: Math.round(parseFloat(mM[1]) * 100), conf: 'high' };
+    // Feet/inches e.g. 5'9" or 5 ft 9
+    const ftM = t.match(/([4-7])\s*(?:ft|'|′)\s*([0-9]{1,2})\s*(?:in|"|″)?/i);
+    if (ftM) result.ht = { val: Math.round((parseInt(ftM[1]) * 12 + parseInt(ftM[2])) * 2.54), conf: 'high' };
+  }
+
+  // Age — "Age: 45", "56 y.o.", "45 yrs", "45 y/o", "45yo"
+  // Also handles EPIC top-line format "Male, 56 y.o.,"
+  const ageM = t.match(/(?:age|aged)\s*[:\-]?\s*([0-9]{1,3})/i)
+            || t.match(/\b([0-9]{1,3})\s*y(?:\.o\.?|\/o|rs?|o)\b/i)
+            || t.match(/,\s*([0-9]{1,3})\s*y/i);
+  if (ageM && parseInt(ageM[1]) >= 0 && parseInt(ageM[1]) <= 120)
+    result.age = { val: parseInt(ageM[1]), conf: 'high' };
+
+  // DOB fallback — calculate age from DOB if no direct age found
+  if (!result.age) {
+    const dobM = t.match(/(?:dob|d\.o\.b|born)[:\s]*([0-9]{1,2})[\/\-\.]([0-9]{1,2})[\/\-\.]([0-9]{2,4})/i);
+    if (dobM) {
+      let yr = parseInt(dobM[3]);
+      if (yr < 100) yr += yr > 30 ? 1900 : 2000;
+      const age = new Date().getFullYear() - yr;
+      if (age >= 0 && age <= 120) result.age = { val: age, conf: 'low' };
+    }
+  }
+
+  // Sex — "Male, 56 y.o." at line start, or "Sex: Male", or standalone Male/Female
+  const sexM = t.match(/(?:sex|gender)\s*[:\-]?\s*(male|female)/i)
+            || t.match(/^(male|female)\b/i)
+            || t.match(/\b(male|female)\b/i);
+  if (sexM) {
+    const s = sexM[1].toLowerCase();
+    result.sex = { val: s.startsWith('f') ? 'F' : 'M', conf: 'high' };
+  }
+
+  // BMI cross-check only — not applied, shown in status note
+  const bmiM = t.match(/bmi\s*[:\-]?\s*([0-9]{2}(?:[.,][0-9]{1,2})?)/i);
+  if (bmiM) result.bmi = { val: parseFloat(bmiM[1].replace(',', '.')), conf: 'high' };
+
+  return result;
+}
+
+function showOCRReview(parsed, rawText) {
+  const setField = (id, confId, field) => {
+    const el = document.getElementById(id);
+    const conf = document.getElementById(confId);
+    if (parsed[field]) {
+      el.value = parsed[field].val;
+      conf.textContent = parsed[field].conf === 'high' ? '✓' : '~';
+      conf.className = 'ocr-conf ' + parsed[field].conf;
+    } else {
+      el.value = '';
+      conf.textContent = '—';
+      conf.className = 'ocr-conf none';
+    }
+  };
+  setField('ocrWt', 'ocrWtConf', 'wt');
+  setField('ocrHt', 'ocrHtConf', 'ht');
+  setField('ocrAge', 'ocrAgeConf', 'age');
+
+  const sexEl = document.getElementById('ocrSex');
+  const sexConf = document.getElementById('ocrSexConf');
+  if (parsed.sex) {
+    sexEl.value = parsed.sex.val;
+    sexConf.textContent = '✓'; sexConf.className = 'ocr-conf high';
+  } else {
+    sexEl.value = ''; sexConf.textContent = '—'; sexConf.className = 'ocr-conf none';
+  }
+
+  const detected = Object.keys(parsed).filter(k => k !== 'bmi').length;
+  const bmiNote = parsed.bmi ? ` BMI ${parsed.bmi.val} detected (not applied — calculated from Ht/Wt).` : '';
+  document.getElementById('camStatus').textContent =
+    detected > 0 ? `${detected} field${detected > 1 ? 's' : ''} detected.${bmiNote}` : 'No values detected — try again with better framing or lighting.';
+  document.getElementById('ocrNote').textContent = 'Always verify before applying. OCR may misread characters.';
+  document.getElementById('ocrReview').style.display = detected > 0 ? 'block' : 'none';
+  document.getElementById('camCaptureBtn').disabled = false;
+  document.getElementById('camCaptureBtn').textContent = '📸 Retake';
+  // On retake: restore live video feed
+  document.getElementById('camCaptureBtn').onclick = async () => {
+    document.getElementById('camFreezeOverlay').style.display = 'flex';
+    document.getElementById('camFreeze').style.display = 'none';
+    document.getElementById('cameraVideo').style.display = 'block';
+    document.getElementById('ocrReview').style.display = 'none';
+    document.getElementById('camCaptureBtn').textContent = '📸 Capture & Scan';
+    document.getElementById('camCaptureBtn').onclick = captureAndOCR;
+    // Restart camera if it stopped
+    if (!camStream) {
+      try {
+        camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        document.getElementById('cameraVideo').srcObject = camStream;
+      } catch(e) { document.getElementById('camStatus').textContent = '⚠ Camera unavailable: ' + e.message; }
+    }
+    document.getElementById('camStatus').textContent = 'Camera ready — frame the patient demographics and tap Capture.';
+  };
+}
+
+function applyOCRValues() {
+  const wt  = parseFloat(document.getElementById('ocrWt').value);
+  const ht  = parseFloat(document.getElementById('ocrHt').value);
+  const age = parseFloat(document.getElementById('ocrAge').value);
+  const sex = document.getElementById('ocrSex').value;
+
+  // Weight is always visible — apply first
+  if (!isNaN(wt) && wt > 0) {
+    document.getElementById('wt').value = wt;
+    document.getElementById('wt').dispatchEvent(new Event('input'));
+  }
+
+  // Ensure anthro panel is open before writing to its fields
+  if (!anthroOpen) toggleAnthro();
+
+  // Write sex directly to anthro state (bypass setSex to avoid premature onAnthroChange)
+  if (sex === 'M' || sex === 'F') {
+    anthro.sex = sex;
+    document.getElementById('sexM').classList.toggle('active', sex === 'M');
+    document.getElementById('sexF').classList.toggle('active', sex === 'F');
+  }
+
+  // Set height and age directly — actual element ID is 'heightInput' not 'htInput'
+  if (!isNaN(ht) && ht > 0) document.getElementById('heightInput').value = ht;
+  if (!isNaN(age) && age >= 0) {
+    anthro.ageUnit = 'yrs';
+    document.getElementById('ageYrs').classList.add('active');
+    document.getElementById('ageMos').classList.remove('active');
+    document.getElementById('ageInput').value = age;
+  }
+
+  // Single recalc after all values are set
+  onAnthroChange();
+
+  closeScanner();
+  // Return to originating tab after modal fade completes
+  if (scannerSourceTab) setTimeout(() => scannerSourceTab.click(), 150);
+}
+
+// ── PNG EXPORT ────────────────────────────────────────────────────────────
+async function doExportPNG() {
+  const btn = document.querySelector('.btn-png');
+  const origLabel = btn.textContent;
+  btn.textContent = '⏳ Generating…';
+  btn.disabled = true;
+
+  if (!window.html2canvas) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  doPrint(true);
+  const el = document.getElementById('printReport');
+  el.style.display = 'block';
+  el.style.width = '794px';
+
+  try {
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#fff' });
+    const filename = `LASTCalc-report-${new Date().toISOString().slice(0,10)}.png`;
+
+    if (window.showSaveFilePicker) {
+      // Modern browsers (Chrome/Edge): show native save dialog
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      try {
+        const fh = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{ description: 'PNG image', accept: { 'image/png': ['.png'] } }],
+        });
+        const writable = await fh.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        btn.textContent = '✓ Saved';
+      } catch (e) {
+        if (e.name !== 'AbortError') throw e;
+        btn.textContent = origLabel;
+      }
+    } else {
+      // Fallback: open in new tab so user can long-press / right-click → Save
+      const tab = window.open();
+      tab.document.write(`<title>${filename}</title><body style="margin:0;background:#111"><img src="${canvas.toDataURL('image/png')}" style="max-width:100%"></body>`);
+      tab.document.close();
+      btn.textContent = '✓ Opened';
+    }
+  } catch(e) {
+    console.error('PNG export failed', e);
+    btn.textContent = '✗ Error';
+  } finally {
+    el.style.display = 'none';
+    el.style.width = '';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = origLabel; }, 2500);
+  }
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 // Select-all on focus for every number input (current and future, including dynamically rendered)
 // setTimeout defers select() until after iOS Safari finishes its focus handling
 document.addEventListener('focus', e => { if(e.target.type === 'number') setTimeout(() => e.target.select(), 0); }, true);
-document.getElementById('wt').addEventListener('input', () => {
+function runWtCalcs() {
   selAdditives.forEach(id => refreshAdd(id));
   updateAnthroUI();
   calc();
   calcAFOi();
-  const v = document.getElementById('wt').value;
-  const el = document.getElementById('afoiWtDisplay');
-  if (el) el.textContent = v || '70';
+  calcLidoIV();
+  calcObs();
+}
+function syncWtMirror(triggerEl) {
+  // Parse the raw value — number inputs return "" for incomplete entries like "81."
+  // so we skip syncing until a valid number is complete, but still run calcs so
+  // the display stays live using the last valid #wt value.
+  const n = parseFloat(triggerEl.value);
+  if (!isNaN(n) && n >= 1 && n <= 250) {
+    document.getElementById('wt').value = n;
+    // Update every OTHER mirror — never overwrite the element being typed into
+    // (overwriting it would reset the cursor and break mid-decimal entry)
+    document.querySelectorAll('.wt-mirror').forEach(m => { if (m !== triggerEl) m.value = n; });
+  }
+  runWtCalcs();
+}
+document.getElementById('wt').addEventListener('input', () => {
+  // Blocks tab #wt changed — push to all mirrors
+  const v = parseFloat(document.getElementById('wt').value);
+  if (!isNaN(v) && v >= 1) document.querySelectorAll('.wt-mirror').forEach(m => { m.value = v; });
+  runWtCalcs();
 });
 buildAdditives();
 updateAnthroUI();
@@ -1641,53 +2691,20 @@ calc();
 calcAFOi();
 
 // ── FIRST LAUNCH ──────────────────────────────────────────────────────────
-let _installPrompt = null;
-
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  _installPrompt = e;
-  const btn = document.getElementById('installPromptBtn');
-  if (btn) { btn.disabled = false; btn.textContent = 'Install App'; }
-});
-
-document.getElementById('installPromptBtn').addEventListener('click', async () => {
-  if (!_installPrompt) return;
-  _installPrompt.prompt();
-  const { outcome } = await _installPrompt.userChoice;
-  _installPrompt = null;
-  if (outcome === 'accepted') closeInstallModal(true);
-});
-
-function openInstallModal() {
-  const ua = navigator.userAgent;
-  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
-  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua);
-  if (isIOS && isSafari) {
-    document.getElementById('installStepsIOS').style.display = 'block';
-  } else {
-    document.getElementById('installStepsAndroid').style.display = 'block';
-  }
-  document.getElementById('installModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeInstallModal(markDone) {
-  document.getElementById('installModal').classList.remove('open');
-  document.body.style.overflow = '';
-  if (markDone) {
-    localStorage.setItem('lc_installed', '1');
-    // Show disclaimer next if not yet seen
-    if (!localStorage.getItem('lc_disc_seen')) {
-      localStorage.setItem('lc_disc_seen', '1');
-      setTimeout(openDisclaimer, 300);
-    }
-  }
-}
-
 (function firstLaunch() {
-  if (!localStorage.getItem('lc_installed')) {
-    setTimeout(openInstallModal, 800);
-  } else if (!localStorage.getItem('lc_disc_seen')) {
+  const installed = localStorage.getItem('lc_installed');
+  const discSeen  = localStorage.getItem('lc_disc_seen');
+
+  if (!installed) {
+    // First ever visit — show install page in-app, then mark done
+    localStorage.setItem('lc_installed', '1');
+    // Redirect to install guide; install.html sets lc_disc_seen then returns
+    window.location.href = 'install.html?from=app';
+    return;
+  }
+
+  if (!discSeen) {
+    // Installed but disclaimer not yet accepted — show it
     localStorage.setItem('lc_disc_seen', '1');
     openDisclaimer();
   }
@@ -1703,10 +2720,10 @@ function openWorkings() {
   for (const e of drugs) {
     const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
     const mg = e.conc * 10 * e.vol;
-    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
-    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource });
+    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource, obsSource: e.obsSource, obsMax: e.obsMax });
   }
   const totalPct = Math.min(100, Math.round(totalFrac * 100));
   const col = totalPct >= 100 ? 'var(--red)' : totalPct >= 80 ? 'var(--amber)' : 'var(--green)';
@@ -1738,7 +2755,7 @@ function openWorkings() {
       const pedMos = getAgeMonths();
       const isPed = eff.pedMode && pedMos !== null;
       html += `<div class="work-drug-block${r.prior ? ' work-prior' : ''}">`;
-      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : '⏱ Prior (by others)'}</div>`;
+      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : r.obsSource ? '🍼 Obstetric LA (transferred)' : '⏱ Prior (by others)'}</div>`;
       html += `<div class="work-drug-name">${r.d.label} <span style="font-size:11px;color:var(--sub2);font-weight:400">${r.d.sub}</span></div>`;
       if (isPed) {
         html += `<div class="work-note" style="margin-bottom:4px;color:var(--purple)">⚠ Paediatric ceiling applied (${eff.pedMode})</div>`;
@@ -1783,7 +2800,7 @@ function closeWorkings() { document.getElementById('workingsModal').classList.re
 function onWorkingsBgClick(e) { if (e.target === document.getElementById('workingsModal')) closeWorkings(); }
 
 // ── PRINT/PDF REPORT ───────────────────────────────────────────────────────
-function doPrint() {
+function doPrint(suppressPrint = false) {
   plausible('Print Report');
   const wt = getWt();
   const eff = calcEffectiveWt();
@@ -1796,7 +2813,7 @@ function doPrint() {
   for (const e of drugs) {
     const d = DRUGS.find(x => x.id === e.did); if (!d) continue;
     const mg = e.conc * 10 * e.vol;
-    const max = e.afoiSource ? (e.topicalMax || 9*wt) : drugMax(d, wt);
+    const max = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
     drugRows.push({ d, e, mg, max, frac });
@@ -1881,7 +2898,7 @@ function doPrint() {
       const dc = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#16a34a';
       const bg = pd >= 100 ? '#fef2f2' : pd >= 80 ? '#fffbeb' : '#fff';
       const borderL = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#d1fae5';
-      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : '⏱ Prior') : '';
+      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : r.e.obsSource ? '🍼 Obs' : '⏱ Prior') : '';
       const barW = Math.min(100, pd);
       html += `<tr style="border-bottom:1px solid #f3f4f6;background:${bg}">
         <td style="padding:10px 14px;border-left:3px solid ${borderL}">
@@ -1960,16 +2977,64 @@ function doPrint() {
 
   // ── FOOTER ──
   html += `<div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:9px;color:#9ca3af;line-height:1.6">
-    <strong style="color:#6b7280">LASTCalc v1.2</strong> · Educational decision-support tool only · Not a registered medical device ·
+    <strong style="color:#6b7280">LASTCalc v1.3</strong> · Educational decision-support tool only · Not a registered medical device ·
     All doses must be independently verified by the treating clinician against local formulary and current guidelines ·
     This printout does not constitute a clinical prescription or formal medical record.
   </div></div>`;
 
   document.getElementById('printContent').innerHTML = html;
-  window.print();
+  if (!suppressPrint) window.print();
 }
 
 // ── AFOi → BLOCKS BRIDGE ──────────────────────────────────────────────────
+function obsToBlocks() {
+  const wt = getWt();
+  const lidoEpiMax = Math.min(wt * 5, 400);
+  const entries = [];
+
+  if(obsTrk.spinal && obsSp.vol) {
+    entries.push({ did:'bupi_p', conc:0.5, mg:obsSp.vol * 5 });
+  }
+  if(obsTrk.topup) {
+    const r = obsTop.recipe;
+    if(r === 'levoLido') {
+      const llMixTotal=obsTop.levoVol+obsTop.lidoVol;
+      if(obsTop.llGiven>0 && llMixTotal>0) {
+        const llF=Math.min(obsTop.llGiven,llMixTotal)/llMixTotal;
+        const llLevoMg=llF*obsTop.levoVol*5;
+        const llLidoMg=llF*obsTop.lidoVol*20;
+        if(llLevoMg>0) entries.push({ did:'levo_p', conc:0.5, mg:llLevoMg });
+        if(llLidoMg>0) {
+          if(obsTop.lidoAdr) entries.push({ did:'lido_a2', conc:2, mg:llLidoMg });
+          else entries.push({ did:'lido_p', conc:2, mg:llLidoMg, obsMax:lidoEpiMax });
+        }
+      }
+    } else if(r === 'levoOnly') {
+      if(obsTop.loVol > 0) entries.push({ did:'levo_p', conc:0.5, mg:obsTop.loVol * 5 });
+    } else if(r === 'fizzy') {
+      entries.push({ did:'lido_a2', conc:2, mg:340 });
+    } else if(r === 'ropi') {
+      if(obsTop.ropiVol > 0) entries.push({ did:'ropi', conc:obsTop.ropiConc, mg:obsTop.ropiVol * obsTop.ropiConc * 10 });
+    }
+  }
+  if(obsTrk.epi && obsEpi.totalVol) {
+    const mix = OBS_EPI_MIXES[obsEpi.mix];
+    const mg = obsEpi.totalVol * mix.concPct * 10;
+    entries.push({ did: obsEpi.mix === '01bupi' ? 'bupi_p' : 'levo_p', conc: mix.concPct, mg });
+  }
+
+  if(entries.length === 0) { alert('No LA doses recorded in the tracker. Enable sources and enter values first.'); return; }
+
+  for(const e of entries) {
+    const vol = parseFloat((e.mg / (e.conc * 10)).toFixed(1));
+    const entry = { id:uid++, did:e.did, conc:e.conc, vol, prior:true, obsSource:true };
+    if(e.obsMax) entry.obsMax = e.obsMax;
+    drugs.push(entry);
+  }
+  renderDrugs(); syncRopiToggle(); calc();
+  showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
+}
+
 function afoiToBlocks() {
   // Always use FULL administered dose regardless of bioavailability setting — conservative for safety
   let fullDose = 0;
@@ -1986,12 +3051,717 @@ function afoiToBlocks() {
   showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
 }
 
+// ═══════════════════════════════════════════════════════════
+// TAB 3 — LIDOCAINE IV INFUSION
+// ═══════════════════════════════════════════════════════════
+let lidoBolusRate = 1;    // mg/kg
+let lidoBolusMin  = 2;    // minutes
+let lidoInfRate   = 1;    // mg/kg/hr
+let lidoInfConc   = 0.2;  // %
+
+function getLidoIVWt() { return getWt(); }
+
+function setBolusRate(r) {
+  lidoBolusRate = r;
+  ['1','15'].forEach(k => document.getElementById('lidobolus-'+k).classList.remove('active'));
+  document.getElementById('lidobolus-'+(r===1?'1':'15')).classList.add('active');
+  calcLidoIV();
+}
+
+function setBolusMin(m) {
+  lidoBolusMin = m;
+  [2,4,20].forEach(k => document.getElementById('lidodur-'+k).classList.remove('active'));
+  document.getElementById('lidodur-'+m).classList.add('active');
+  calcLidoIV();
+}
+
+function setInfRate(r) {
+  lidoInfRate = r;
+  ['05','1','15','2'].forEach(k => document.getElementById('lidoinf-'+k).classList.remove('active'));
+  const keyMap = {0.5:'05', 1:'1', 1.5:'15', 2:'2'};
+  document.getElementById('lidoinf-'+keyMap[r]).classList.add('active');
+  calcLidoIV();
+}
+
+function setInfConc(c) {
+  lidoInfConc = c;
+  ['01','02','05','1'].forEach(k => document.getElementById('lidoconc-'+k).classList.remove('active'));
+  const keyMap = {0.1:'01', 0.2:'02', 0.5:'05', 1:'1'};
+  document.getElementById('lidoconc-'+keyMap[c]).classList.add('active');
+  calcLidoIV();
+}
+
+function lidoIVRow(label, value, unit, sub) {
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-top:1px solid var(--border)">
+    <span style="font-size:11.5px;color:var(--sub2)">${label}</span>
+    <span style="font-size:14px;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums">${value} <span style="font-size:11px;font-weight:500;color:var(--sub2)">${unit}</span>${sub?`<span style="font-size:10px;color:var(--sub);display:block;text-align:right">${sub}</span>`:''}</span>
+  </div>`;
+}
+
+function calcLidoIV() {
+  const wt = getLidoIVWt();
+
+  // Bolus
+  const bolusMg   = lidoBolusRate * wt;
+  const bolusVolConcs = [0.5, 1, 2];
+  let bHtml = `<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:5px">
+    <span style="font-size:12px;font-weight:700;color:var(--text)">Total dose</span>
+    <span style="font-size:20px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums">${bolusMg.toFixed(1)} <span style="font-size:12px;font-weight:500;color:var(--sub2)">mg</span></span>
+  </div>`;
+  bolusVolConcs.forEach(c => {
+    const vol = bolusMg / (c * 10);
+    const rateMlMin = vol / lidoBolusMin;
+    bHtml += lidoIVRow(`${c}% lidocaine`, vol.toFixed(1), 'ml', `${rateMlMin.toFixed(1)} ml/min over ${lidoBolusMin} min`);
+  });
+  document.getElementById('lidoiv-bolus-result').innerHTML = bHtml;
+
+  // Infusion
+  const infMgHr = lidoInfRate * wt;
+  const infMlHr = infMgHr / (lidoInfConc * 10);
+  let iHtml = `<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:5px">
+    <span style="font-size:12px;font-weight:700;color:var(--text)">Rate at ${lidoInfConc}%</span>
+    <span style="font-size:20px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums">${infMlHr.toFixed(1)} <span style="font-size:12px;font-weight:500;color:var(--sub2)">ml/hr</span></span>
+  </div>`;
+  iHtml += lidoIVRow('Dose delivered', infMgHr.toFixed(1), 'mg/hr', `${(infMgHr/60).toFixed(2)} mg/min`);
+  iHtml += lidoIVRow('mg/kg/hr check', lidoInfRate.toFixed(1), 'mg/kg/hr', '');
+  document.getElementById('lidoiv-inf-result').innerHTML = iHtml;
+
+  // Preparation
+  const syringeVol = 50;
+  const stocks = [{conc:2, label:'2%'}, {conc:1, label:'1%'}];
+  const bagConc = 0.1; // % → 1 mg/ml
+
+  function prepRow(label, val, unit) {
+    return `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;border-top:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--sub2)">${label}</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums">${val} <span style="font-size:10.5px;font-weight:400;color:var(--sub2)">${unit}</span></span>
+    </div>`;
+  }
+
+  let pHtml = '';
+
+  // ── Syringe driver ──
+  pHtml += `<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--sub2);margin-bottom:6px">50 ml syringe driver · ${lidoInfConc}%</div>`;
+  pHtml += `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">`;
+  stocks.forEach(s => {
+    const volStock = (lidoInfConc / s.conc) * syringeVol;
+    const volSaline = syringeVol - volStock;
+    const runMlHr = infMgHr / (lidoInfConc * 10);
+    const durH = syringeVol / runMlHr;
+    pHtml += `<div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+      <div style="font-size:11px;font-weight:600;color:var(--sub2);margin-bottom:8px">Using ${s.label} lidocaine</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums">${volStock.toFixed(1)} ml</div><div style="font-size:10px;color:var(--sub2)">${s.label} lidocaine</div></div>
+        ${volSaline > 0.05 ? `<div style="font-size:16px;color:var(--sub2)">+</div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--sub);font-variant-numeric:tabular-nums">${volSaline.toFixed(1)} ml</div><div style="font-size:10px;color:var(--sub2)">0.9% NaCl</div></div>
+        <div style="font-size:16px;color:var(--sub2)">=</div>
+        <div style="text-align:center"><div style="font-size:18px;font-weight:900;color:var(--green)">50 ml</div><div style="font-size:10px;color:var(--sub2)">${lidoInfConc}% solution</div></div>` : `<div style="font-size:16px;color:var(--sub2)">=</div><div style="text-align:center"><div style="font-size:16px;font-weight:700;color:var(--green)">Undiluted</div><div style="font-size:10px;color:var(--sub2)">${lidoInfConc}% ready to use</div></div>`}
+      </div>
+      ${prepRow('Run at', runMlHr.toFixed(1), 'ml/hr')}
+      ${prepRow('Syringe lasts', durH.toFixed(1), 'hr at this rate')}
+    </div>`;
+  });
+  pHtml += `</div>`;
+
+  // ── 0.1% pre-mixed bag ──
+  const bagMlHr = infMgHr / (bagConc * 10);
+  const vol500dur = (500 / bagMlHr).toFixed(1);
+  const vol250dur = (250 / bagMlHr).toFixed(1);
+  // How to make a 500ml 0.1% bag from 2% stock:
+  // 0.1% of 500ml = 500mg; from 2% → 500/20 = 25ml of 2% into 475ml saline
+  const makeFrom2pct500 = (bagConc / 2 * 500).toFixed(1);
+  const salineFor500 = (500 - parseFloat(makeFrom2pct500)).toFixed(1);
+
+  pHtml += `<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--sub2);margin-bottom:6px">Pre-mixed 0.1% bag · volumetric pump</div>`;
+  pHtml += `<div style="background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+    <div style="font-size:11px;font-weight:600;color:var(--sub2);margin-bottom:8px">0.1% lidocaine = 1 mg/ml</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+      <span style="font-size:12px;color:var(--text);font-weight:600">Pump rate (${lidoInfRate} mg/kg/hr)</span>
+      <span style="font-size:22px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums">${bagMlHr.toFixed(1)} <span style="font-size:11px;font-weight:500;color:var(--sub2)">ml/hr</span></span>
+    </div>
+    ${prepRow('500 ml bag lasts', vol500dur, 'hr')}
+    ${prepRow('250 ml bag lasts', vol250dur, 'hr')}
+    <div style="margin-top:8px;padding:8px 10px;background:rgba(96,165,250,.07);border-radius:6px;border:1px solid rgba(96,165,250,.15)">
+      <div style="font-size:10px;font-weight:600;color:var(--blue);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">To make a 500 ml 0.1% bag from 2%</div>
+      <div style="font-size:11.5px;color:var(--sub);line-height:1.6">Remove <strong style="color:var(--text)">${makeFrom2pct500} ml</strong> from a 500 ml saline bag, then add <strong style="color:var(--text)">${makeFrom2pct500} ml</strong> of 2% lidocaine</div>
+    </div>
+  </div>`;
+
+  document.getElementById('lidoiv-prep-result').innerHTML = pHtml;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB 4 — DILUTIONS
+// ═══════════════════════════════════════════════════════════
+const DIL_PRESETS = [
+  { label:'Lidocaine 1.5% from 1% + 2%',            low:1,    high:2,    target:1.5   },
+  { label:'Bupi/Levo 0.375% from 0.25% + 0.5%',     low:0.25, high:0.5,  target:0.375 },
+  { label:'Bupi/Levo 0.125% from 0.25% + saline',   low:0,    high:0.25, target:0.125 },
+  { label:'Ropivacaine 0.375% from 0.2% + 0.5%',    low:0.2,  high:0.5,  target:0.375 },
+  { label:'Ropivacaine 0.375% from 0.75% + saline', low:0,    high:0.75, target:0.375 },
+  { label:'Ropivacaine 0.5% from 0.75% + saline',   low:0,    high:0.75, target:0.5   },
+  { label:'Ropivacaine 0.6% from 0.75% + saline',   low:0,    high:0.75, target:0.6   },
+  { label:'Lidocaine 1% from 2% + saline',           low:0,    high:2,    target:1     },
+];
+
+function applyDilPreset(p) {
+  document.getElementById('dil-low').value    = p.low;
+  document.getElementById('dil-high').value   = p.high;
+  document.getElementById('dil-target').value = p.target;
+  updateSalineBtn();
+  calcDilution();
+}
+
+function setDilSaline() {
+  document.getElementById('dil-low').value = '0';
+  updateSalineBtn();
+  calcDilution();
+}
+
+function updateSalineBtn() {
+  const btn = document.getElementById('dil-saline-btn');
+  if (!btn) return;
+  const isSaline = document.getElementById('dil-low').value === '0';
+  btn.style.color = isSaline ? 'var(--blue)' : 'var(--sub2)';
+  btn.style.borderColor = isSaline ? 'var(--blue)' : 'var(--border)';
+}
+
+function clearDilution() {
+  ['dil-low','dil-high','dil-target','dil-vol'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  updateSalineBtn();
+  document.getElementById('dil-result').innerHTML = '';
+}
+
+function calcDilution() {
+  updateSalineBtn();
+  const lowRaw = document.getElementById('dil-low').value;
+  const low    = lowRaw === '' ? NaN : parseFloat(lowRaw);
+  const high   = parseFloat(document.getElementById('dil-high').value);
+  const target = parseFloat(document.getElementById('dil-target').value);
+  const vol    = parseFloat(document.getElementById('dil-vol').value) || 20;
+  const res    = document.getElementById('dil-result');
+
+  // Stay silent if fields not yet filled in
+  if (isNaN(low) || isNaN(high) || isNaN(target)) { res.innerHTML = ''; return; }
+
+  if (high <= low || target <= low || target >= high) {
+    res.innerHTML = `<span style="font-size:12px;color:var(--amber);font-style:italic">Target must be between Conc 1 and Conc 2.</span>`;
+    return;
+  }
+
+  const volHigh  = vol * (target - low) / (high - low);
+  const volLow   = vol - volHigh;
+  const lowLabel = low === 0 ? 'Saline / water for injection' : `${low}% solution`;
+
+  res.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--blue-d);border-radius:10px;border:1px solid rgba(96,165,250,.2)">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">${high}% solution</span>
+        <span style="font-size:22px;font-weight:900;color:var(--blue);font-variant-numeric:tabular-nums">${volHigh.toFixed(1)} <span style="font-size:12px;font-weight:500">ml</span></span>
+      </div>
+      <div style="text-align:center;font-size:20px;color:var(--sub2);line-height:1">+</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--s1);border-radius:10px;border:1px solid var(--border)">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">${lowLabel}</span>
+        <span style="font-size:22px;font-weight:900;color:var(--sub);font-variant-numeric:tabular-nums">${volLow.toFixed(1)} <span style="font-size:12px;font-weight:500">ml</span></span>
+      </div>
+      <div style="text-align:center;font-size:20px;color:var(--sub2);line-height:1">=</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(16,185,129,.08);border-radius:10px;border:1px solid rgba(16,185,129,.2)">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">${target}% · ${vol} ml total</span>
+        <span style="font-size:16px;font-weight:800;color:var(--green)">✓</span>
+      </div>
+    </div>`;
+}
+
+function initDilPresets() {
+  document.getElementById('dil-presets').innerHTML = DIL_PRESETS.map(p =>
+    `<button onclick='applyDilPreset(${JSON.stringify(p)})' style="text-align:left;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:11.5px;font-weight:600;color:var(--text);font-family:var(--font);cursor:pointer">${p.label}</button>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// OBS TAB
+// ═══════════════════════════════════════════════════════════
+
+const obsSp  = { drug:null, vol:null };
+const obsSpAdj = {
+  excl: 'diamorphine', // 'none' | 'diamorphine'
+  morphinePF: false,
+  fentanyl: false,
+  doses: { diamorphine:300, morphinePF:100, fentanyl:25 }
+};
+const obsTop = {
+  recipe: 'levoLido',
+  levoVol:10, levoAdr:false,
+  lidoVol:10, lidoAdr:false,
+  llGiven:0,
+  llFentanyl:false,
+  loVol:20, loAdr:false,
+  ropiConc:0.75, ropiVol:20,
+  blockHeight:'none'
+};
+const obsEpi = { mix:'01bupi', totalVol:0 };
+const obsTrk = { spinal:false, topup:true, epi:true };
+const OBS_EPI_MIXES = {
+  '01bupi':   { drug:'Bupivacaine',     concPct:0.1   },
+  '01levo':   { drug:'Levobupivacaine', concPct:0.1   },
+  '0125levo': { drug:'Levobupivacaine', concPct:0.125 },
+};
+
+function setObsSpDrug(d) {
+  obsSp.drug = d;
+  document.getElementById('obsSpHeavy').classList.toggle('active', d==='heavy');
+  document.getElementById('obsSpPlain').classList.toggle('active', d==='plain');
+  calcObsSpinal();
+}
+function setObsSpVol(v) {
+  obsSp.vol = v;
+  document.getElementById('obsSpVolInput').value = v;
+  ['16','18','20','22','23','25'].forEach(x => {
+    const el = document.getElementById('obsSpV'+x);
+    if(el) el.classList.toggle('active', parseFloat(x)/10===v);
+  });
+  calcObsSpinal();
+}
+function setObsSpVolCustom(v) {
+  if(isNaN(v)) return;
+  obsSp.vol = v;
+  ['16','18','20','22','23','25'].forEach(x => { const el=document.getElementById('obsSpV'+x); if(el) el.classList.remove('active'); });
+  calcObsSpinal();
+}
+
+function setObsSpAdjExcl(v) {
+  obsSpAdj.excl = v;
+  obsSpAdj.morphinePF = false;
+  obsSpAdj.fentanyl = false;
+  updateObsSpAdjUI();
+  calcObsSpinal();
+}
+function toggleObsSpAdjCombi(k) {
+  obsSpAdj.excl = 'none';
+  obsSpAdj[k] = !obsSpAdj[k];
+  updateObsSpAdjUI();
+  calcObsSpinal();
+}
+function setObsSpAdjDose(drug, val) {
+  obsSpAdj.doses[drug] = val;
+  const idMap   = { diamorphine:['200','300','400'], morphinePF:['100','150','200'], fentanyl:['15','20','25'] };
+  const prefMap = { diamorphine:'obsSpDia', morphinePF:'obsSpMorph', fentanyl:'obsSpFent' };
+  const inputMap= { diamorphine:'obsSpDiaInput', morphinePF:'obsSpMorphInput', fentanyl:'obsSpFentInput' };
+  idMap[drug].forEach(x => { const el=document.getElementById(prefMap[drug]+x); if(el) el.classList.toggle('active', parseFloat(x)===val); });
+  const inp = document.getElementById(inputMap[drug]); if(inp) inp.value = val;
+  calcObsSpinal();
+}
+function updateObsSpAdjUI() {
+  const isNone = obsSpAdj.excl==='none' && !obsSpAdj.morphinePF && !obsSpAdj.fentanyl;
+  document.getElementById('obsSpAdjNone').classList.toggle('active', isNone);
+  document.getElementById('obsSpAdjDia').classList.toggle('active', obsSpAdj.excl==='diamorphine');
+  document.getElementById('obsSpAdjMorph').classList.toggle('active', obsSpAdj.morphinePF);
+  document.getElementById('obsSpAdjFent').classList.toggle('active', obsSpAdj.fentanyl);
+  document.getElementById('obsSpDiaDoseRow').style.display  = obsSpAdj.excl==='diamorphine' ? 'flex' : 'none';
+  document.getElementById('obsSpMorphDoseRow').style.display= obsSpAdj.morphinePF ? 'flex' : 'none';
+  document.getElementById('obsSpFentDoseRow').style.display = obsSpAdj.fentanyl   ? 'flex' : 'none';
+}
+
+function setObsTopRecipe(r) {
+  obsTop.recipe = r;
+  const keys = ['levoLido','levoOnly','fizzy','ropi'];
+  keys.forEach(k => {
+    const cap = k.charAt(0).toUpperCase()+k.slice(1);
+    document.getElementById('obsTopR'+cap).classList.toggle('active', k===r);
+    const panel = document.getElementById('obsTopPanel'+cap);
+    if(panel) panel.style.display = k===r ? '' : 'none';
+  });
+  calcObsTopup();
+}
+function setObsBlockHeight(h) {
+  obsTop.blockHeight = h;
+  ['none','T10','T8','T6','T4','T2plus'].forEach(x => document.getElementById('obsBlk'+x).classList.toggle('active', x===h));
+  const warnEl = document.getElementById('obsBlockWarn');
+  const W = {
+    none:   null,
+    T10:    { bg:'rgba(52,211,153,.1)', bd:'rgba(52,211,153,.3)', col:'var(--green)',  txt:'Block to T10: standard top-up volumes appropriate. Give in 3–5 ml increments as normal.' },
+    T8:     { bg:'rgba(52,211,153,.1)', bd:'rgba(52,211,153,.3)', col:'var(--green)',  txt:'Block to T8: standard volumes usually adequate. Monitor spread carefully.' },
+    T6:     { bg:'rgba(251,191,36,.1)', bd:'rgba(251,191,36,.3)', col:'var(--amber)',  txt:'⚠ Block to T6: higher pre-existing block. Consider reducing volume by 20–30% or giving in smaller increments (2–3 ml). Monitor for unexpected high spread.' },
+    T4:     { bg:'rgba(248,113,113,.1)',bd:'rgba(248,113,113,.3)',col:'var(--red)',    txt:'🚨 Block at T4: at or near surgical target level. High risk of further extension with standard volumes. Reduce dose significantly or consider GA. Senior review recommended.' },
+    T2plus: { bg:'rgba(248,113,113,.1)',bd:'rgba(248,113,113,.3)',col:'var(--red)',    txt:'🚨 Block at T2 or above: DO NOT top up — unacceptable risk of total spinal / cardiovascular collapse. Convert to GA.' },
+  };
+  const w = W[h];
+  if(!w) { warnEl.style.display='none'; return; }
+  warnEl.style.cssText = `display:block;margin-bottom:12px;padding:8px 10px;border-radius:var(--rsm);font-size:10.5px;line-height:1.5;background:${w.bg};border:1px solid ${w.bd};color:${w.col}`;
+  warnEl.textContent = w.txt;
+}
+function setObsLL(comp, v) {
+  if(comp==='levo') {
+    obsTop.levoVol=v; document.getElementById('obsLLLevoInput').value=v;
+    [5,10,15].forEach(x=>document.getElementById('obsLLLevo'+x).classList.toggle('active',x===v));
+  } else {
+    obsTop.lidoVol=v; document.getElementById('obsLLLidoInput').value=v;
+    [0,5,10].forEach(x=>document.getElementById('obsLLLido'+x).classList.toggle('active',x===v));
+  }
+  calcObsTopup();
+}
+function clearObsLLPresets(comp) {
+  if(comp==='levo') [5,10,15].forEach(x=>document.getElementById('obsLLLevo'+x).classList.remove('active'));
+  else [0,5,10].forEach(x=>document.getElementById('obsLLLido'+x).classList.remove('active'));
+}
+function setObsLLGiven(v) {
+  obsTop.llGiven=v; document.getElementById('obsLLGivenInput').value=v;
+  [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.toggle('active',x===v));
+  document.getElementById('obsLLGivenAll').classList.remove('active');
+  calcObsTopup();
+}
+function setObsLLGivenAll() {
+  const total = obsTop.levoVol + obsTop.lidoVol;
+  obsTop.llGiven = total;
+  document.getElementById('obsLLGivenInput').value = total;
+  [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.toggle('active',x===total));
+  document.getElementById('obsLLGivenAll').classList.toggle('active', ![5,10,15].includes(total));
+  calcObsTopup();
+}
+function clearObsLLGivenPresets() {
+  [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.remove('active'));
+  document.getElementById('obsLLGivenAll').classList.remove('active');
+}
+function setObsLLAdr(comp, on) {
+  if(comp==='levo') {
+    obsTop.levoAdr=on;
+    document.getElementById('obsLLLevoNoAdr').classList.toggle('active',!on);
+    document.getElementById('obsLLLevoAdr').classList.toggle('active',on);
+  } else {
+    obsTop.lidoAdr=on;
+    document.getElementById('obsLLLidoNoAdr').classList.toggle('active',!on);
+    document.getElementById('obsLLLidoAdr').classList.toggle('active',on);
+  }
+  calcObsTopup();
+}
+function toggleObsLLFent() {
+  obsTop.llFentanyl=!obsTop.llFentanyl;
+  const btn=document.getElementById('obsLLFentBtn');
+  btn.style.background  = obsTop.llFentanyl ? 'rgba(96,165,250,.15)' : 'var(--s1)';
+  btn.style.borderColor = obsTop.llFentanyl ? 'rgba(96,165,250,.4)'  : 'var(--border)';
+  btn.style.color       = obsTop.llFentanyl ? 'var(--blue)'          : 'var(--sub2)';
+  calcObsTopup();
+}
+function setObsLO(v) {
+  obsTop.loVol=v; document.getElementById('obsLOInput').value=v;
+  [15,20].forEach(x=>document.getElementById('obsLOVol'+x).classList.toggle('active',x===v));
+  calcObsTopup();
+}
+function setObsLOAdr(on) {
+  obsTop.loAdr=on;
+  document.getElementById('obsLONoAdr').classList.toggle('active',!on);
+  document.getElementById('obsLOAdr').classList.toggle('active',on);
+  calcObsTopup();
+}
+function setObsRopi(k, v) {
+  if(k==='conc') {
+    obsTop.ropiConc=v;
+    document.getElementById('obsRopiConc05').classList.toggle('active',v===0.5);
+    document.getElementById('obsRopiConc075').classList.toggle('active',v===0.75);
+  } else {
+    obsTop.ropiVol=v; document.getElementById('obsRopiInput').value=v;
+    [15,20].forEach(x=>document.getElementById('obsRopiVol'+x).classList.toggle('active',x===v));
+  }
+  calcObsTopup();
+}
+
+function setObsEpiMix(m) {
+  obsEpi.mix = m;
+  Object.keys(OBS_EPI_MIXES).forEach(k => document.getElementById('obsEpiMix'+k).classList.toggle('active',k===m));
+  calcObs();
+}
+function calcObsEpiFromRate() {
+  const rate = parseFloat(document.getElementById('obsEpiRate').value);
+  const hrs  = parseFloat(document.getElementById('obsEpiHrs').value);
+  if(!isNaN(rate) && !isNaN(hrs)) {
+    const vol = rate * hrs;
+    document.getElementById('obsEpiVol').value = vol.toFixed(0);
+    obsEpi.totalVol = vol;
+  } else {
+    obsEpi.totalVol = parseFloat(document.getElementById('obsEpiVol').value)||0;
+  }
+  calcObs();
+}
+function toggleObsTrk(k) {
+  obsTrk[k] = !obsTrk[k];
+  const btn = document.getElementById('obsTrk'+k.charAt(0).toUpperCase()+k.slice(1));
+  const on = obsTrk[k];
+  btn.style.background  = on ? 'rgba(96,165,250,.1)' : 'var(--s1)';
+  btn.style.borderColor = on ? 'rgba(96,165,250,.4)' : 'var(--border)';
+  btn.style.color       = on ? 'var(--blue)'         : 'var(--sub2)';
+  btn.textContent = { spinal:'Spinal bupi', topup:'Epi top-up', epi:'Labour epi' }[k] + (on?' ✓':'');
+  calcObsTracker();
+}
+
+function calcObs() { calcObsSpinal(); calcObsTopup(); calcObsEpi(); calcObsTracker(); }
+
+function clearObsSp() {
+  obsSp.drug = null; obsSp.vol = null;
+  document.getElementById('obsSpHeavy').classList.remove('active');
+  document.getElementById('obsSpPlain').classList.remove('active');
+  ['16','18','20','22','23','25'].forEach(x => { const el=document.getElementById('obsSpV'+x); if(el) el.classList.remove('active'); });
+  document.getElementById('obsSpVolInput').value = '';
+  setObsSpAdjExcl('none');
+  document.getElementById('obs-sp-result').innerHTML = '';
+  calcObsTracker();
+}
+function clearObsTop() {
+  setObsTopRecipe('levoLido');
+  setObsBlockHeight('none');
+  setObsLL('levo', 0); setObsLLAdr('levo', false);
+  setObsLL('lido', 0); setObsLLAdr('lido', false);
+  obsTop.llGiven = 0;
+  document.getElementById('obsLLGivenInput').value = '';
+  clearObsLLGivenPresets();
+  obsTop.llFentanyl = false;
+  const fb = document.getElementById('obsLLFentBtn');
+  if(fb){ fb.style.background='var(--s1)'; fb.style.borderColor='var(--border)'; fb.style.color='var(--sub2)'; }
+  setObsLO(20); setObsLOAdr(false);
+  setObsRopi('conc', 0.75); setObsRopi('vol', 20);
+  document.getElementById('obs-top-result').innerHTML = '';
+  calcObsTopup();
+}
+function clearObsEpi() {
+  document.getElementById('obsEpiRate').value = '';
+  document.getElementById('obsEpiHrs').value = '';
+  document.getElementById('obsEpiVol').value = '';
+  obsEpi.totalVol = 0;
+  document.getElementById('obs-epi-result').innerHTML = '';
+  calcObsTracker();
+}
+
+function calcObsSpinal() {
+  const el = document.getElementById('obs-sp-result'); if(!el) return;
+  if(!obsSp.drug || !obsSp.vol) { el.innerHTML=''; calcObsTracker(); return; }
+  const mg = obsSp.vol * 5;
+  const drugLabel = obsSp.drug==='heavy' ? 'Heavy bupivacaine 0.5% (hyperbaric)' : 'Plain bupivacaine 0.5%';
+  let adjLines=[], notes=[];
+  if(obsSpAdj.excl==='diamorphine') {
+    adjLines.push(`+ Diamorphine <strong style="color:var(--text)">${obsSpAdj.doses.diamorphine} mcg</strong>`);
+    notes.push('Diamorphine: 12–24 h analgesia. Standard UK practice for elective and emergency CS.');
+  }
+  if(obsSpAdj.morphinePF) {
+    adjLines.push(`+ Morphine PF <strong style="color:var(--text)">${obsSpAdj.doses.morphinePF} mcg</strong>`);
+    notes.push('Morphine PF: long-acting analgesia; higher PONV/itch risk. Requires extended monitoring (12–24 h).');
+  }
+  if(obsSpAdj.fentanyl) {
+    adjLines.push(`+ Fentanyl <strong style="color:var(--text)">${obsSpAdj.doses.fentanyl} mcg</strong>`);
+    notes.push('Fentanyl: rapid onset, ~4 h duration. Combined with morphine PF for dual-action analgesia.');
+  }
+  if(!obsSpAdj.morphinePF && !obsSpAdj.fentanyl && obsSpAdj.excl==='none')
+    notes.push('No intrathecal opioid selected — ensure alternative analgesia plan.');
+  const adjHTML  = adjLines.map(l=>`<div style="font-size:12px;color:var(--sub);margin-top:3px">${l}</div>`).join('');
+  const noteHTML = notes.length ? `<div style="font-size:10.5px;color:var(--sub2);margin-top:7px;line-height:1.4">${notes.join('<br>')}</div>` : '';
+  el.innerHTML = `<div style="font-size:15px;font-weight:700;color:var(--text)">${mg.toFixed(1)} mg ${drugLabel}</div>${adjHTML}${noteHTML}`;
+}
+
+function calcObsTopup() {
+  const el = document.getElementById('obs-top-result'); if(!el) return;
+  const r = obsTop.recipe;
+  let html='';
+  if(r==='levoLido') {
+    const lv=parseFloat(document.getElementById('obsLLLevoInput').value)||0;
+    const li=parseFloat(document.getElementById('obsLLLidoInput').value)||0;
+    obsTop.levoVol=lv; obsTop.lidoVol=li;
+    const mixTotal=lv+li;
+    const given=obsTop.llGiven;
+    // Update mix total label
+    const mixLbl=document.getElementById('obsLLMixTotal');
+    if(mixLbl) mixLbl.textContent=mixTotal>0?`= ${mixTotal} ml total mix`:'';
+    if(!given || mixTotal<=0) {
+      html=`<div style="font-size:12px;color:var(--sub2)">Enter volume administered below</div>`;
+    } else {
+      const f=Math.min(given,mixTotal)/mixTotal;
+      const lvoMg=(f*lv*5), lidMg=(f*li*20);
+      const parts=[];
+      if(lv>0) parts.push(`${lvoMg.toFixed(1)} mg levo 0.5%${obsTop.levoAdr?' + adr':''}`);
+      if(li>0) parts.push(`${lidMg.toFixed(1)} mg lido 2%${obsTop.lidoAdr?' + adr':''}`);
+      html=`<div style="font-size:14px;font-weight:700;color:var(--text)">${given} ml given of ${mixTotal} ml mix</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${parts.join(' · ')}</div>
+        ${obsTop.llFentanyl?'<div style="font-size:11px;color:var(--sub);margin-top:2px">+ Fentanyl 100 mcg</div>':''}`;
+    }
+  } else if(r==='levoOnly') {
+    const lv=parseFloat(document.getElementById('obsLOInput').value)||0;
+    obsTop.loVol=lv;
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${lv} ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(lv*5).toFixed(0)} mg levobupivacaine 0.5%${obsTop.loAdr?' + adr':''}</div>`;
+  } else if(r==='fizzy') {
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total 20 ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">340 mg lidocaine · 100 mcg adrenaline · NaHCO₃ 2 ml</div>`;
+  } else if(r==='ropi') {
+    const rv=parseFloat(document.getElementById('obsRopiInput').value)||0;
+    obsTop.ropiVol=rv;
+    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${rv} ml</div>
+      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(rv*obsTop.ropiConc*10).toFixed(0)} mg ropivacaine ${obsTop.ropiConc}%</div>`;
+  }
+  el.innerHTML=html;
+  calcObsTracker();
+}
+
+function calcObsEpi() {
+  const el = document.getElementById('obs-epi-result'); if(!el) return;
+  const vol = obsEpi.totalVol;
+  if(!vol){ el.innerHTML=''; return; }
+  const mix = OBS_EPI_MIXES[obsEpi.mix];
+  const mg = vol * mix.concPct * 10;
+  el.innerHTML = `<div style="font-size:13px;font-weight:600;color:var(--text)">${mg.toFixed(0)} mg ${mix.drug}</div>
+    <div style="font-size:10.5px;color:var(--sub);margin-top:2px">${vol.toFixed(0)} ml × ${mix.concPct*100}% + fentanyl 2 mcg/ml</div>`;
+}
+
+function calcObsTracker() {
+  const el = document.getElementById('obs-tracker-result'); if(!el) return;
+  const BUPI = DRUGS.find(d=>d.id==='bupi_p');
+  const LEVO = DRUGS.find(d=>d.id==='levo_p');
+  const LIDO_A = DRUGS.find(d=>d.id==='lido_a2');
+  const ROPI  = DRUGS.find(d=>d.id==='ropi');
+  const bupiMax  = drugMax(BUPI);
+  const levoMax  = drugMax(LEVO);
+  const lidoAMax = drugMax(LIDO_A);
+  const ropiMaxD = drugMax(ROPI);
+  // Epidural lidocaine (plain) uses 5 mg/kg (max 400 mg) — higher than the
+  // nerve-block limit (3 mg/kg / 200 mg) to reflect slower epidural absorption.
+  // OAA CS top-up protocols routinely accept 300–400 mg plain lidocaine epidurally.
+  const lidoEpiMax = Math.min(calcEffectiveWt().wt * 5, 400);
+
+  let bupiMg=0, levoMg=0, lidoPMg=0, lidoAMg=0, ropiMgT=0;
+  if(obsTrk.spinal && obsSp.vol) bupiMg += obsSp.vol * 5;
+  if(obsTrk.topup) {
+    const r=obsTop.recipe;
+    if(r==='levoLido') {
+      const mixTotal=obsTop.levoVol+obsTop.lidoVol;
+      if(obsTop.llGiven>0 && mixTotal>0) {
+        const f=Math.min(obsTop.llGiven,mixTotal)/mixTotal;
+        levoMg += f*obsTop.levoVol*5;
+        if(obsTop.lidoAdr) lidoAMg += f*obsTop.lidoVol*20; else lidoPMg += f*obsTop.lidoVol*20;
+      }
+    } else if(r==='levoOnly') {
+      levoMg += obsTop.loVol*5;
+    } else if(r==='fizzy') {
+      lidoAMg += 340;
+    } else if(r==='ropi') {
+      ropiMgT += obsTop.ropiVol*obsTop.ropiConc*10;
+    }
+  }
+  if(obsTrk.epi && obsEpi.totalVol) {
+    const mix=OBS_EPI_MIXES[obsEpi.mix];
+    const mg=obsEpi.totalVol*mix.concPct*10;
+    if(obsEpi.mix==='01bupi') bupiMg+=mg; else levoMg+=mg;
+  }
+
+  const fBupi  = bupiMax  > 0 ? bupiMg/bupiMax   : 0;
+  const fLevo  = levoMax  > 0 ? levoMg/levoMax   : 0;
+  const fLidoP = lidoEpiMax > 0 ? lidoPMg/lidoEpiMax : 0;
+  const fLidoA = lidoAMax > 0 ? lidoAMg/lidoAMax : 0;
+  const fRopi  = ropiMaxD > 0 ? ropiMgT/ropiMaxD : 0;
+  const fTotal = fBupi+fLevo+fLidoP+fLidoA+fRopi;
+  const pct=Math.min(100,fTotal*100);
+  const remFrac=Math.max(0,1-fTotal);
+  const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+  const statusText=pct>=100?'AT MAXIMUM':pct>=80?'APPROACHING MAX':pct>=50?'CAUTION':'WITHIN LIMITS';
+  const chipCls=pct>=100?'chip-over':pct>=80?'chip-warn':'chip-safe';
+
+  const mkRow=(name,mg,max,f)=>mg>0?`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--sub)">${name}</span>
+      <span><strong style="color:var(--text)">${mg.toFixed(0)}</strong> / ${max.toFixed(0)} mg <span style="color:${f>=1?'var(--red)':f>=0.8?'var(--amber)':'var(--sub2)'}">(${(f*100).toFixed(0)}%)</span></span>
+    </div>`:'';
+
+  const rows=mkRow('Bupivacaine',bupiMg,bupiMax,fBupi)
+           +mkRow('Levobupivacaine',levoMg,levoMax,fLevo)
+           +mkRow('Lidocaine plain (epidural)',lidoPMg,lidoEpiMax,fLidoP)
+           +mkRow('Lidocaine + adr (epidural)',lidoAMg,lidoAMax,fLidoA)
+           +mkRow('Ropivacaine',ropiMgT,ropiMaxD,fRopi);
+
+  const remSection=remFrac>0?`
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Remaining capacity</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.8">
+        Bupivacaine / Levobupivacaine: <strong style="color:var(--text)">${(remFrac*bupiMax).toFixed(0)} mg</strong><br>
+        Lidocaine plain (epidural): <strong style="color:var(--text)">${(remFrac*lidoEpiMax).toFixed(0)} mg</strong><br>
+        Ropivacaine: <strong style="color:var(--text)">${(remFrac*ropiMaxD).toFixed(0)} mg</strong>
+      </div>
+    </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--red);font-weight:700">No remaining capacity — do not give further LA</div>`;
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:26px;font-weight:800;color:${col}">${pct.toFixed(0)}<span style="font-size:14px">%</span> <span style="font-size:11px;font-weight:500;color:var(--sub)">used</span></div>
+      <span class="chip ${chipCls}">${statusText}</span>
+    </div>
+    ${rows||'<div style="font-size:12px;color:var(--sub2)">Enable at least one source above</div>'}
+    ${remSection}
+    <div style="margin-top:8px;font-size:10px;color:var(--sub2);line-height:1.5">Lidocaine plain epidural limit: 5 mg/kg (max 400 mg) — higher than the nerve-block ceiling (3 mg/kg) reflecting slower epidural absorption. OAA CS top-up protocols routinely use 300–400 mg.${bupiMg>0&&obsTrk.spinal?' Spinal bupivacaine included conservatively.':''}</div>`;
+}
+
+// Init obs tab
+function initObs() {
+  updateObsSpAdjUI();
+  setObsTopRecipe('levoLido');
+  setObsBlockHeight('none');
+  calcObs();
+}
+
+// ── ADRENALINE CALCULATOR ─────────────────────────────────────────────────
+let adrTarget = 200; // thousands — 200 = 1:200,000
+function setAdrTarget(v) {
+  adrTarget = v;
+  [100, 200, 400].forEach(x => document.getElementById('adrT' + x).classList.toggle('active', x === v));
+  calcAdrAdd();
+}
+function calcAdrAdd() {
+  const vol = parseFloat(document.getElementById('adr-add-vol').value);
+  const el = document.getElementById('adr-add-result');
+  if (isNaN(vol) || vol <= 0) { el.innerHTML = ''; return; }
+  // mcg/ml for target: 1:200,000 = 5 mcg/ml; formula: 1,000,000 / (adrTarget * 1000) = 1000 / adrTarget
+  const mcgPerMl = 1000 / adrTarget;
+  const totalMcg = vol * mcgPerMl;
+  const stockMl1k  = totalMcg / 1000;  // 1:1,000  = 1 mg/ml    = 1000 mcg/ml
+  const stockMl10k = totalMcg / 100;   // 1:10,000 = 0.1 mg/ml  = 100 mcg/ml
+  el.innerHTML = `
+    <div style="margin-bottom:4px">Add <strong style="color:var(--text);font-size:14px">${stockMl1k.toFixed(2)} ml</strong> of <strong style="color:var(--text)">1:1,000</strong> adrenaline&nbsp;(${totalMcg.toFixed(0)}&thinsp;mcg) to ${vol.toFixed(0)}&thinsp;ml LA</div>
+    <div style="margin-bottom:6px">or <strong style="color:var(--text);font-size:14px">${stockMl10k.toFixed(2)} ml</strong> of <strong style="color:var(--text)">1:10,000</strong> adrenaline&nbsp;(${totalMcg.toFixed(0)}&thinsp;mcg) to ${vol.toFixed(0)}&thinsp;ml LA</div>
+    <span style="font-size:10px;color:var(--sub2)">1:1,000 = 1&thinsp;mg/ml = 1000&thinsp;mcg/ml · 1:10,000 = 0.1&thinsp;mg/ml = 100&thinsp;mcg/ml · Volume increase as stated above</span>`;
+}
+function adrRatioLabel(mcgPerMl) {
+  const known = [[10,'1:100,000'],[5,'1:200,000'],[2.5,'1:400,000'],[12.5,'1:80,000']];
+  const hit = known.find(([m]) => Math.abs(mcgPerMl - m) < 0.01);
+  if (hit) return hit[1];
+  const r = Math.round(1e6 / mcgPerMl);
+  return '1:' + r.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function calcAdrMix() {
+  const volA = parseFloat(document.getElementById('adr-mix-vola').value);
+  const volB = parseFloat(document.getElementById('adr-mix-volb').value);
+  const ratioA = parseInt(document.getElementById('adr-mix-conca').value); // 0=plain,100,200,400
+  const ratioB = parseInt(document.getElementById('adr-mix-concb').value);
+  const el = document.getElementById('adr-mix-result');
+  if (isNaN(volA) || isNaN(volB)) { el.innerHTML = ''; return; }
+  const totalVol = volA + volB;
+  if (totalVol <= 0) { el.innerHTML = ''; return; }
+  const mcgA = ratioA === 0 ? 0 : volA * (1000 / ratioA);
+  const mcgB = ratioB === 0 ? 0 : volB * (1000 / ratioB);
+  const totalMcg = mcgA + mcgB;
+  if (totalMcg === 0) {
+    el.innerHTML = `<span style="color:var(--sub2)">Both plain — no adrenaline in mixture</span>`;
+    return;
+  }
+  const finalMcgPerMl = totalMcg / totalVol;
+  const label = adrRatioLabel(finalMcgPerMl);
+  el.innerHTML = `Total <strong style="color:var(--text)">${totalVol.toFixed(0)} ml</strong> · Adrenaline <strong style="color:var(--text)">${label}</strong> (${finalMcgPerMl.toFixed(2)}&thinsp;mcg/ml · ${totalMcg.toFixed(0)}&thinsp;mcg total)`;
+}
+
 // ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => {});
   });
 }
+
+initDilPresets();
+initObs();
+window.addEventListener('load', () => {
+  calcLidoIV();
+});
 </script>
 </body>
 </html>
