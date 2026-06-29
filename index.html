@@ -3506,7 +3506,7 @@ function calcObsTracker() {
   // Epidural lidocaine (plain) uses 5 mg/kg (max 400 mg) — higher than the
   // nerve-block limit (3 mg/kg / 200 mg) to reflect slower epidural absorption.
   // OAA CS top-up protocols routinely accept 300–400 mg plain lidocaine epidurally.
-  const lidoEpiMax = Math.min(calcEffectiveWt() * 5, 400);
+  const lidoEpiMax = Math.min(calcEffectiveWt().wt * 5, 400);
 
   let bupiMg=0, levoMg=0, lidoPMg=0, lidoAMg=0, ropiMgT=0;
   if(obsTrk.spinal && obsSp.vol) bupiMg += obsSp.vol * 5;
