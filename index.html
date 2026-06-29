@@ -2150,6 +2150,8 @@ function openDisclaimer(){
       <li><strong>Additive systemic toxicity.</strong> When mixing agents, total toxic potential is cumulative. LASTCalc's fractional dose model accounts for this, but the clinical risk of LAST from a mixture is not simply the sum of individual risks — it depends on absorption kinetics, site of injection, and patient factors that this tool cannot model.</li>
       <li><strong>Dilutions must be prepared aseptically</strong> by a suitably trained practitioner, using appropriate diluents (typically preservative-free 0.9% NaCl or water for injection), and administered promptly. Stability and compatibility should be verified against your local formulary and pharmacy guidance before administration.</li>
     </ol>
+    <h3>Patient data and OCR privacy</h3>
+    <p>The EPR scanning (OCR) function uses on-device processing only. When you capture an image, it is processed entirely within your browser using a local OCR engine (Tesseract.js) running as a browser process on your device. The image is never transmitted to any server or cloud service. No image data is written to the device's storage — no files, no browser cache, no application data. The captured image exists only in temporary browser memory for the duration of the scan and is not retained after you close the scanner or end the session. No patient-identifiable information is stored by this application at any point.</p>
     <h3>Regulatory status</h3>
     <p>LASTCalc is not a registered medical device. It has not been evaluated or approved by the MHRA or any equivalent regulatory body.</p>
     <h3>Governing law</h3>
@@ -2232,12 +2234,12 @@ function openChangelog(){
     <h3>v1.3 — 2026-06-29</h3>
     <strong>🍼 Obstetrics tab (new)</strong>
     <ol>
-      <li><strong>Spinal for Caesarean Section</strong> — heavy or plain bupivacaine 0.5% with volume selector (1.6–2.5 ml including 2.3 ml), intrathecal adjuvants (diamorphine solo; morphine PF + fentanyl combinable)</li>
-      <li><strong>Epidural top-up</strong> — four recipes: Levo + Lido (prepared mix model with volume-administered input), Levo only, Fizzy Mix (lidocaine 2% + NaHCO₃ + adrenaline), Ropivacaine 0.5%. Adrenaline toggles per agent. Onset estimates and pre-existing block height warnings (T10 → T2+)</li>
-      <li><strong>Labour epidural running dose</strong> — rate × hours or direct volume entry; supports 0.1% bupivacaine, 0.1% levobupivacaine, 0.125% levobupivacaine</li>
-      <li><strong>Cumulative LAST tracker</strong> — fractional dose total across all obstetric sources; epidural plain lidocaine uses 5 mg/kg / 400 mg ceiling (vs 3 mg/kg nerve-block limit) reflecting epidural pharmacokinetics. Remaining capacity shown per drug</li>
-      <li><strong>Send to Blocks</strong> — transfers all obstetric LA doses to the Blocks tab as prior entries, preserving the epidural lidocaine ceiling via obsMax flag</li>
-      <li>Clear buttons on spinal, top-up, and labour epidural cards</li>
+      <li><strong>Spinal for Caesarean Section</strong> — heavy or plain bupivacaine 0.5% with volume presets (1.6–2.5 ml), intrathecal adjuvants: diamorphine (solo), morphine PF and fentanyl (combinable)</li>
+      <li><strong>Epidural top-up</strong> — four recipes: Levo + Lido (define prepared mix volume and enter amount given), Levo only, Fizzy Mix (lidocaine 2% + NaHCO₃ + adrenaline), Ropivacaine. Adrenaline toggle per agent. Onset estimates and block height warnings (T10 → T2+)</li>
+      <li><strong>Labour epidural running dose</strong> — rate × hours or direct volume entry for 0.1% bupivacaine, 0.1% or 0.125% levobupivacaine</li>
+      <li><strong>Cumulative LAST tracker</strong> — combined fractional dose across spinal, top-up, and labour epidural. Plain epidural lidocaine uses the 5 mg/kg / 400 mg ceiling (vs 3 mg/kg for nerve blocks), reflecting slower epidural absorption. Remaining capacity shown per drug</li>
+      <li><strong>Send to Blocks</strong> — transfers all recorded obstetric LA doses to the Blocks tab as prior entries, with the correct epidural lidocaine limit carried through</li>
+      <li>Clear buttons on each obstetric card</li>
     </ol>
     <strong>Adrenaline calculator</strong>
     <ol>
@@ -2245,22 +2247,20 @@ function openChangelog(){
     </ol>
     <strong>💧 Lidocaine IV</strong>
     <ol>
-      <li>LAST risk warning added: advises users to account for combined IV + nerve block lidocaine load within the 6-hour window using the Blocks tab</li>
+      <li>Warning added to remind users to account for combined IV + nerve block lidocaine within the same 6-hour window</li>
     </ol>
     <strong>Bug fixes</strong>
     <ol>
-      <li>Paediatric <code>drugMax()</code>: corrected <code>mos &lt; 1 || mos &lt; 6</code> to proper if/else chain — infants 1–6 months were incorrectly hitting the neonate path</li>
-      <li>Weight change now triggers full obs recalculation (<code>calcObs()</code>) rather than tracker only</li>
-      <li>Cumulative tracker: division-by-zero guards added for all fractional drug limits</li>
-      <li>Obstetric-transferred entries now correctly labelled "🍼 Obstetric LA (transferred)" in Show Workings modal</li>
-      <li>Cumulative tracker NaN% fixed (<code>calcEffectiveWt()</code> returns object — <code>.wt</code> property now used)</li>
+      <li>Paediatric dose limits: infants aged 1–6 months were incorrectly receiving neonate-level restrictions — now corrected to the intended 6-month ceiling</li>
+      <li>Weight changes now correctly update all obstetric calculations, not just the tracker total</li>
+      <li>Cumulative tracker no longer shows NaN% when no weight has been entered</li>
+      <li>Obstetric-transferred entries now correctly labelled in the Show Workings breakdown</li>
     </ol>
     <strong>Other</strong>
     <ol>
-      <li>Beta and closed-beta flags removed from all tabs and landing page — tool is now in general release</li>
-      <li>OCR scan button redesigned as a compact pill with amber "Experimental" badge</li>
-      <li>Disclaimer updated to reflect full tool scope (obstetric anaesthesia, AFOi, IV lidocaine, nerve blocks)</li>
-      <li>Service worker cache bumped to v6</li>
+      <li>Beta and closed-beta labels removed — tool is now in general release</li>
+      <li>EPR scan button redesigned as a compact labelled button with an "Experimental" badge</li>
+      <li>Disclaimer updated to reflect full clinical scope and OCR privacy confirmation</li>
     </ol>
     <hr>
     <h3>v1.2 — 2026-06-24</h3>
