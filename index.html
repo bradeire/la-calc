@@ -280,8 +280,8 @@ tbody td:not(:first-child){text-align:right}
 .disc-btn{background:none;border:1px solid var(--border);border-radius:99px;color:var(--sub2);font-family:var(--font);font-size:10px;font-weight:500;padding:3px 10px;cursor:pointer}
 .disc-btn:active{background:var(--s1)}
 /* Camera / OCR */
-.scan-btn{display:flex;align-items:center;gap:6px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.3);border-radius:var(--rsm);color:var(--purple);font-family:var(--font);font-size:11px;font-weight:600;padding:6px 12px;cursor:pointer;margin-top:8px;width:100%}
-.scan-btn:active{background:rgba(139,92,246,.2)}
+.scan-btn{display:inline-flex;align-items:center;gap:5px;background:var(--s1);border:1px solid var(--border2);border-radius:99px;color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;padding:5px 14px 5px 10px;cursor:pointer;margin-top:8px}
+.scan-btn:active{background:var(--s2)}
 .scan-exp{font-size:9px;font-weight:500;background:rgba(139,92,246,.2);border-radius:4px;padding:1px 5px;letter-spacing:.3px}
 #cameraModal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:0;opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
 #cameraModal.open{opacity:1;pointer-events:all}
@@ -377,7 +377,7 @@ tbody td:not(:first-child){text-align:right}
   <button class="scan-btn" onclick="openScanner()">
     <span>📷</span>
     <span>Scan patient label / EPR</span>
-    <span class="scan-exp">EXPERIMENTAL</span>
+    <span style="font-size:9px;font-weight:700;color:var(--amber);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:99px;padding:1px 6px;letter-spacing:.3px;text-transform:uppercase">Experimental</span>
   </button>
 </div>
 
@@ -2229,8 +2229,8 @@ function openChangelog(){
   document.getElementById('changelogModal').classList.add('open');
   document.body.style.overflow='hidden';
   document.getElementById('changelogBody').innerHTML=`
-    <h3>v1.2 — 2026-06-24 <span style="font-size:11px;font-weight:600;color:#f59e0b;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);border-radius:99px;padding:2px 8px;vertical-align:middle">Beta</span></h3>
-    <strong>New tabs (closed beta)</strong>
+    <h3>v1.2 — 2026-06-24</h3>
+    <strong>New tabs</strong>
     <ol>
       <li><strong>💧 Lidocaine IV</strong> — bolus calculator (1–1.5 mg/kg, 2/4/20 min duration) and maintenance infusion (0.5–2 mg/kg/hr). Shows ml/hr and syringe preparation for 50 ml syringe driver or pre-mixed 0.1% bag. Reference: Oxford Handbook of Anaesthesia; Eipe et al. BJA Education 2016.</li>
       <li><strong>🧪 Dilutions</strong> — mix any two LA concentrations to a clinical target using C₁V₁ + C₂V₂ = C₃V₃. Common presets: 0.375% bupivacaine/levobupivacaine, 1.5% lidocaine, 0.375% ropivacaine, and more.</li>
