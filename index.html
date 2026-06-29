@@ -2356,6 +2356,9 @@ async function openScanner() {
 
 function closeScanner() {
   if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  // Belt-and-braces: clear any residual pixel data on close
+  const fc = document.getElementById('camFreezeCanvas');
+  if (fc) { fc.width = 0; fc.height = 0; }
   document.getElementById('cameraModal').classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -2416,11 +2419,19 @@ async function captureAndOCR() {
     }
     status.textContent = '🔍 Scanning text…';
     const { data: { text } } = await tesseractWorker.recognize(canvas);
+    // Immediately release image pixel data from RAM — set canvas dimensions to 0
+    // which forces the browser to discard the pixel buffer without waiting for GC.
+    canvas.width = 0; canvas.height = 0;
+    document.getElementById('camFreezeCanvas').width = 0;
+    document.getElementById('camFreezeCanvas').height = 0;
     // Hide spinner, keep frozen frame visible
     document.getElementById('camFreezeOverlay').style.display = 'none';
     const parsed = parseOCRText(text);
     showOCRReview(parsed, text);
   } catch(err) {
+    canvas.width = 0; canvas.height = 0;
+    document.getElementById('camFreezeCanvas').width = 0;
+    document.getElementById('camFreezeCanvas').height = 0;
     document.getElementById('camFreezeOverlay').style.display = 'none';
     status.textContent = '⚠ OCR failed: ' + (err.message || err);
     btn.disabled = false;
