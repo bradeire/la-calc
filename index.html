@@ -40,6 +40,8 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .tab-bar::-webkit-scrollbar{display:none}
 .tab-btn{flex:1 0 52px;background:var(--s0);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--sub);font-family:var(--font);font-size:11.5px;font-weight:600;padding:7px 4px 6px;cursor:pointer;transition:all .15s;letter-spacing:.1px}
 .tab-btn.active{background:var(--s1);border-color:var(--border2);color:var(--text)}
+.last-emerg-tab{border-color:rgba(239,68,68,.45);color:#f87171}
+.last-emerg-tab.active{background:rgba(239,68,68,.09);border-color:#ef4444;color:#f87171}
 .tab-page{display:none;flex-direction:column;flex:1;overflow-y:auto;padding:0 10px 6px;gap:7px}
 .tab-page.active{display:flex}
 
@@ -336,6 +338,8 @@ tbody td:not(:first-child){text-align:right}
   <button class="tab-btn" onclick="showTab('lidoiv',this)">💧 Lido IV</button>
   <button class="tab-btn" onclick="showTab('dilutions',this)">🧪 Dilutions</button>
   <button class="tab-btn" onclick="showTab('obs',this)">🍼 Obs</button>
+  <button class="tab-btn" onclick="showTab('spinal',this)">🧠 Spinal</button>
+  <button class="tab-btn last-emerg-tab" onclick="showTab('last',this)">🚨 LAST</button>
 </div>
 
 <!-- SHARED ANTHROPOMETRICS PANEL (shared across all tabs) -->
@@ -1241,6 +1245,156 @@ tbody td:not(:first-child){text-align:right}
   <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
 </div>
 
+<!-- ═══════════════════════════════════════════
+     TAB 6 — NON-OBS SPINAL
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-spinal">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#0891b2,#7c3aed)">🧠</div>
+      <h1>Non-Obs Spinal</h1>
+    </div>
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+      <label style="cursor:pointer">Wt</label>
+      <input type="number" class="wt-mirror" min="1" max="250" value="70" inputmode="decimal" onclick="event.stopPropagation()" oninput="syncWtMirror(this)">
+      <span class="wt-unit">kg</span>
+      <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
+    </div>
+  </div>
+
+  <!-- Drug selector -->
+  <div class="card">
+    <div class="card-title">Drug &amp; Preparation</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+      <button class="tbtn active" id="spDrugHeavy05" onclick="setSpDrug('heavy05')" style="flex:1;min-width:80px">Heavy 0.5%</button>
+      <button class="tbtn" id="spDrugPlain05" onclick="setSpDrug('plain05')" style="flex:1;min-width:80px">Plain 0.5%</button>
+      <button class="tbtn" id="spDrugPlain025" onclick="setSpDrug('plain025')" style="flex:1;min-width:80px">Plain 0.25%</button>
+    </div>
+    <div id="spDrugNote" style="font-size:10.5px;color:var(--sub2);line-height:1.5">Bupivacaine 0.5% heavy — standard for most spinal anaesthesia; predictable block height with positioning</div>
+  </div>
+
+  <!-- Volume -->
+  <div class="card">
+    <div class="card-title">Volume</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="toggle-btns">
+        <button class="tbtn" id="spVol10" onclick="setSpVol(1.0)">1.0</button>
+        <button class="tbtn" id="spVol15" onclick="setSpVol(1.5)">1.5</button>
+        <button class="tbtn active" id="spVol20" onclick="setSpVol(2.0)">2.0</button>
+        <button class="tbtn" id="spVol25" onclick="setSpVol(2.5)">2.5</button>
+        <button class="tbtn" id="spVol30" onclick="setSpVol(3.0)">3.0</button>
+      </div>
+      <input type="number" id="spVolInput" min="0.5" max="5" step="0.1" value="2.0" inputmode="decimal"
+        oninput="spState.vol=parseFloat(this.value)||0;[10,15,20,25,30].forEach(x=>document.getElementById('spVol'+x).classList.remove('active'));calcSpinal()"
+        style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+      <span style="font-size:11px;color:var(--sub2)">ml</span>
+    </div>
+  </div>
+
+  <!-- Adjuncts -->
+  <div class="card">
+    <div class="card-title">Intrathecal Adjuncts</div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="spAdjFentBtn" onclick="toggleSpAdjFent()"
+          style="font-size:11px;font-weight:600;padding:4px 12px;border-radius:99px;border:1px solid var(--border);background:var(--s1);color:var(--sub2);font-family:var(--font);cursor:pointer;white-space:nowrap">Fentanyl 25 mcg</button>
+        <span style="font-size:10.5px;color:var(--sub2)">Improves quality &amp; reduces LA dose required</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Diamorphine</span>
+        <div class="toggle-btns">
+          <button class="tbtn active" id="spDia0" onclick="setSpDia(0)">None</button>
+          <button class="tbtn" id="spDia300" onclick="setSpDia(300)">300 mcg</button>
+          <button class="tbtn" id="spDia500" onclick="setSpDia(500)">500 mcg</button>
+          <button class="tbtn" id="spDia1000" onclick="setSpDia(1000)">1000 mcg</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:600;color:var(--sub2);min-width:70px">Morphine PF</span>
+        <div class="toggle-btns">
+          <button class="tbtn active" id="spMorphPF0" onclick="setSpMorphPF(0)">None</button>
+          <button class="tbtn" id="spMorphPF100" onclick="setSpMorphPF(100)">100 mcg</button>
+          <button class="tbtn" id="spMorphPF200" onclick="setSpMorphPF(200)">200 mcg</button>
+          <button class="tbtn" id="spMorphPF300" onclick="setSpMorphPF(300)">300 mcg</button>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);line-height:1.4">Diamorphine 300–1000 mcg: post-op analgesia 12–18 h; monitor ≥ 12 h. Morphine PF 100–300 mcg: analgesia up to 24 h; monitor ≥ 24 h. Fentanyl 25 mcg: rapid onset, no delayed respiratory risk.</div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div id="spResult" style="padding:10px 12px;background:var(--s1);border-radius:var(--r);border:1px solid var(--border);flex-shrink:0"></div>
+
+  <!-- Guidance note -->
+  <div style="padding:8px 12px;background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);flex-shrink:0">
+    <div style="font-size:10.5px;color:var(--sub);line-height:1.6"><strong style="color:var(--text)">Note:</strong> Spinal bupivacaine doses are not strictly weight-based — baricity, position, and patient factors (height, age, pregnancy) influence spread. These are guidance ranges only. Verify with local protocol.</div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left;flex:1 1 auto">Non-obs spinal — verify locally</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TAB 7 — LAST / INTRALIPID RESCUE
+═══════════════════════════════════════════ -->
+<div class="tab-page" id="tab-last">
+
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon" style="background:linear-gradient(135deg,#dc2626,#b45309)">🚨</div>
+      <h1>LAST Rescue</h1>
+    </div>
+    <div class="wt-pill" onclick="toggleAnthro()" style="cursor:pointer">
+      <label style="cursor:pointer">Wt</label>
+      <input type="number" class="wt-mirror" min="1" max="250" value="70" inputmode="decimal" onclick="event.stopPropagation()" oninput="syncWtMirror(this)">
+      <span class="wt-unit">kg</span>
+      <span style="font-size:13px;color:var(--sub2);margin-left:4px;padding:2px 6px;user-select:none">⌄</span>
+    </div>
+  </div>
+
+  <!-- Emergency banner -->
+  <div style="padding:10px 12px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.35);border-radius:var(--r);flex-shrink:0">
+    <div style="font-size:12px;font-weight:700;color:#ef4444;margin-bottom:4px">⚠ EMERGENCY PROTOCOL</div>
+    <div style="font-size:11px;color:var(--sub);line-height:1.6">Call for help · Stop LA · O₂ · Seizures → benzodiazepine · Arrest → CPR + consider ECMO</div>
+  </div>
+
+  <!-- Preparation selector -->
+  <div class="card">
+    <div class="card-title">Lipid Emulsion Preparation</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="tbtn active" id="lastPrep20" onclick="setLastPrep(20)" style="flex:1">20% — Intralipid / Lipovenös (standard)</button>
+      <button class="tbtn" id="lastPrep10" onclick="setLastPrep(10)" style="flex:1">10% — double volumes below</button>
+    </div>
+  </div>
+
+  <!-- Phase calculations (populated by calcLast) -->
+  <div id="lastResult"></div>
+
+  <!-- Reference -->
+  <div style="padding:8px 12px;background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);flex-shrink:0">
+    <div style="font-size:10.5px;color:var(--sub);line-height:1.7">
+      <strong style="color:var(--text)">Source:</strong>
+      <a href="https://anaesthetists.org/Portals/0/PDFs/Guidelines%20PDFs/Guideline_management_of_severe_local_anaesthetic_toxicity_v2_2010_final.pdf"
+         target="_blank" rel="noopener" style="color:var(--blue)">AAGBI — Management of Severe LAST (2010) ↗</a><br>
+      <a href="https://www.lipidrescue.org" target="_blank" rel="noopener" style="color:var(--blue)">lipidrescue.org ↗</a> · For ECMO centres see
+      <a href="https://www.aagbi.org" target="_blank" rel="noopener" style="color:var(--blue)">aagbi.org ↗</a>
+    </div>
+  </div>
+
+  <div class="disc-footer">
+    <div class="footer" style="text-align:left;flex:1 1 auto">Emergency reference — call for expert help</div>
+    <button class="disc-btn" onclick="openChangelog()">📋 Changelog</button>
+    <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
+    <button class="disc-btn" onclick="openSources()">📚 Sources</button>
+  </div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
+</div>
 
 </div><!-- #app -->
 
@@ -2687,6 +2841,144 @@ async function doExportPNG() {
   }
 }
 
+// ── NON-OBS SPINAL ────────────────────────────────────────────────────────
+const SP_DRUGS = {
+  heavy05:  { label:'Bupivacaine 0.5% heavy (hyperbaric)', concMgml:5,   note:'Predictable block height with posturing — standard for most spinal anaesthesia' },
+  plain05:  { label:'Bupivacaine 0.5% plain (isobaric)',   concMgml:5,   note:'Position-independent spread — less predictable block height; useful for saddle/lateral approach' },
+  plain025: { label:'Bupivacaine 0.25% plain (isobaric)',  concMgml:2.5, note:'Low-dose option — saddle blocks, day-case perineal surgery, combined spinal-epidural (CSE)' }
+};
+const SP_DRUG_NOTES = {
+  heavy05:  'Bupivacaine 0.5% heavy — standard for most spinal anaesthesia; predictable block height with positioning',
+  plain05:  'Bupivacaine 0.5% plain — isobaric; spread less position-dependent; useful when positioning is limited',
+  plain025: 'Bupivacaine 0.25% plain — low-dose option for saddle blocks, perineal or day-case surgery'
+};
+const spState = { drug:'heavy05', vol:2.0, adjFent:false, adjMorphPF:0, adjDia:0 };
+
+function setSpDrug(d) {
+  spState.drug = d;
+  const keys = { heavy05:'Heavy05', plain05:'Plain05', plain025:'Plain025' };
+  Object.keys(keys).forEach(k => { const el=document.getElementById('spDrug'+keys[k]); if(el) el.classList.toggle('active',k===d); });
+  const note = document.getElementById('spDrugNote');
+  if(note) note.textContent = SP_DRUG_NOTES[d];
+  calcSpinal();
+}
+function setSpVol(v) {
+  spState.vol = v;
+  [10,15,20,25,30].forEach(x => { const el=document.getElementById('spVol'+x); if(el) el.classList.toggle('active', x===Math.round(v*10)); });
+  const inp = document.getElementById('spVolInput');
+  if(inp) inp.value = v.toFixed(1);
+  calcSpinal();
+}
+function toggleSpAdjFent() {
+  spState.adjFent = !spState.adjFent;
+  const btn = document.getElementById('spAdjFentBtn');
+  if(btn){ btn.style.background=spState.adjFent?'rgba(96,165,250,.1)':'var(--s1)'; btn.style.borderColor=spState.adjFent?'rgba(96,165,250,.4)':'var(--border)'; btn.style.color=spState.adjFent?'var(--blue)':'var(--sub2)'; }
+  calcSpinal();
+}
+function setSpMorphPF(dose) {
+  spState.adjMorphPF = dose;
+  [0,100,200,300].forEach(x => { const el=document.getElementById('spMorphPF'+x); if(el) el.classList.toggle('active', x===dose); });
+  calcSpinal();
+}
+function setSpDia(dose) {
+  spState.adjDia = dose;
+  [0,300,500,1000].forEach(x => { const el=document.getElementById('spDia'+x); if(el) el.classList.toggle('active', x===dose); });
+  calcSpinal();
+}
+function calcSpinal() {
+  const el = document.getElementById('spResult'); if(!el) return;
+  const drug = SP_DRUGS[spState.drug];
+  const vol = spState.vol || 0;
+  const mg = vol * drug.concMgml;
+
+  let heightNote = '';
+  if(spState.drug === 'heavy05') {
+    if(mg <= 7.5)      heightNote = 'Expected level: S1–L1 (perineal/saddle — confirm with positioning)';
+    else if(mg <= 10)  heightNote = 'Expected level: T10–L1 (lower limb, hip, knee)';
+    else if(mg <= 12.5) heightNote = 'Expected level: T6–T10 (lower abdominal, hip)';
+    else               heightNote = 'High dose — T4 or above possible; monitor carefully';
+  } else if(spState.drug === 'plain05') {
+    heightNote = 'Isobaric: block level less influenced by position — allow extra time for spread';
+  } else {
+    heightNote = 'Low dose: saddle / perineal level expected; adjust posture to direct spread';
+  }
+
+  const adjLines = [];
+  if(spState.adjFent) adjLines.push('+ Fentanyl 25 mcg (0.5 ml of 50 mcg/ml)');
+  if(spState.adjDia) {
+    const diaVol = (spState.adjDia / 10000).toFixed(3).replace(/\.?0+$/,'');
+    adjLines.push(`+ Diamorphine ${spState.adjDia} mcg (${(spState.adjDia/1000).toFixed(1)} mg — draw ${diaVol} ml of 10 mg/ml reconstituted solution) — monitor ≥ 12 h`);
+  }
+  if(spState.adjMorphPF) {
+    const morphVol = (spState.adjMorphPF / 500).toFixed(2);
+    adjLines.push(`+ Morphine preservative-free ${spState.adjMorphPF} mcg (${morphVol} ml of 0.5 mg/ml) — requires ≥ 24 h respiratory monitoring`);
+  }
+
+  el.innerHTML = `
+    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:2px">${mg.toFixed(1)} mg · ${vol.toFixed(1)} ml</div>
+    <div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">${drug.label.split('(')[0].trim()}</div>
+    <div style="font-size:11px;color:var(--text);padding:6px 8px;background:rgba(96,165,250,.07);border-radius:6px;margin-bottom:${adjLines.length?'8px':'0'}">${heightNote}</div>
+    ${adjLines.length ? `<div style="display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--border);padding-top:8px">
+      ${adjLines.map(l=>`<div style="font-size:11px;color:var(--sub)">${l}</div>`).join('')}
+    </div>` : ''}
+    <div style="font-size:10px;color:var(--sub2);margin-top:8px;line-height:1.4">${drug.note}</div>
+  `;
+}
+
+// ── LAST / INTRALIPID RESCUE ───────────────────────────────────────────────
+const lastState = { prep: 20 };
+
+function setLastPrep(p) {
+  lastState.prep = p;
+  [10,20].forEach(x => { const el=document.getElementById('lastPrep'+x); if(el) el.classList.toggle('active', x===p); });
+  calcLast();
+}
+function calcLast() {
+  const el = document.getElementById('lastResult'); if(!el) return;
+  const wt = getWt();
+  const mult = lastState.prep === 20 ? 1 : 2;
+  const prep = lastState.prep;
+
+  const bolus    = Math.round(wt * 1.5 * mult);
+  const infRate1 = Math.round(wt * 15 * mult);
+  const infRate2 = Math.round(wt * 30 * mult);
+  const maxVol   = Math.round(wt * 12 * mult);
+
+  const phaseCard = (phase, colour, title, rows, sub) => `
+    <div style="padding:10px 12px;background:${colour.bg};border:1px solid ${colour.bdr};border-radius:var(--r);display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:10px;font-weight:700;color:${colour.txt};text-transform:uppercase;letter-spacing:.5px">${phase} — ${title}</div>
+      ${rows.map(([lbl,val])=>`<div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--sub)">${lbl}</span>
+        <strong style="font-size:15px;color:var(--text)">${val}</strong>
+      </div>`).join('')}
+      ${sub ? `<div style="font-size:10px;color:var(--sub2);margin-top:2px;line-height:1.4">${sub}</div>` : ''}
+    </div>`;
+
+  const red    = { bg:'rgba(220,38,38,.07)',  bdr:'rgba(220,38,38,.3)',  txt:'#ef4444' };
+  const amber  = { bg:'rgba(245,158,11,.07)', bdr:'rgba(245,158,11,.3)', txt:'#f59e0b' };
+  const indigo = { bg:'rgba(99,102,241,.07)', bdr:'rgba(99,102,241,.3)', txt:'#818cf8' };
+
+  el.innerHTML = [
+    phaseCard('Phase 1', red, 'Immediate (0 min)', [
+      ['IV bolus over 1 min', `${bolus} ml`],
+      ['Start infusion at',   `${infRate1} ml/hr`]
+    ], `1.5 ml/kg bolus · 15 ml/kg/hr infusion · ${prep}% lipid emulsion`),
+
+    phaseCard('Phase 2', amber, 'No response at 5 min', [
+      ['Repeat bolus (2nd)', `${bolus} ml`]
+    ], `Continue infusion at ${infRate1} ml/hr`),
+
+    phaseCard('Phase 3', amber, 'No response at 10 min', [
+      ['3rd bolus', `${bolus} ml`],
+      ['Double infusion to', `${infRate2} ml/hr`]
+    ], `30 ml/kg/hr — consider ECMO if no response`),
+
+    phaseCard('Maximum', indigo, 'Do not exceed without senior advice', [
+      ['Total ceiling', `${maxVol} ml`]
+    ], `12 ml/kg · ${prep}% lipid emulsion`)
+  ].join('');
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 // Select-all on focus for every number input (current and future, including dynamically rendered)
 // setTimeout defers select() until after iOS Safari finishes its focus handling
@@ -2698,6 +2990,7 @@ function runWtCalcs() {
   calcAFOi();
   calcLidoIV();
   calcObs();
+  calcLast();
 }
 function syncWtMirror(triggerEl) {
   // Parse the raw value — number inputs return "" for incomplete entries like "81."
@@ -2722,6 +3015,8 @@ buildAdditives();
 updateAnthroUI();
 calc();
 calcAFOi();
+calcSpinal();
+calcLast();
 
 // ── FIRST LAUNCH ──────────────────────────────────────────────────────────
 (function firstLaunch() {
