@@ -36,8 +36,9 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 #app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
 
 /* ── TAB BAR ── */
-.tab-bar{display:flex;gap:4px;padding:8px 10px 0;flex-shrink:0}
-.tab-btn{flex:1;background:var(--s0);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--sub);font-family:var(--font);font-size:11.5px;font-weight:600;padding:7px 4px 6px;cursor:pointer;transition:all .15s;letter-spacing:.1px}
+.tab-bar{display:flex;gap:4px;padding:8px 10px 0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{flex:1 0 52px;background:var(--s0);border:1px solid var(--border);border-radius:10px 10px 0 0;color:var(--sub);font-family:var(--font);font-size:11.5px;font-weight:600;padding:7px 4px 6px;cursor:pointer;transition:all .15s;letter-spacing:.1px}
 .tab-btn.active{background:var(--s1);border-color:var(--border2);color:var(--text)}
 .tab-page{display:none;flex-direction:column;flex:1;overflow-y:auto;padding:0 10px 6px;gap:7px}
 .tab-page.active{display:flex}
@@ -546,7 +547,7 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
 </div>
 
 <!-- MODAL OVERLAY -->
@@ -649,7 +650,7 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -742,7 +743,7 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -872,7 +873,7 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
 </div>
 
 
@@ -1091,9 +1092,9 @@ tbody td:not(:first-child){text-align:right}
           <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Levo 0.5%</span>
           <div class="toggle-btns">
             <button class="tbtn" id="obsLOVol15" onclick="setObsLO(15)">15</button>
-            <button class="tbtn active" id="obsLOVol20" onclick="setObsLO(20)">20</button>
+            <button class="tbtn" id="obsLOVol20" onclick="setObsLO(20)">20</button>
           </div>
-          <input type="number" id="obsLOInput" min="0" max="30" step="1" value="20" inputmode="decimal"
+          <input type="number" id="obsLOInput" min="0" max="30" step="1" value="" inputmode="decimal"
             oninput="obsTop.loVol=parseFloat(this.value)||0;[15,20].forEach(x=>document.getElementById('obsLOVol'+x).classList.remove('active'));calcObsTopup()"
             style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
           <span style="font-size:11px;color:var(--sub2)">ml</span>
@@ -1117,7 +1118,22 @@ tbody td:not(:first-child){text-align:right}
           <div style="border-top:1px solid var(--border);padding-top:5px;display:flex;justify-content:space-between"><span>Total</span><strong style="color:var(--text)">20 ml</strong></div>
         </div>
       </div>
-      <div style="font-size:10px;color:var(--sub2);padding:4px 2px;line-height:1.4">⏱ Onset to T4: <strong>10–12 min</strong> (alkalinisation + adrenaline accelerate onset). Do <strong>not</strong> substitute bupivacaine or levobupivacaine — NaHCO₃ causes precipitation. Give in 3–5 ml increments.</div>
+      <!-- Volume administered -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Volume administered</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <div class="toggle-btns">
+            <button class="tbtn" id="obsFizzyGiven10" onclick="setObsFizzyGiven(10)">10</button>
+            <button class="tbtn" id="obsFizzyGiven15" onclick="setObsFizzyGiven(15)">15</button>
+            <button class="tbtn" id="obsFizzyGiven20" onclick="setObsFizzyGiven(20)">20</button>
+          </div>
+          <input type="number" id="obsFizzyGivenInput" min="0" max="20" step="1" value="" inputmode="decimal"
+            oninput="obsTop.fizzyGiven=parseFloat(this.value)||0;clearObsFizzyGivenPresets();calcObsTopup()"
+            style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
+          <span style="font-size:11px;color:var(--sub2)">ml</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--sub2);padding:6px 2px 0;line-height:1.4">⏱ Onset to T4: <strong>10–12 min</strong> (alkalinisation + adrenaline accelerate onset). Do <strong>not</strong> substitute bupivacaine or levobupivacaine — NaHCO₃ causes precipitation. Give in 3–5 ml increments.</div>
     </div>
 
     <!-- PANEL: Ropivacaine -->
@@ -1134,9 +1150,9 @@ tbody td:not(:first-child){text-align:right}
           <span style="font-size:11px;font-weight:600;color:var(--sub2);width:90px">Volume</span>
           <div class="toggle-btns">
             <button class="tbtn" id="obsRopiVol15" onclick="setObsRopi('vol',15)">15</button>
-            <button class="tbtn active" id="obsRopiVol20" onclick="setObsRopi('vol',20)">20</button>
+            <button class="tbtn" id="obsRopiVol20" onclick="setObsRopi('vol',20)">20</button>
           </div>
-          <input type="number" id="obsRopiInput" min="0" max="30" step="1" value="20" inputmode="decimal"
+          <input type="number" id="obsRopiInput" min="0" max="30" step="1" value="" inputmode="decimal"
             oninput="obsTop.ropiVol=parseFloat(this.value)||0;[15,20].forEach(x=>document.getElementById('obsRopiVol'+x).classList.remove('active'));calcObsTopup()"
             style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
           <span style="font-size:11px;color:var(--sub2)">ml</span>
@@ -1222,8 +1238,9 @@ tbody td:not(:first-child){text-align:right}
     <button class="disc-btn" onclick="openDisclaimer()">⚠ Disclaimer</button>
     <button class="disc-btn" onclick="openSources()">📚 Sources</button>
   </div>
-  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.3</div>
+  <div class="footer" style="text-align:center;margin-top:1px">© 2026 Ó Brolcháin · LASTCalc v1.4</div>
 </div>
+
 
 </div><!-- #app -->
 
@@ -2208,19 +2225,14 @@ function openSources(){
 <ol>
   <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/Epidural%20top-up%20for%20emergency%20LSCS%20protocol.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Epidural Top-up for Emergency LSCS ↗</a></strong><br>Obstetric Anaesthetists' Association. Levo 0.5% + lido 2% standard recipe; onset to T4; dose guidance.</li>
   <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/OAA%20resources/OAA_Spinal_for_Elective_CS_Protocol_2019.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Spinal Anaesthesia for Caesarean Section ↗</a></strong><br>Obstetric Anaesthetists' Association, 2019. Bupivacaine heavy 0.5% dosing (1.6–2.5 ml); intrathecal adjuvants including diamorphine 300 mcg.</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/23661490/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sng BL et al. — Intrathecal diamorphine dose for CS: systematic review ↗</a></strong><br><em>Anaesthesia</em> 2013; 68(7): 732–741. Meta-analysis supporting 300 mcg as optimal dose balancing analgesia with PONV/itch.</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/29224958/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sultan P et al. — Intrathecal morphine for CS: systematic review ↗</a></strong><br><em>BJA</em> 2019; 122(1): e23–e35. Evidence for morphine PF 100–150 mcg; monitoring requirements (12–24 h).</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/8214480/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Chestnut DH et al. — Alkalinised lidocaine epidural top-up for urgent CS ↗</a></strong><br><em>Anesthesiology</em> 1993; 79(5): 1054–1060. Alkalinisation with NaHCO₃ reduces pH and accelerates epidural lidocaine onset; do not mix with bupivacaine (precipitation).</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/9118730/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Siddik SM et al. — NaHCO₃ with lidocaine for epidural anaesthesia in CS ↗</a></strong><br><em>Acta Anaesthesiologica Scandinavica</em> 1997; 41(1): 75–79. Fizzy mix composition; onset advantage vs plain lidocaine.</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/16430477/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Stocks GM et al. — Block height and epidural top-up volume for conversion to surgical anaesthesia ↗</a></strong><br><em>International Journal of Obstetric Anesthesia</em> 2006. Relationship between pre-existing epidural block height and epidural top-up volume required; risk of high spinal extension.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/34362559/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sultan P, Carvalho B — Intrathecal morphine as an alternative to diamorphine for CS analgesia ↗</a></strong><br><em>BJA</em> 2021; 127(4): 501–505. Evidence-based guidance: morphine PF 100–150 mcg is an effective safe alternative to diamorphine; monitoring requirements (12–24 h).</li>
 </ol>
 <hr>
 <h3>Epidural lidocaine dose limits (cumulative tracker)</h3>
 <p>The cumulative LAST tracker uses 5 mg/kg (max 400 mg) for plain epidural lidocaine — higher than the nerve-block ceiling of 3 mg/kg / 200 mg — reflecting the distinct pharmacokinetics of the epidural route.</p>
 <ol>
   <li><strong>Cousins MJ, Bridenbaugh PO (eds.) — Neural Blockade in Clinical Anaesthesia and Management of Pain, 3rd ed.</strong><br>Lippincott-Raven, 1998. Epidural lidocaine maximum dose cited as 5 mg/kg; systemic absorption from epidural space is substantially slower than from peripheral nerve blocks, resulting in lower peak plasma concentrations for equivalent doses.</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/7477040/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Rosenberg PH et al. — Maximum recommended doses of local anaesthetics: a multifactorial concept ↗</a></strong><br><em>Regional Anesthesia and Pain Medicine</em> 2004; 29(6): 564–575. Maximum doses are route- and site-dependent; epidural administration produces lower Cmax than equivalent peripheral doses and warrants distinct limits.</li>
-  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/8214480/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Chestnut DH et al. — Epidural lidocaine 2% for urgent CS ↗</a></strong><br><em>Anesthesiology</em> 1993; 79(5): 1054–1060. Doses of 300–400 mg lidocaine administered epidurally for CS top-up without evidence of systemic toxicity, supporting a higher ceiling than the infiltration limit.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/15635516/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Rosenberg PH et al. — Maximum recommended doses of local anaesthetics: a multifactorial concept ↗</a></strong><br><em>Regional Anesthesia and Pain Medicine</em> 2004; 29(6): 564–575. Maximum doses are route- and site-dependent; epidural administration produces lower Cmax than equivalent peripheral doses and warrants distinct limits.</li>
   <li><strong>OAA Epidural Top-up for Emergency LSCS Protocol</strong><br>Obstetric Anaesthetists' Association. Standard recipe of 15–20 ml lidocaine 2% (300–400 mg) used routinely for epidural CS conversion — consistent with a 5 mg/kg / 400 mg ceiling rather than the 3 mg/kg nerve-block limit.</li>
 </ol>`;
 }
@@ -2231,6 +2243,27 @@ function openChangelog(){
   document.getElementById('changelogModal').classList.add('open');
   document.body.style.overflow='hidden';
   document.getElementById('changelogBody').innerHTML=`
+    <h3>v1.4 — 2026-07-08</h3>
+    <strong>🧠 Non-Obs Spinal tab (new)</strong>
+    <ol>
+      <li>Racemic bupivacaine 0.5% heavy, 0.5% plain, and 0.25% plain with volume presets (1.0–3.0 ml) and live mg dose calculation</li>
+      <li>Expected block height guidance for heavy 0.5%, graded by dose: saddle/perineal → T10 → T6–T10 → high spinal warning</li>
+      <li>Intrathecal adjuncts: diamorphine (default 300 mcg; options 300/500/1000 mcg with mg and reconstituted volume), morphine PF (100/200/300 mcg), fentanyl 25 mcg — monitoring reminders per adjunct</li>
+    </ol>
+    <strong>🚨 LAST Rescue tab (new)</strong>
+    <ol>
+      <li>Weight-based lipid emulsion rescue protocol per AAGBI 2010 guidelines</li>
+      <li>Preparation toggle: 20% (Intralipid/Lipovenös, standard) or 10% — automatically doubles all volumes</li>
+      <li>Three-phase protocol display: Phase 1 bolus + infusion, Phase 2 repeat bolus at 5 min, Phase 3 third bolus + doubled infusion at 10 min, plus maximum cumulative ceiling (12 ml/kg)</li>
+      <li>Links to AAGBI guideline PDF and lipidrescue.org</li>
+    </ol>
+    <strong>🍼 Obstetrics — epidural top-up improvements</strong>
+    <ol>
+      <li>Fizzy mix: added Volume administered input (presets 10/15/20 ml) — dose and tracker contribution now scale proportionally for partial volumes</li>
+      <li>Consistency: levo only and ropivacaine now start at 0 ml (matching levo + lido behaviour); all mixes display "X ml given" uniformly</li>
+      <li>Clear button: no longer switches recipe back to levo + lido; resets all recipe panels to zero without changing the active recipe</li>
+    </ol>
+    <hr>
     <h3>v1.3 — 2026-06-29</h3>
     <strong>🍼 Obstetrics tab (new)</strong>
     <ol>
@@ -2844,7 +2877,7 @@ function doPrint(suppressPrint = false) {
       <div style="font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:#1d4ed8">LASTCalc</div>
       <div style="font-size:10px;color:#6b7280;letter-spacing:.5px;margin-top:2px">LOCAL ANAESTHETIC SYSTEMIC TOXICITY CALCULATOR</div>
     </div>
-    <div style="text-align:right;font-size:11px;color:#6b7280">${dateStr}<br><span style="color:#1d4ed8;font-weight:600">v1.2</span></div>
+    <div style="text-align:right;font-size:11px;color:#6b7280">${dateStr}<br><span style="color:#1d4ed8;font-weight:600">v1.4</span></div>
   </div>`;
 
   // ── TOP ROW: patient + gauge side by side ──
@@ -2977,7 +3010,7 @@ function doPrint(suppressPrint = false) {
 
   // ── FOOTER ──
   html += `<div style="border-top:1px solid #e5e7eb;padding-top:10px;font-size:9px;color:#9ca3af;line-height:1.6">
-    <strong style="color:#6b7280">LASTCalc v1.3</strong> · Educational decision-support tool only · Not a registered medical device ·
+    <strong style="color:#6b7280">LASTCalc v1.4</strong> · Educational decision-support tool only · Not a registered medical device ·
     All doses must be independently verified by the treating clinician against local formulary and current guidelines ·
     This printout does not constitute a clinical prescription or formal medical record.
   </div></div>`;
@@ -3012,7 +3045,8 @@ function obsToBlocks() {
     } else if(r === 'levoOnly') {
       if(obsTop.loVol > 0) entries.push({ did:'levo_p', conc:0.5, mg:obsTop.loVol * 5 });
     } else if(r === 'fizzy') {
-      entries.push({ did:'lido_a2', conc:2, mg:340 });
+      const fG = Math.min(obsTop.fizzyGiven||20, 20);
+      entries.push({ did:'lido_a2', conc:2, mg:(fG/20)*340 });
     } else if(r === 'ropi') {
       if(obsTop.ropiVol > 0) entries.push({ did:'ropi', conc:obsTop.ropiConc, mg:obsTop.ropiVol * obsTop.ropiConc * 10 });
     }
@@ -3297,8 +3331,9 @@ const obsTop = {
   lidoVol:10, lidoAdr:false,
   llGiven:0,
   llFentanyl:false,
-  loVol:20, loAdr:false,
-  ropiConc:0.75, ropiVol:20,
+  loVol:0, loAdr:false,
+  fizzyGiven:0,
+  ropiConc:0.75, ropiVol:0,
   blockHeight:'none'
 };
 const obsEpi = { mix:'01bupi', totalVol:0 };
@@ -3424,6 +3459,16 @@ function clearObsLLGivenPresets() {
   [5,10,15].forEach(x=>document.getElementById('obsLLGiven'+x).classList.remove('active'));
   document.getElementById('obsLLGivenAll').classList.remove('active');
 }
+function setObsFizzyGiven(v) {
+  obsTop.fizzyGiven = v;
+  [10,15,20].forEach(x=>{ const el=document.getElementById('obsFizzyGiven'+x); if(el) el.classList.toggle('active',x===v); });
+  const inp = document.getElementById('obsFizzyGivenInput');
+  if(inp) inp.value = v;
+  calcObsTopup();
+}
+function clearObsFizzyGivenPresets() {
+  [10,15,20].forEach(x=>{ const el=document.getElementById('obsFizzyGiven'+x); if(el) el.classList.remove('active'); });
+}
 function setObsLLAdr(comp, on) {
   if(comp==='levo') {
     obsTop.levoAdr=on;
@@ -3508,8 +3553,8 @@ function clearObsSp() {
   calcObsTracker();
 }
 function clearObsTop() {
-  setObsTopRecipe('levoLido');
   setObsBlockHeight('none');
+  // Levo + Lido
   setObsLL('levo', 0); setObsLLAdr('levo', false);
   setObsLL('lido', 0); setObsLLAdr('lido', false);
   obsTop.llGiven = 0;
@@ -3518,8 +3563,21 @@ function clearObsTop() {
   obsTop.llFentanyl = false;
   const fb = document.getElementById('obsLLFentBtn');
   if(fb){ fb.style.background='var(--s1)'; fb.style.borderColor='var(--border)'; fb.style.color='var(--sub2)'; }
-  setObsLO(20); setObsLOAdr(false);
-  setObsRopi('conc', 0.75); setObsRopi('vol', 20);
+  // Levo only
+  obsTop.loVol = 0;
+  document.getElementById('obsLOInput').value = '';
+  [15,20].forEach(x => document.getElementById('obsLOVol'+x).classList.remove('active'));
+  setObsLOAdr(false);
+  // Fizzy
+  obsTop.fizzyGiven = 0;
+  const fgi = document.getElementById('obsFizzyGivenInput');
+  if(fgi) fgi.value = '';
+  clearObsFizzyGivenPresets();
+  // Ropi
+  setObsRopi('conc', 0.75);
+  obsTop.ropiVol = 0;
+  document.getElementById('obsRopiInput').value = '';
+  [15,20].forEach(x => document.getElementById('obsRopiVol'+x).classList.remove('active'));
   document.getElementById('obs-top-result').innerHTML = '';
   calcObsTopup();
 }
@@ -3585,16 +3643,30 @@ function calcObsTopup() {
   } else if(r==='levoOnly') {
     const lv=parseFloat(document.getElementById('obsLOInput').value)||0;
     obsTop.loVol=lv;
-    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${lv} ml</div>
-      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(lv*5).toFixed(0)} mg levobupivacaine 0.5%${obsTop.loAdr?' + adr':''}</div>`;
+    if(!lv) {
+      html=`<div style="font-size:12px;color:var(--sub2)">Enter volume administered</div>`;
+    } else {
+      html=`<div style="font-size:14px;font-weight:700;color:var(--text)">${lv} ml given</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(lv*5).toFixed(0)} mg levobupivacaine 0.5%${obsTop.loAdr?' + adr':''}</div>`;
+    }
   } else if(r==='fizzy') {
-    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total 20 ml</div>
-      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">340 mg lidocaine · 100 mcg adrenaline · NaHCO₃ 2 ml</div>`;
+    const fg = Math.min(obsTop.fizzyGiven||0, 20);
+    if(!fg) {
+      html=`<div style="font-size:12px;color:var(--sub2)">Enter volume administered</div>`;
+    } else {
+      const fLidoMg = (fg/20)*340, fAdrMcg = (fg/20)*100, fBicarb = (fg/20)*2;
+      html=`<div style="font-size:14px;font-weight:700;color:var(--text)">${fg} ml given</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${fLidoMg.toFixed(0)} mg lidocaine · ${fAdrMcg.toFixed(0)} mcg adrenaline · NaHCO₃ ${fBicarb.toFixed(1)} ml</div>`;
+    }
   } else if(r==='ropi') {
     const rv=parseFloat(document.getElementById('obsRopiInput').value)||0;
     obsTop.ropiVol=rv;
-    html=`<div style="font-size:14px;font-weight:700;color:var(--text)">Total ${rv} ml</div>
-      <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(rv*obsTop.ropiConc*10).toFixed(0)} mg ropivacaine ${obsTop.ropiConc}%</div>`;
+    if(!rv) {
+      html=`<div style="font-size:12px;color:var(--sub2)">Enter volume administered</div>`;
+    } else {
+      html=`<div style="font-size:14px;font-weight:700;color:var(--text)">${rv} ml given</div>
+        <div style="font-size:11.5px;color:var(--sub);margin-top:3px">${(rv*obsTop.ropiConc*10).toFixed(0)} mg ropivacaine ${obsTop.ropiConc}%</div>`;
+    }
   }
   el.innerHTML=html;
   calcObsTracker();
@@ -3639,7 +3711,7 @@ function calcObsTracker() {
     } else if(r==='levoOnly') {
       levoMg += obsTop.loVol*5;
     } else if(r==='fizzy') {
-      lidoAMg += 340;
+      lidoAMg += (Math.min(obsTop.fizzyGiven||20, 20)/20)*340;
     } else if(r==='ropi') {
       ropiMgT += obsTop.ropiVol*obsTop.ropiConc*10;
     }
