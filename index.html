@@ -102,6 +102,7 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .arc-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
 .arc-pct{font-size:15px;font-weight:800;letter-spacing:-.5px;line-height:1}
 .arc-lbl{font-size:9px;color:var(--sub);font-weight:500}
+.arc-box .arc-stop svg{width:34px;height:34px}
 .gauge-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .bar-track{background:var(--s2);border-radius:99px;height:7px;overflow:hidden;position:relative}
 .bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
@@ -439,8 +440,16 @@ tbody td:not(:first-child){text-align:right}
             style="transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1),stroke .3s"/>
         </svg>
         <div class="arc-center">
+          <div class="arc-stop" id="arcStop" style="display:none;line-height:0;margin-bottom:1px">
+            <svg viewBox="0 0 100 100" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="30,1.5 70,1.5 98.5,30 98.5,70 70,98.5 30,98.5 1.5,70 1.5,30"
+                fill="#dc2626" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
+              <text x="50" y="60" text-anchor="middle" font-size="24" font-weight="900" fill="#fff"
+                font-family="Arial,Helvetica,sans-serif" textLength="66" lengthAdjust="spacingAndGlyphs">STOP</text>
+            </svg>
+          </div>
           <div class="arc-pct" id="arcPct" style="color:var(--green)">0%</div>
-          <div class="arc-lbl">used</div>
+          <div class="arc-lbl" id="arcLbl">used</div>
         </div>
       </div>
       <div class="gauge-right">
@@ -2058,8 +2067,23 @@ function calc(){
   arc.style.strokeDashoffset=circ-circ*Math.min(1,totalFrac);
   const col=truePct>=100?'var(--red)':truePct>=80?'var(--amber)':'var(--green)';
   arc.style.stroke=col;
-  // Central figure shows the true (uncapped) percentage so overdoses read e.g. 143%
+  // Central figure shows the true (uncapped) percentage so overdoses read e.g. 143%.
+  // Once over the limit (101%+) the figure is replaced by a red STOP sign; the true
+  // percentage drops to the sublabel.
   const ap=document.getElementById('arcPct');ap.textContent=truePct+'%';ap.style.color=col;
+  const stop=document.getElementById('arcStop');
+  const lbl=document.getElementById('arcLbl');
+  if(over){
+    ap.style.display='none';
+    stop.style.display='block';
+    lbl.textContent=truePct+'%';
+    lbl.style.color='var(--red)';
+  } else {
+    ap.style.display='block';
+    stop.style.display='none';
+    lbl.textContent='used';
+    lbl.style.color='';
+  }
   // When over the limit, rescale the bar so the whole track represents the true total
   // and drop a marker at the 100% position — illustrating how far past maximum the mix is.
   const bf=document.getElementById('barFill');
