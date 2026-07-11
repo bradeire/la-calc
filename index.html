@@ -103,8 +103,10 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .arc-pct{font-size:15px;font-weight:800;letter-spacing:-.5px;line-height:1}
 .arc-lbl{font-size:9px;color:var(--sub);font-weight:500}
 .gauge-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.bar-track{background:var(--s2);border-radius:99px;height:7px;overflow:hidden}
+.bar-track{background:var(--s2);border-radius:99px;height:7px;overflow:hidden;position:relative}
 .bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
+.bar-limit{position:absolute;top:0;bottom:0;width:2px;background:var(--text);opacity:.9;display:none;z-index:2;transition:left .4s cubic-bezier(.4,0,.2,1)}
+.bar-fill.over{background:repeating-linear-gradient(45deg,var(--red),var(--red) 5px,rgba(0,0,0,.18) 5px,rgba(0,0,0,.18) 10px)!important}
 .gauge-row{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .gauge-rem{font-size:12px;font-weight:600;white-space:nowrap}
 .chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:.3px;flex-shrink:0}
@@ -442,7 +444,7 @@ tbody td:not(:first-child){text-align:right}
         </div>
       </div>
       <div class="gauge-right">
-        <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%;background:var(--green)"></div></div>
+        <div class="bar-track"><div class="bar-fill" id="barFill" style="width:0%;background:var(--green)"></div><div class="bar-limit" id="barLimit" title="100% maximum"></div></div>
         <div class="gauge-row">
           <span class="gauge-rem" id="remTxt">100% remaining</span>
           <span class="chip chip-safe" id="statusChip">SAFE</span>
@@ -606,7 +608,7 @@ tbody td:not(:first-child){text-align:right}
       <span class="chip chip-safe" id="afoiChip">SAFE</span>
     </div>
     <div class="afoi-bar-wrap">
-      <div class="bar-track"><div class="bar-fill" id="afoiBar" style="width:0%;background:var(--green)"></div></div>
+      <div class="bar-track"><div class="bar-fill" id="afoiBar" style="width:0%;background:var(--green)"></div><div class="bar-limit" id="afoiBarLimit" title="100% maximum"></div></div>
     </div>
   </div>
 
@@ -1380,7 +1382,7 @@ tbody td:not(:first-child){text-align:right}
   <div style="padding:8px 12px;background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);flex-shrink:0">
     <div style="font-size:10.5px;color:var(--sub);line-height:1.7">
       <strong style="color:var(--text)">Source:</strong>
-      <a href="https://anaesthetists.org/Portals/0/PDFs/Guidelines%20PDFs/Guideline_management_of_severe_local_anaesthetic_toxicity_v2_2010_final.pdf"
+      <a href="https://anaesthetists.org/Portals/0/PDFs/Guidelines%20PDFs/Guideline_management_severe_local_anaesthetic_toxicity_accompanying_notes_2010_final.pdf"
          target="_blank" rel="noopener" style="color:var(--blue)">AAGBI — Management of Severe LAST (2010) ↗</a><br>
       <a href="https://www.lipidrescue.org" target="_blank" rel="noopener" style="color:var(--blue)">lipidrescue.org ↗</a> · For ECMO centres see
       <a href="https://www.aagbi.org" target="_blank" rel="noopener" style="color:var(--blue)">aagbi.org ↗</a>
@@ -2047,16 +2049,35 @@ function calc(){
     totalFrac+=eMax>0?mg/eMax:0;
     given[d.id]=(given[d.id]||0)+mg;
   }
-  const pct=Math.min(100,Math.round(totalFrac*100));
+  const truePct=Math.round(totalFrac*100);
+  const pct=Math.min(100,truePct);
+  const over=totalFrac>1;
   const remFrac=Math.max(0,1-totalFrac);
   const circ=157.08;
   const arc=document.getElementById('arcFg');
   arc.style.strokeDashoffset=circ-circ*Math.min(1,totalFrac);
-  const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+  const col=truePct>=100?'var(--red)':truePct>=80?'var(--amber)':'var(--green)';
   arc.style.stroke=col;
-  const ap=document.getElementById('arcPct');ap.textContent=pct+'%';ap.style.color=col;
-  const bf=document.getElementById('barFill');bf.style.width=pct+'%';bf.style.background=col;
-  document.getElementById('remTxt').textContent=Math.max(0,100-pct)+'% remaining';
+  // Central figure shows the true (uncapped) percentage so overdoses read e.g. 143%
+  const ap=document.getElementById('arcPct');ap.textContent=truePct+'%';ap.style.color=col;
+  // When over the limit, rescale the bar so the whole track represents the true total
+  // and drop a marker at the 100% position — illustrating how far past maximum the mix is.
+  const bf=document.getElementById('barFill');
+  const lim=document.getElementById('barLimit');
+  bf.classList.toggle('over',over);
+  if(over){
+    bf.style.width='100%';
+    bf.style.background='';
+    lim.style.display='block';
+    lim.style.left=(100/totalFrac).toFixed(1)+'%';
+  } else {
+    bf.style.width=pct+'%';
+    bf.style.background=col;
+    lim.style.display='none';
+  }
+  const remEl=document.getElementById('remTxt');
+  if(over){remEl.textContent=(truePct-100)+'% over maximum';remEl.style.color='var(--red)';}
+  else{remEl.textContent=(100-pct)+'% remaining';remEl.style.color='';}
 
   // Total mg given
   const mgEl=document.getElementById('mgTxt');
@@ -2077,8 +2098,9 @@ function calc(){
     wtEl.style.display='none';
   }
   const chip=document.getElementById('statusChip');
-  if(pct>=100){chip.className='chip chip-over';chip.textContent='OVER LIMIT';}
-  else if(pct>=80){chip.className='chip chip-warn';chip.textContent='CAUTION';}
+  if(over){chip.className='chip chip-over';chip.textContent='OVER +'+(truePct-100)+'%';}
+  else if(truePct>=100){chip.className='chip chip-over';chip.textContent='AT LIMIT';}
+  else if(truePct>=80){chip.className='chip chip-warn';chip.textContent='CAUTION';}
   else{chip.className='chip chip-safe';chip.textContent='SAFE';}
   const warns=[];
   for(const[did,mg] of Object.entries(given)){const d=DRUGS.find(x=>x.id===did);if(d&&d.h24!==null&&mg>d.h24)warns.push(`${d.label}>24h cap`);}
@@ -2212,16 +2234,30 @@ function calcAFOi(){
     }
   }
 
-  const pct=Math.min(100,Math.round(totalLido/maxTop*100));
-  const col=pct>=100?'var(--red)':pct>=80?'var(--amber)':'var(--green)';
+  const frac=maxTop>0?totalLido/maxTop:0;
+  const truePct=Math.round(frac*100);
+  const pct=Math.min(100,truePct);
+  const over=frac>1;
+  const col=truePct>=100?'var(--red)':truePct>=80?'var(--amber)':'var(--green)';
   document.getElementById('afoiTotalMg').textContent=totalLido.toFixed(0)+' mg';
   document.getElementById('afoiTotalMg').style.color=col;
   document.getElementById('afoiMaxLine').textContent=`Max: ${maxTop.toFixed(0)} mg (9 mg/kg topical)`;
-  document.getElementById('afoiBar').style.width=pct+'%';
-  document.getElementById('afoiBar').style.background=col;
+  const afoiBar=document.getElementById('afoiBar');
+  const afoiLim=document.getElementById('afoiBarLimit');
+  afoiBar.classList.toggle('over',over);
+  if(over){
+    afoiBar.style.width='100%';
+    afoiBar.style.background='';
+    if(afoiLim){afoiLim.style.display='block';afoiLim.style.left=(100/frac).toFixed(1)+'%';}
+  } else {
+    afoiBar.style.width=pct+'%';
+    afoiBar.style.background=col;
+    if(afoiLim)afoiLim.style.display='none';
+  }
   const ac=document.getElementById('afoiChip');
-  if(pct>=100){ac.className='chip chip-over';ac.textContent='OVER LIMIT';}
-  else if(pct>=80){ac.className='chip chip-warn';ac.textContent='CAUTION';}
+  if(over){ac.className='chip chip-over';ac.textContent='OVER +'+(truePct-100)+'%';}
+  else if(truePct>=100){ac.className='chip chip-over';ac.textContent='AT LIMIT';}
+  else if(truePct>=80){ac.className='chip chip-warn';ac.textContent='CAUTION';}
   else{ac.className='chip chip-safe';ac.textContent='SAFE';}
 
   // Build breakdown HTML (shared between modal and summary)
@@ -2380,6 +2416,10 @@ function openSources(){
   <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/Epidural%20top-up%20for%20emergency%20LSCS%20protocol.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Epidural Top-up for Emergency LSCS ↗</a></strong><br>Obstetric Anaesthetists' Association. Levo 0.5% + lido 2% standard recipe; onset to T4; dose guidance.</li>
   <li><strong><a href="https://www.oaa-anaes.ac.uk/assets/_managed/cms/files/OAA%20resources/OAA_Spinal_for_Elective_CS_Protocol_2019.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">OAA — Spinal Anaesthesia for Caesarean Section ↗</a></strong><br>Obstetric Anaesthetists' Association, 2019. Bupivacaine heavy 0.5% dosing (1.6–2.5 ml); intrathecal adjuvants including diamorphine 300 mcg.</li>
   <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/34362559/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Sultan P, Carvalho B — Intrathecal morphine as an alternative to diamorphine for CS analgesia ↗</a></strong><br><em>BJA</em> 2021; 127(4): 501–505. Evidence-based guidance: morphine PF 100–150 mcg is an effective safe alternative to diamorphine; monitoring requirements (12–24 h).</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/12925476/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Saravanan S et al. — Minimum dose of intrathecal diamorphine for CS ↗</a></strong><br><em>BJA</em> 2003; 91(3): 368–372. Dose-finding study: ED₉₅ for intrathecal diamorphine to prevent intraoperative supplementation ≈ 0.4 mg; nausea, vomiting and pruritus increase with dose.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/21997149/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Hillyard SG et al. — Extending epidural analgesia for emergency CS: a meta-analysis ↗</a></strong><br><em>BJA</em> 2011; 107(5): 668–678. Compares top-up solutions — lidocaine + epinephrine (± fentanyl) gives fastest onset; 0.75% ropivacaine gives the best block quality; 0.5% bupivacaine/levobupivacaine is least effective. Evidence basis for the top-up recipe choices.</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/1662978/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Fernando R, Jones HM — Plain vs alkalinized lignocaine/bupivacaine mixtures for extradural CS ↗</a></strong><br><em>BJA</em> 1991; 67(6): 699–703. The "fizzy mix": bupivacaine 0.5% 10 ml + lignocaine 2% 10 ml + adrenaline 1:200,000 + 8.4% NaHCO₃ 2 ml — alkalinisation produced faster, denser block (P&lt;0.001).</li>
+  <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/15321322/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Patel M, Craig R, Laishley R — Alkalinized epidural vs spinal anaesthesia for elective CS ↗</a></strong><br><em>Int J Obstet Anesth</em> 1996; 5(4): 236–239. pH-adjusted epidural solution (bupivacaine + lignocaine + adrenaline + NaHCO₃) as a rapid-onset option for parturients progressing to emergency CS through a pre-existing labour catheter.</li>
 </ol>
 <hr>
 <h3>Epidural lidocaine dose limits (cumulative tracker)</h3>
@@ -2402,7 +2442,7 @@ function openChangelog(){
     <ol>
       <li>Racemic bupivacaine 0.5% heavy, 0.5% plain, and 0.25% plain with volume presets (1.0–3.0 ml) and live mg dose calculation</li>
       <li>Expected block height guidance for heavy 0.5%, graded by dose: saddle/perineal → T10 → T6–T10 → high spinal warning</li>
-      <li>Intrathecal adjuncts: diamorphine (default 300 mcg; options 300/500/1000 mcg with mg and reconstituted volume), morphine PF (100/200/300 mcg), fentanyl 25 mcg — monitoring reminders per adjunct</li>
+      <li>Intrathecal adjuncts: diamorphine (default None; options 300/500/1000 mcg with mg and reconstituted volume), morphine PF (100/200/300 mcg), fentanyl 25 mcg — monitoring reminders per adjunct</li>
     </ol>
     <strong>🚨 LAST Rescue tab (new)</strong>
     <ol>
@@ -2410,6 +2450,16 @@ function openChangelog(){
       <li>Preparation toggle: 20% (Intralipid/Lipovenös, standard) or 10% — automatically doubles all volumes</li>
       <li>Three-phase protocol display: Phase 1 bolus + infusion, Phase 2 repeat bolus at 5 min, Phase 3 third bolus + doubled infusion at 10 min, plus maximum cumulative ceiling (12 ml/kg)</li>
       <li>Links to AAGBI guideline PDF and lipidrescue.org</li>
+    </ol>
+    <strong>📊 Over-limit visualisation</strong>
+    <ol>
+      <li>Dose gauges no longer cap at 100% — the true percentage is shown (e.g. 143%) so overdoses are explicit on the Blocks gauge, topical lidocaine tracker and printed report</li>
+      <li>When a mixture exceeds the maximum, the bar rescales and a marker shows where the 100% limit falls, with an "OVER +X%" status chip</li>
+    </ol>
+    <strong>🔧 Fixes</strong>
+    <ol>
+      <li>LAST tab: corrected the broken AAGBI 2010 guideline PDF link (was a dead URL)</li>
+      <li>Sources: replaced four obstetric references whose PubMed links pointed to the wrong papers — now Saravanan 2003 (intrathecal diamorphine ED₉₅), Hillyard 2011 (epidural top-up meta-analysis), Fernando 1991 (the fizzy-mix study) and Patel 1996 (alkalinised epidural for emergency CS), all with verified PubMed IDs</li>
     </ol>
     <strong>🍼 Obstetrics — epidural top-up improvements</strong>
     <ol>
@@ -3053,7 +3103,7 @@ function openWorkings() {
     totalFrac += frac; totalMg += mg;
     rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource, obsSource: e.obsSource, obsMax: e.obsMax });
   }
-  const totalPct = Math.min(100, Math.round(totalFrac * 100));
+  const totalPct = Math.round(totalFrac * 100);
   const col = totalPct >= 100 ? 'var(--red)' : totalPct >= 80 ? 'var(--amber)' : 'var(--green)';
   let html = '';
 
@@ -3146,13 +3196,15 @@ function doPrint(suppressPrint = false) {
     totalFrac += frac; totalMg += mg;
     drugRows.push({ d, e, mg, max, frac });
   }
-  const totalPct = Math.min(100, Math.round(totalFrac * 100));
-  const totalCol = totalPct >= 100 ? '#dc2626' : totalPct >= 80 ? '#d97706' : '#16a34a';
-  const statusTxt = totalPct >= 100 ? 'OVER LIMIT' : totalPct >= 80 ? 'CAUTION' : 'SAFE';
-  const statusBg  = totalPct >= 100 ? '#fef2f2' : totalPct >= 80 ? '#fffbeb' : '#f0fdf4';
-  const statusBdr = totalPct >= 100 ? '#fca5a5' : totalPct >= 80 ? '#fcd34d' : '#86efac';
+  const truePct = Math.round(totalFrac * 100);
+  const totalPct = Math.min(100, truePct);
+  const over = totalFrac > 1;
+  const totalCol = truePct >= 100 ? '#dc2626' : truePct >= 80 ? '#d97706' : '#16a34a';
+  const statusTxt = over ? 'OVER +' + (truePct - 100) + '%' : truePct >= 100 ? 'AT LIMIT' : truePct >= 80 ? 'CAUTION' : 'SAFE';
+  const statusBg  = truePct >= 100 ? '#fef2f2' : truePct >= 80 ? '#fffbeb' : '#f0fdf4';
+  const statusBdr = truePct >= 100 ? '#fca5a5' : truePct >= 80 ? '#fcd34d' : '#86efac';
 
-  // SVG half-donut gauge
+  // SVG half-donut gauge — full arc when over limit, with the true % shown in the centre
   const r = 54, cx = 70, cy = 70, sw = 14;
   const circ = Math.PI * r;
   const filled = circ * Math.min(1, totalFrac);
@@ -3160,8 +3212,8 @@ function doPrint(suppressPrint = false) {
     <path d="M${cx-r},${cy} A${r},${r} 0 0,1 ${cx+r},${cy}" fill="none" stroke="#e5e7eb" stroke-width="${sw}" stroke-linecap="round"/>
     <path d="M${cx-r},${cy} A${r},${r} 0 0,1 ${cx+r},${cy}" fill="none" stroke="${totalCol}" stroke-width="${sw}" stroke-linecap="round"
       stroke-dasharray="${circ}" stroke-dashoffset="${circ - filled}"/>
-    <text x="${cx}" y="${cy-8}" text-anchor="middle" font-size="22" font-weight="900" fill="${totalCol}" font-family="Arial,sans-serif">${totalPct}%</text>
-    <text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="9" fill="#6b7280" font-family="Arial,sans-serif">of max dose used</text>
+    <text x="${cx}" y="${cy-8}" text-anchor="middle" font-size="22" font-weight="900" fill="${totalCol}" font-family="Arial,sans-serif">${truePct}%</text>
+    <text x="${cx}" y="${cy+6}" text-anchor="middle" font-size="9" fill="#6b7280" font-family="Arial,sans-serif">${over ? 'over maximum dose' : 'of max dose used'}</text>
   </svg>`;
 
   let html = `<div style="max-width:700px;margin:0 auto;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:#111;font-size:13px;line-height:1.5">`;
