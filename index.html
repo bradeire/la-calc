@@ -116,6 +116,22 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .chip-over{background:var(--red-d);color:var(--red);border:1px solid rgba(248,113,113,.25)}
 .gauge-sub{font-size:10px;color:var(--amber)}
 
+/* LAST lipid preparation selector */
+.prep-btn{flex:1;border:2px solid var(--border);background:var(--s1);color:var(--sub2);border-radius:10px;padding:9px 8px 8px;font-family:var(--font);cursor:pointer;text-align:center;transition:border-color .15s,background .15s,color .15s;position:relative}
+.prep-btn .prep-conc{font-size:19px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+.prep-btn .prep-desc{font-size:9.5px;font-weight:500;line-height:1.3;margin-top:2px}
+.prep-btn.active{border-color:#ef4444;background:rgba(220,38,38,.12);color:var(--text)}
+.prep-btn.active .prep-conc{color:#ef4444}
+.prep-btn.active::after{content:'✓';position:absolute;top:4px;right:7px;color:#ef4444;font-weight:800;font-size:11px}
+
+/* Expandable ECMO centres box */
+details.ecmo-box{background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.22);border-radius:var(--r);flex-shrink:0;overflow:hidden}
+details.ecmo-box>summary{list-style:none;cursor:pointer;font-size:11px;font-weight:700;color:#ef4444;padding:9px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+details.ecmo-box>summary::-webkit-details-marker{display:none}
+details.ecmo-box>summary::after{content:'▸';font-size:12px;color:#ef4444;transition:transform .2s;flex-shrink:0}
+details.ecmo-box[open]>summary::after{transform:rotate(90deg)}
+.ecmo-body{padding:0 12px 10px}
+
 /* Duration projection pill */
 .dur-proj{display:flex;align-items:center;gap:6px;background:var(--purple-d);border:1px solid rgba(167,139,250,.22);border-radius:var(--rsm);padding:5px 9px;margin-top:4px}
 .dur-proj-icon{font-size:13px;flex-shrink:0}
@@ -1390,9 +1406,15 @@ tbody td:not(:first-child){text-align:right}
   <!-- Preparation selector -->
   <div class="card">
     <div class="card-title">Lipid Emulsion Preparation</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="tbtn active" id="lastPrep20" onclick="setLastPrep(20)" style="flex:1">20% — Intralipid / Lipovenös (standard)</button>
-      <button class="tbtn" id="lastPrep10" onclick="setLastPrep(10)" style="flex:1">10% — double volumes below</button>
+    <div style="display:flex;gap:8px">
+      <button class="prep-btn active" id="lastPrep20" onclick="setLastPrep(20)">
+        <div class="prep-conc">20%</div>
+        <div class="prep-desc">Intralipid / Lipovenös<br>standard</div>
+      </button>
+      <button class="prep-btn" id="lastPrep10" onclick="setLastPrep(10)">
+        <div class="prep-conc">10%</div>
+        <div class="prep-desc">volumes doubled<br>automatically</div>
+      </button>
     </div>
   </div>
 
@@ -1409,10 +1431,10 @@ tbody td:not(:first-child){text-align:right}
     </div>
   </div>
 
-  <!-- ECMO centres — UK & Ireland -->
-  <div style="padding:9px 12px;background:rgba(220,38,38,.05);border:1px solid rgba(220,38,38,.22);border-radius:var(--r);flex-shrink:0">
-    <div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:5px">🫀 Adult ECMO centres — UK &amp; Ireland</div>
-    <div style="font-size:10.5px;color:var(--sub);line-height:1.6">
+  <!-- ECMO centres — UK & Ireland (expandable) -->
+  <details class="ecmo-box">
+    <summary>🫀 Adult ECMO centres — UK &amp; Ireland</summary>
+    <div class="ecmo-body" style="font-size:10.5px;color:var(--sub);line-height:1.6">
       <div style="margin-bottom:4px"><strong style="color:var(--text)">England</strong> (NHS England commissioned)<br>
         Guy's &amp; St Thomas' · Royal Brompton &amp; Harefield — London<br>
         Royal Papworth — Cambridge · Glenfield — Leicester · Wythenshawe — Manchester</div>
@@ -1425,7 +1447,7 @@ tbody td:not(:first-child){text-align:right}
         <a href="https://www.mater.ie/services/extracorporeal-membrane-oxygenation/" target="_blank" rel="noopener" style="color:var(--blue)">Mater Dublin ↗</a>
       </div>
     </div>
-  </div>
+  </details>
 
   <div class="disc-footer">
     <div class="footer" style="text-align:left;flex:1 1 auto">Emergency reference — call for expert help</div>
@@ -2433,6 +2455,15 @@ function openSources(){
 <ol>
   <li><strong><a href="https://anaesthetists.org/Home/Resources-publications/Guidelines/Archived-guidelines/Management-of-severe-local-anaesthetic-toxicity" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">AAGBI Safety Guideline — Management of Severe Local Anaesthetic Toxicity ↗</a></strong><br>Association of Anaesthetists of Great Britain &amp; Ireland, 2010. Primary source for maximum mg/kg dose limits used throughout LASTCalc.</li>
   <li><strong><a href="https://pubmed.ncbi.nlm.nih.gov/30122981/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">El-Boghdadly K et al. — Local anaesthetic systemic toxicity: current perspectives ↗</a></strong><br><em>Local and Regional Anesthesia</em> 2018; 11: 35–44. Fractional dose mixture rationale and clinical risk stratification.</li>
+</ol>
+<hr>
+<h3>Lipid rescue &amp; ECMO (LAST Rescue tab)</h3>
+<ol>
+  <li><strong><a href="https://anaesthetists.org/Portals/0/PDFs/Guidelines%20PDFs/Guideline_management_severe_local_anaesthetic_toxicity_accompanying_notes_2010_final.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">AAGBI — Management of Severe Local Anaesthetic Toxicity, accompanying notes (PDF) ↗</a></strong><br>Association of Anaesthetists, 2010. Basis for the weight-based lipid emulsion protocol on the LAST Rescue tab (1.5 ml/kg bolus, 15→30 ml/kg/hr infusion, 12 ml/kg ceiling).</li>
+  <li><strong><a href="https://www.lipidrescue.org" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">lipidrescue.org ↗</a></strong><br>Weinberg G. Lipid emulsion resuscitation resource — dosing, case registry and background evidence.</li>
+  <li><strong><a href="https://www.england.nhs.uk/wp-content/uploads/2019/02/Adult-ECMO-Service-Specification.pdf" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">NHS England — Adult ECMO Service Specification (PDF) ↗</a></strong><br>Names the commissioned English adult respiratory ECMO centres (Guy's &amp; St Thomas', Royal Brompton &amp; Harefield, Royal Papworth, Glenfield/Leicester, Wythenshawe/Manchester).</li>
+  <li><strong><a href="https://www.nss.nhs.scot/specialist-healthcare/specialist-services/extra-corporeal-membrane-oxygenation-ecmo-service-adult/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">NHS National Services Scotland — Adult Respiratory ECMO Service ↗</a></strong><br>Aberdeen Royal Infirmary, commissioned as the sixth UK adult respiratory ECMO centre (2020).</li>
+  <li><strong><a href="https://www.mater.ie/services/extracorporeal-membrane-oxygenation/" target="_blank" rel="noopener" style="color:var(--blue-light,#60a5fa)">Mater Misericordiae University Hospital — ECMO Service ↗</a></strong><br>National adult ECMO service for the Republic of Ireland, Dublin (ELSO-accredited).</li>
 </ol>
 <hr>
 <h3>AFOi topical lidocaine ceiling (9 mg/kg)</h3>
