@@ -102,7 +102,7 @@ html,body{height:100vh;height:100dvh;overflow:hidden;background:var(--bg);color:
 .arc-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
 .arc-pct{font-size:15px;font-weight:800;letter-spacing:-.5px;line-height:1}
 .arc-lbl{font-size:9px;color:var(--sub);font-weight:500}
-.arc-box .arc-stop svg{width:34px;height:34px}
+.arc-box .arc-stop svg{width:30px;height:30px;display:block}
 .gauge-right{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .bar-track{background:var(--s2);border-radius:99px;height:7px;overflow:hidden;position:relative}
 .bar-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1),background .3s}
@@ -440,7 +440,7 @@ tbody td:not(:first-child){text-align:right}
             style="transition:stroke-dashoffset .4s cubic-bezier(.4,0,.2,1),stroke .3s"/>
         </svg>
         <div class="arc-center">
-          <div class="arc-stop" id="arcStop" style="display:none;line-height:0;margin-bottom:1px">
+          <div class="arc-stop" id="arcStop" style="display:none;line-height:0">
             <svg viewBox="0 0 100 100" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
               <polygon points="30,1.5 70,1.5 98.5,30 98.5,70 70,98.5 30,98.5 1.5,70 1.5,30"
                 fill="#dc2626" stroke="#fff" stroke-width="6" stroke-linejoin="round"/>
@@ -2074,13 +2074,15 @@ function calc(){
   const stop=document.getElementById('arcStop');
   const lbl=document.getElementById('arcLbl');
   if(over){
+    // Show only the STOP sign, centred; the exact % lives in the "OVER +X%" pill
+    // and the Show Workings breakdown.
     ap.style.display='none';
     stop.style.display='block';
-    lbl.textContent=truePct+'%';
-    lbl.style.color='var(--red)';
+    lbl.style.display='none';
   } else {
     ap.style.display='block';
     stop.style.display='none';
+    lbl.style.display='';
     lbl.textContent='used';
     lbl.style.color='';
   }
