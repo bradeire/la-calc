@@ -1,4 +1,4 @@
-const CACHE = 'la-calc-v15';
+const CACHE = 'la-calc-v16';
 const ASSETS = [
   './index.html',
   './manifest.json',

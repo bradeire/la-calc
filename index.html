@@ -1308,11 +1308,11 @@ tbody td:not(:first-child){text-align:right}
       <div class="toggle-btns">
         <button class="tbtn" id="spVol10" onclick="setSpVol(1.0)">1.0</button>
         <button class="tbtn" id="spVol15" onclick="setSpVol(1.5)">1.5</button>
-        <button class="tbtn active" id="spVol20" onclick="setSpVol(2.0)">2.0</button>
+        <button class="tbtn" id="spVol20" onclick="setSpVol(2.0)">2.0</button>
         <button class="tbtn" id="spVol25" onclick="setSpVol(2.5)">2.5</button>
         <button class="tbtn" id="spVol30" onclick="setSpVol(3.0)">3.0</button>
       </div>
-      <input type="number" id="spVolInput" min="0.5" max="5" step="0.1" value="2.0" inputmode="decimal"
+      <input type="number" id="spVolInput" min="0.5" max="5" step="0.1" value="" placeholder="0" inputmode="decimal"
         oninput="spState.vol=parseFloat(this.value)||0;[10,15,20,25,30].forEach(x=>document.getElementById('spVol'+x).classList.remove('active'));calcSpinal()"
         style="width:46px;padding:4px 6px;border-radius:8px;border:1px solid var(--border);background:var(--s1);color:var(--text);font-size:13px;font-weight:600;font-family:var(--font);text-align:right">
       <span style="font-size:11px;color:var(--sub2)">ml</span>
@@ -2989,7 +2989,7 @@ const SP_DRUG_NOTES = {
   plain05:  'Bupivacaine 0.5% plain — isobaric; spread less position-dependent; useful when positioning is limited',
   plain025: 'Bupivacaine 0.25% plain — low-dose option for saddle blocks, perineal or day-case surgery'
 };
-const spState = { drug:'heavy05', vol:2.0, adjFent:false, adjMorphPF:0, adjDia:0 };
+const spState = { drug:'heavy05', vol:0, adjFent:false, adjMorphPF:0, adjDia:0 };
 
 function setSpDrug(d) {
   spState.drug = d;
@@ -3027,6 +3027,12 @@ function calcSpinal() {
   const drug = SP_DRUGS[spState.drug];
   const vol = spState.vol || 0;
   const mg = vol * drug.concMgml;
+
+  if(!vol) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--sub2)">Enter a spinal volume above</div>`;
+    calcSpTracker();
+    return;
+  }
 
   let heightNote = '';
   if(spState.drug === 'heavy05') {
