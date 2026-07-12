@@ -1337,6 +1337,18 @@ tbody td:not(:first-child){text-align:right}
   <!-- Result -->
   <div id="spResult" style="padding:10px 12px;background:var(--s1);border-radius:var(--r);border:1px solid var(--border);flex-shrink:0"></div>
 
+  <!-- Cumulative dose tracker -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="card-title" style="margin-bottom:0">Cumulative Dose Tracker</div>
+    </div>
+    <div style="font-size:10.5px;color:var(--sub);margin-bottom:12px;line-height:1.4">Spinal bupivacaine as a fraction of its systemic maximum — same 6-hour LAST logic as the Blocks tab. Intrathecal opioid adjuncts are not local anaesthetics and are not counted.</div>
+    <div id="sp-tracker-result"></div>
+    <div style="margin-top:10px">
+      <button onclick="spToBlocks()" style="font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:var(--rsm);border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:var(--blue);font-family:var(--font);cursor:pointer">→ Send to Blocks</button>
+    </div>
+  </div>
+
   <!-- Guidance note -->
   <div style="padding:8px 12px;background:rgba(59,130,246,.05);border:1px solid rgba(59,130,246,.15);border-radius:var(--r);flex-shrink:0">
     <div style="font-size:10.5px;color:var(--sub);line-height:1.6"><strong style="color:var(--text)">Note:</strong> Spinal bupivacaine doses are not strictly weight-based — baricity, position, and patient factors (height, age, pregnancy) influence spread. These are guidance ranges only. Verify with local protocol.</div>
@@ -1943,7 +1955,7 @@ function renderDrugs(){
     const dOpts=DRUGS.map(x=>`<option value="${x.id}"${x.id===e.did?' selected':''}>${x.label} (${x.sub})</option>`).join('');
     const cOpts=d.concs.map(c=>`<option value="${c}"${c===e.conc?' selected':''}>${c}%</option>`).join('');
     const priorClass = e.prior ? ' prior' : '';
-    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : e.obsSource ? '🍼 Obstetric LA (transferred)' : '⏱ Prior (by others)'}</div>` : '';
+    const priorLabel = e.prior ? `<div class="prior-tag" style="grid-column:1/-1">${e.afoiSource ? '🫁 AFOi lidocaine (transferred)' : e.obsSource ? '🍼 Obstetric LA (transferred)' : e.spinalSource ? '🧠 Spinal (transferred)' : '⏱ Prior (by others)'}</div>` : '';
     return `<div class="drug-row${priorClass}">
       ${priorLabel}
       <select class="f-select" onchange="onDrug(${e.id},this.value)">${dOpts}</select>
@@ -2486,6 +2498,7 @@ function openChangelog(){
       <li>Racemic bupivacaine 0.5% heavy, 0.5% plain, and 0.25% plain with volume presets (1.0–3.0 ml) and live mg dose calculation</li>
       <li>Expected block height guidance for heavy 0.5%, graded by dose: saddle/perineal → T10 → T6–T10 → high spinal warning</li>
       <li>Intrathecal adjuncts: diamorphine (default None; options 300/500/1000 mcg with mg and reconstituted volume), morphine PF (100/200/300 mcg), fentanyl 25 mcg — monitoring reminders per adjunct</li>
+      <li>Cumulative dose tracker showing the spinal bupivacaine as a percentage of its weight-adjusted maximum, with a Send to Blocks button to combine it with infiltration or nerve-block LA</li>
     </ol>
     <strong>🚨 LAST Rescue tab (new)</strong>
     <ol>
@@ -3016,6 +3029,58 @@ function calcSpinal() {
     </div>` : ''}
     <div style="font-size:10px;color:var(--sub2);margin-top:8px;line-height:1.4">${drug.note}</div>
   `;
+  calcSpTracker();
+}
+
+// Spinal cumulative dose tracker — bupivacaine as a fraction of its systemic max
+function spMg() {
+  const drug = SP_DRUGS[spState.drug];
+  return (spState.vol || 0) * drug.concMgml;
+}
+function calcSpTracker() {
+  const el = document.getElementById('sp-tracker-result'); if(!el) return;
+  const BUPI = DRUGS.find(d=>d.id==='bupi_p');
+  const bupiMax = drugMax(BUPI);
+  const mg = spMg();
+  const frac = bupiMax > 0 ? mg/bupiMax : 0;
+  const truePct = frac*100;
+  const pct = Math.min(100, truePct);
+  const over = frac > 1;
+  const col = truePct>=100?'var(--red)':truePct>=80?'var(--amber)':'var(--green)';
+  const statusText = over?`OVER +${(truePct-100).toFixed(0)}%`:truePct>=100?'AT MAXIMUM':truePct>=80?'APPROACHING MAX':truePct>=50?'CAUTION':'WITHIN LIMITS';
+  const chipCls = truePct>=100?'chip-over':truePct>=80?'chip-warn':'chip-safe';
+  const remFrac = Math.max(0,1-frac);
+
+  const row = mg>0?`<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--sub)">Bupivacaine (spinal)</span>
+      <span><strong style="color:var(--text)">${mg.toFixed(0)}</strong> / ${bupiMax.toFixed(0)} mg <span style="color:${frac>=1?'var(--red)':frac>=0.8?'var(--amber)':'var(--sub2)'}">(${truePct.toFixed(0)}%)</span></span>
+    </div>`:'<div style="font-size:12px;color:var(--sub2)">Enter a spinal volume above</div>';
+
+  const remSection = mg>0 ? (remFrac>0?`
+    <div style="margin-top:12px">
+      <div style="font-size:10px;font-weight:700;color:var(--sub2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Remaining capacity</div>
+      <div style="font-size:12px;color:var(--sub)">Bupivacaine: <strong style="color:var(--text)">${(remFrac*bupiMax).toFixed(0)} mg</strong></div>
+    </div>`:`<div style="margin-top:10px;font-size:12px;color:var(--red);font-weight:700">No remaining capacity — do not give further LA</div>`) : '';
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div style="font-size:26px;font-weight:800;color:${col}">${truePct.toFixed(0)}<span style="font-size:14px">%</span> <span style="font-size:11px;font-weight:500;color:var(--sub)">used</span></div>
+      <span class="chip ${chipCls}">${statusText}</span>
+    </div>
+    ${row}
+    ${remSection}
+    <div style="margin-top:8px;font-size:10px;color:var(--sub2);line-height:1.5">Bupivacaine ceiling: ${bupiMax.toFixed(0)} mg (nerve-block limit, weight-adjusted). Transfer to Blocks to combine the spinal dose with any infiltration or nerve-block LA in the same window.</div>`;
+}
+
+function spToBlocks() {
+  const drug = SP_DRUGS[spState.drug];
+  const mg = spMg();
+  if(mg <= 0) { alert('No spinal dose recorded. Enter a volume on the Spinal tab first.'); return; }
+  const conc = drug.concMgml/10; // 0.5 or 0.25
+  const vol = parseFloat((mg / (conc*10)).toFixed(1));
+  drugs.push({ id:uid++, did:'bupi_p', conc, vol, prior:true, spinalSource:true });
+  renderDrugs(); syncRopiToggle(); calc();
+  showTab('blocks', document.querySelectorAll('.tab-btn')[0]);
 }
 
 // ── LAST / INTRALIPID RESCUE ───────────────────────────────────────────────
@@ -3083,6 +3148,7 @@ function runWtCalcs() {
   calcAFOi();
   calcLidoIV();
   calcObs();
+  calcSpinal();
   calcLast();
 }
 function syncWtMirror(triggerEl) {
@@ -3144,7 +3210,7 @@ function openWorkings() {
     const max = e.afoiSource ? (e.topicalMax || 9*wt) : e.obsSource ? (e.obsMax || drugMax(d,wt)) : drugMax(d, wt);
     const frac = max > 0 ? mg / max : 0;
     totalFrac += frac; totalMg += mg;
-    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource, obsSource: e.obsSource, obsMax: e.obsMax });
+    rows.push({ d, mg, max, frac, prior: e.prior, afoiSource: e.afoiSource, obsSource: e.obsSource, spinalSource: e.spinalSource, obsMax: e.obsMax });
   }
   const totalPct = Math.round(totalFrac * 100);
   const col = totalPct >= 100 ? 'var(--red)' : totalPct >= 80 ? 'var(--amber)' : 'var(--green)';
@@ -3176,7 +3242,7 @@ function openWorkings() {
       const pedMos = getAgeMonths();
       const isPed = eff.pedMode && pedMos !== null;
       html += `<div class="work-drug-block${r.prior ? ' work-prior' : ''}">`;
-      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : r.obsSource ? '🍼 Obstetric LA (transferred)' : '⏱ Prior (by others)'}</div>`;
+      if (r.prior) html += `<div class="work-prior-tag">${r.afoiSource ? '🫁 AFOi dose (transferred)' : r.obsSource ? '🍼 Obstetric LA (transferred)' : r.spinalSource ? '🧠 Spinal (transferred)' : '⏱ Prior (by others)'}</div>`;
       html += `<div class="work-drug-name">${r.d.label} <span style="font-size:11px;color:var(--sub2);font-weight:400">${r.d.sub}</span></div>`;
       if (isPed) {
         html += `<div class="work-note" style="margin-bottom:4px;color:var(--purple)">⚠ Paediatric ceiling applied (${eff.pedMode})</div>`;
@@ -3321,7 +3387,7 @@ function doPrint(suppressPrint = false) {
       const dc = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#16a34a';
       const bg = pd >= 100 ? '#fef2f2' : pd >= 80 ? '#fffbeb' : '#fff';
       const borderL = pd >= 100 ? '#dc2626' : pd >= 80 ? '#d97706' : '#d1fae5';
-      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : r.e.obsSource ? '🍼 Obs' : '⏱ Prior') : '';
+      const tag = r.e.prior ? (r.e.afoiSource ? '🫁 AFOi' : r.e.obsSource ? '🍼 Obs' : r.e.spinalSource ? '🧠 Spinal' : '⏱ Prior') : '';
       const barW = Math.min(100, pd);
       html += `<tr style="border-bottom:1px solid #f3f4f6;background:${bg}">
         <td style="padding:10px 14px;border-left:3px solid ${borderL}">
