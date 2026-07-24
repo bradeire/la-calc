@@ -4318,7 +4318,28 @@ function calcAdrMix() {
 // ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Check for a fresh deploy on every load.
+      reg.update();
+      // When a new worker is installed and we already control the page,
+      // tell it to activate immediately.
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            nw.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+    }).catch(() => {});
+    // Reload once when control passes to the new worker, so the fresh shell shows.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
   });
 }
 
