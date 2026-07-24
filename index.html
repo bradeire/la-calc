@@ -2536,17 +2536,12 @@ function openChangelog(){
       <li>Weight-based lipid emulsion rescue protocol per AAGBI 2010 guidelines</li>
       <li>Preparation toggle: 20% (Intralipid/Lipovenös, standard) or 10% — automatically doubles all volumes</li>
       <li>Three-phase protocol display: Phase 1 bolus + infusion, Phase 2 repeat bolus at 5 min, Phase 3 third bolus + doubled infusion at 10 min, plus maximum cumulative ceiling (12 ml/kg)</li>
-      <li>Links to AAGBI guideline PDF and lipidrescue.org, plus a list of adult ECMO centres across the UK &amp; Ireland (England, Scotland, and the Mater in Dublin) with source links</li>
+      <li>Adult ECMO centres across the UK &amp; Ireland listed in an expandable panel</li>
     </ol>
     <strong>📊 Over-limit visualisation</strong>
     <ol>
       <li>Dose gauges no longer cap at 100% — the true percentage is shown (e.g. 143%) so overdoses are explicit on the Blocks gauge, topical lidocaine tracker and printed report</li>
       <li>When a mixture exceeds the maximum, the bar rescales and a marker shows where the 100% limit falls, with an "OVER +X%" status chip</li>
-    </ol>
-    <strong>🔧 Fixes</strong>
-    <ol>
-      <li>LAST tab: corrected the broken AAGBI 2010 guideline PDF link (was a dead URL)</li>
-      <li>Sources: replaced four obstetric references whose PubMed links pointed to the wrong papers — now Saravanan 2003 (intrathecal diamorphine ED₉₅), Hillyard 2011 (epidural top-up meta-analysis), Fernando 1991 (the fizzy-mix study) and Patel 1996 (alkalinised epidural for emergency CS), all with verified PubMed IDs</li>
     </ol>
     <strong>🍼 Obstetrics — epidural top-up improvements</strong>
     <ol>
@@ -4318,7 +4313,28 @@ function calcAdrMix() {
 // ── SERVICE WORKER (PWA offline support) ──────────────────────────────────
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // Check for a fresh deploy on every load.
+      reg.update();
+      // When a new worker is installed and we already control the page,
+      // tell it to activate immediately.
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            nw.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+    }).catch(() => {});
+    // Reload once when control passes to the new worker, so the fresh shell shows.
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
   });
 }
 
