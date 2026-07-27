@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#0f172a">
-<meta name="description" content="PeriOp Digital — clinical calculators built by anaesthetists, for anaesthetists. LASTCalc: Local Anaesthetic Systemic Toxicity calculator.">
+<meta name="description" content="PeriOp Digital — clinical and professional tools built by anaesthetists, for anaesthetists: LASTCalc (LAST dose calculator), Meridian (CPD portfolio), and Laminar (anaesthetic logbook).">
 <title>PeriOp Digital</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -52,6 +52,7 @@ section{padding:48px 24px;max-width:720px;margin:0 auto}
 
 /* APP CARD */
 .app-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;gap:20px;align-items:flex-start}
+.app-card + .app-card{margin-top:14px}
 .app-icon{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#1e3a5f,#1e293b);border:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:36px;flex-shrink:0}
 .app-name{font-size:19px;font-weight:700;margin-bottom:4px}
 .app-sub{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
@@ -101,7 +102,7 @@ footer .copy{font-size:12px;color:var(--text3)}
     <div class="nav-icon">⚕</div>
     PeriOp <span>&nbsp;Digital</span>
   </div>
-  <a class="nav-link" href="https://app.periopdigital.uk">Open LASTCalc →</a>
+  <a class="nav-link" href="#apps">See our apps ↓</a>
 </nav>
 
 <div class="hero">
@@ -109,11 +110,11 @@ footer .copy{font-size:12px;color:var(--text3)}
     <span class="badge-dot"></span>
     Built by anaesthetists
   </div>
-  <h1>Clinical calculators for the <em>operating theatre</em></h1>
-  <p class="hero-sub">Evidence-based point-of-care tools designed by practising anaesthetists — fast, offline-capable, and free.</p>
+  <h1>Clinical &amp; professional tools for the <em>operating theatre</em></h1>
+  <p class="hero-sub">Evidence-based point-of-care tools and portfolio apps designed by practising anaesthetists — fast, offline-capable, and free.</p>
   <div class="hero-badges">
     <span class="badge"><span class="badge-dot" style="background:#22c55e"></span>Works offline</span>
-    <span class="badge"><span class="badge-dot" style="background:#3b82f6"></span>Mobile-first PWA</span>
+    <span class="badge"><span class="badge-dot" style="background:#3b82f6"></span>Mobile-first</span>
     <span class="badge"><span class="badge-dot" style="background:#a78bfa"></span>No login required</span>
     <span class="badge"><span class="badge-dot" style="background:#f59e0b"></span>No data collected</span>
   </div>
@@ -121,7 +122,7 @@ footer .copy{font-size:12px;color:var(--text3)}
 
 <hr class="divider">
 
-<section>
+<section id="apps">
   <p class="section-label">Apps</p>
 
   <div class="app-card">
@@ -142,6 +143,48 @@ footer .copy{font-size:12px;color:var(--text3)}
       </div>
     </div>
   </div>
+
+  <div class="app-card">
+    <div class="app-icon">🧭</div>
+    <div>
+      <div class="app-name">Meridian</div>
+      <p class="app-sub">Cross-profession CPD portfolio for appraisal and revalidation. Tracks your real regulator's framework — NMC, HCPC, or GMC with an optional royal college / faculty layer — with live cycle progress, category breakdowns, and a submission-ready PDF report.</p>
+      <div class="app-tags">
+        <span class="tag">CPD tracking</span>
+        <span class="tag">NMC · HCPC · GMC</span>
+        <span class="tag">Royal colleges</span>
+        <span class="tag">Revalidation</span>
+        <span class="tag">PDF reports</span>
+      </div>
+      <div class="app-btns">
+        <span class="btn-secondary" style="cursor:default">🚧&nbsp;<span class="coming-soon">Coming soon</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-card">
+    <div class="app-icon">📖</div>
+    <div>
+      <div class="app-name">Laminar</div>
+      <p class="app-sub">Anaesthetic logbook for appraisal and revalidation. Case logging with RCoA-aligned technique and specialty breakdowns, ICU and procedures tracking, a CPD log, and polished PDF reports for your portfolio.</p>
+      <div class="app-tags">
+        <span class="tag">Case logbook</span>
+        <span class="tag">ICU &amp; procedures</span>
+        <span class="tag">CPD log</span>
+        <span class="tag">RCoA-aligned</span>
+        <span class="tag">PDF reports</span>
+      </div>
+      <div class="app-btns">
+        <span class="btn-secondary" style="cursor:default">🚧&nbsp;<span class="coming-soon">Coming soon</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section>
+  <p class="section-label">LASTCalc — in depth</p>
 
   <div class="features">
     <div class="feat">
