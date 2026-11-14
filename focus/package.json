@@ -1,0 +1,46 @@
+{
+  "name": "focus",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Focus – a local-first, cross-platform personal productivity application",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test --trace off",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "date-fns": "4.4.0",
+    "lucide-react": "1.73.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sql.js": "1.16.0",
+    "zod": "4.6.7",
+    "zustand": "5.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/vite": "4.3.5",
+    "@types/node": "22.19.21",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/sql.js": "1.4.11",
+    "@vitejs/plugin-react": "6.3.0",
+    "eslint": "10.15.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "fake-indexeddb": "6.2.8",
+    "globals": "17.14.0",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vite": "8.3.5",
+    "vitest": "5.1.0"
+  }
+}

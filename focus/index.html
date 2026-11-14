@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#fbfbfa" />
+    <meta name="description" content="Focus — a local-first task manager. Your data stays on your device." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <title>Focus</title>
+    <script>
+      // Apply the dark theme before first paint to avoid a white flash.
+      try {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <div id="boot-splash" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font:500 15px system-ui;color:#8f8f87">Loading Focus…</div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
