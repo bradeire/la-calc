@@ -15,6 +15,7 @@ import { TemplateService } from '@/services/template-service';
 import { PlanningService } from '@/services/planning-service';
 import { InsightsService } from '@/services/insights-service';
 import { CalendarService } from '@/services/calendar-service';
+import { TransferService } from '@/services/transfer-service';
 import { WebhookService } from '@/services/webhook-service';
 import { AutomationService } from '@/services/automation-service';
 import { AiService } from '@/services/ai-service';
@@ -100,6 +101,7 @@ export interface AppContainer {
   planning: PlanningService;
   insights: InsightsService;
   calendars: CalendarService;
+  transfer: TransferService;
   webhooks: WebhookService;
   automations: AutomationService;
   ai: AiService;
@@ -136,6 +138,7 @@ export function createContainer(
     const planning = new PlanningService(repos, tasks, () => clock.now());
     const calendars = new CalendarService(repos, platform.http, platform.secrets, () => clock.now());
     const insights = new InsightsService(repos, () => clock.now());
+    const transfer = new TransferService(repos, events, { tasks, projects, labels, content }, () => clock.now());
     const webhooks = new WebhookService(repos, platform.http, platform.secrets);
     const ai = new AiService(repos, platform.http, platform.secrets);
     const capture = new CaptureService(repos, quickAdd, ai, () => clock.now());
@@ -144,7 +147,7 @@ export function createContainer(
     teardown.push(db.subscribe(() => saver.schedule()));
     teardown.push(() => automations.dispose());
     teardown.push(platform.lifecycle.onPause(() => saver.flush()));
-    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, insights, calendars, webhooks, automations, ai, capture, saver };
+    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, insights, calendars, transfer, webhooks, automations, ai, capture, saver };
   };
 
   const container: AppContainer = {

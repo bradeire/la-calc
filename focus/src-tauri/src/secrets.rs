@@ -44,15 +44,30 @@ pub mod android {
     use tauri::{plugin::PluginHandle, Manager, Runtime};
 
     pub struct SecureStore<R: Runtime>(pub PluginHandle<R>);
+    pub struct Share<R: Runtime>(pub PluginHandle<R>);
 
+    /// Registers Focus's own Android plugins (SecureStorePlugin.kt, SharePlugin.kt).
     pub fn init<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
-        tauri::plugin::Builder::new("securestore")
+        tauri::plugin::Builder::new("focusnative")
             .setup(|app, api| {
-                let handle = api.register_android_plugin("uk.periopdigital.focus", "SecureStorePlugin")?;
-                app.manage(SecureStore(handle));
+                let store = api.register_android_plugin("uk.periopdigital.focus", "SecureStorePlugin")?;
+                app.manage(SecureStore(store));
+                let share = api.register_android_plugin("uk.periopdigital.focus", "SharePlugin")?;
+                app.manage(Share(share));
                 Ok(())
             })
             .build()
+    }
+
+    #[derive(Serialize)]
+    struct ShareArgs<'a> {
+        name: &'a str,
+        base64: &'a str,
+        mime: &'a str,
+    }
+    pub fn share_file<R: Runtime>(app: &tauri::AppHandle<R>, name: &str, base64: &str, mime: &str) -> Result<(), String> {
+        let share = app.try_state::<Share<R>>().ok_or_else(|| "Sharing is not ready".to_string())?;
+        share.0.run_mobile_plugin::<()>("shareFile", ShareArgs { name, base64, mime }).map_err(|e| e.to_string())
     }
 
     #[derive(Serialize)]

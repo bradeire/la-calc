@@ -87,6 +87,11 @@ export interface Platform {
   secrets: SecretStore;
   http: HttpAdapter;
   links: LinkAdapter;
+  /**
+   * Offer an exported file to the user. Browser: download. Desktop app: saved to the
+   * Downloads folder (returns the path). Android: system share sheet (returns null).
+   */
+  exportFile(name: string, data: Uint8Array | string, mime: string): Promise<string | null>;
   /** Acquire exclusive ownership of the database; false if another window has it. */
   acquireLock(): Promise<boolean>;
 }

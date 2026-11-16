@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Archive, ArchiveRestore, LayoutTemplate, Sparkles, ArrowDown, ArrowUp, Columns3, Ellipsis, Eye, EyeOff, FolderPlus, LayoutList, CalendarDays, Pencil, Plus,
-  StickyNote, Table2, Trash2,
-} from 'lucide-react';
+  StickyNote, Table2, Trash2, FileDown } from 'lucide-react';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Priority, type Project, type ProjectLayout, type Section, type Task, type TaskStatus } from '@/core/domain/types';
 import { formatDuration, formatRelativeDate } from '@/core/dates';
 import { useUi } from '@/state/ui-store';
@@ -14,6 +13,7 @@ import { DRAG_MIME, TaskList } from '../components/TaskList';
 import { ProjectDialog } from '../components/ProjectDialog';
 import { usePopover } from '../components/pickers';
 import { PRIORITY_COLOR, ProgressRing, ProjectIcon } from '../components/meta';
+import { saveFile } from '../download';
 import { ViewHeader } from '../layout/Chrome';
 import { AttachmentsSection } from '../components/TaskDetail';
 import { ProjectSummaryDialog, useAiEnabled } from '../components/AiFeatures';
@@ -124,6 +124,26 @@ export function ProjectView({ id }: { id: string }) {
             }}
           >
             Save as template
+          </MenuItem>
+          <MenuItem
+            icon={<FileDown size={15} />}
+            onClick={() => {
+              menu.hide();
+              const f = act(() => app.transfer.exportProject(id));
+              if (f) void saveFile(app.platform, f.filename, f.text, 'application/json').then((w) => w && useUi.getState().pushToast({ message: w, tone: 'success' }));
+            }}
+          >
+            Export project
+          </MenuItem>
+          <MenuItem
+            icon={<FileDown size={15} />}
+            onClick={() => {
+              menu.hide();
+              const f = act(() => app.calendars.exportIcs({ projectId: id }));
+              if (f) void saveFile(app.platform, f.filename, f.text, 'text/calendar').then((w) => w && useUi.getState().pushToast({ message: w, tone: 'success' }));
+            }}
+          >
+            Export to calendar (.ics)
           </MenuItem>
           <MenuItem icon={showCompleted ? <EyeOff size={15} /> : <Eye size={15} />} onClick={() => (menu.hide(), setShowCompleted(!showCompleted))}>
             {showCompleted ? 'Hide completed' : 'Show completed'}

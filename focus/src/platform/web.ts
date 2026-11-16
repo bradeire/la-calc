@@ -222,6 +222,16 @@ export const webLinks: LinkAdapter = {
   listen: () => () => {},
 };
 
+export async function browserDownload(name: string, data: Uint8Array | string, mime: string): Promise<null> {
+  const url = URL.createObjectURL(new Blob([data as BlobPart], { type: mime }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return null;
+}
+
 export function createWebPlatform(): Platform {
   return {
     kind: 'web',
@@ -232,6 +242,7 @@ export function createWebPlatform(): Platform {
     secrets: new MemorySecretStore(),
     http: fetchHttp,
     links: webLinks,
+    exportFile: browserDownload,
     acquireLock,
   };
 }

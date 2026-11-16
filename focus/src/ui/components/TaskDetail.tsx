@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowUpLeft, Bell, CalendarClock, CalendarDays, CalendarRange, ChevronDown, CircleDot, Copy, Download, Ellipsis, Flag, Folder,
-  History, Inbox, MessageSquare, Paperclip, Pin, Play, Plus, Repeat, Square, Tag, Timer, Trash2, X,
-} from 'lucide-react';
+  History, Inbox, MessageSquare, Paperclip, Pin, Play, Plus, Repeat, Square, Tag, Timer, Trash2, X, FileDown } from 'lucide-react';
 import { formatDuration, formatLongDate, formatRelativeDate, formatTime, todayISO } from '@/core/dates';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Task, type TaskStatus } from '@/core/domain/types';
 import { parseQuickAdd } from '@/core/nlp/parser';
@@ -10,6 +9,7 @@ import { describeRule, firstOccurrenceOnOrAfter } from '@/core/recurrence/engine
 import { useUi } from '@/state/ui-store';
 import { errorMessage, useAction, useApp, useDatePrefs, useQuery, useToday } from '../hooks';
 import { closeTask, go, navigate, openTask } from '../router';
+import { saveFile } from '../download';
 import { Button, IconButton, Input, MenuItem, MenuSeparator, Popover, Select, Switch, Textarea, cx } from '../primitives';
 import { DatePopover, LabelPopover, PriorityPopover, ProjectPopover, usePopover } from './pickers';
 import { LabelChip, PRIORITY_LABEL, PriorityFlag, ProjectIcon } from './meta';
@@ -317,6 +317,9 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
         <div role="menu" className="py-1">
           <MenuItem icon={<Copy size={15} />} onClick={() => { morePop.hide(); const d = act(() => app.tasks.duplicate(task.id)); if (d) openTask(d.id); }}>
             Duplicate
+          </MenuItem>
+          <MenuItem icon={<FileDown size={15} />} onClick={() => { morePop.hide(); const f = act(() => app.transfer.exportTask(task.id)); if (f) void saveFile(app.platform, f.filename, f.text, 'application/json').then((w) => w && useUi.getState().pushToast({ message: w, tone: 'success' })); }}>
+            Export task
           </MenuItem>
           {task.parentId && (
             <MenuItem icon={<ArrowUpLeft size={15} />} onClick={() => (morePop.hide(), act(() => app.tasks.promote(task.id)))}>
@@ -698,12 +701,8 @@ export function AttachmentsSection({ target }: { target: { taskId: string } | { 
   const download = async (id: string) => {
     try {
       const { blob, fileName } = await app.content.getAttachmentBlob(id);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      const where = await saveFile(app.platform, fileName, new Uint8Array(await blob.arrayBuffer()), blob.type || 'application/octet-stream');
+      if (where) pushToast({ message: where, tone: 'success' });
     } catch (err) {
       pushToast({ message: errorMessage(err), tone: 'error' });
     }

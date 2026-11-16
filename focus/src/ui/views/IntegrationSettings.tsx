@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Bot, CalendarPlus, Copy, Download, FileUp, Link2, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, Webhook } from 'lucide-react';
 import { PALETTE } from '@/core/domain/types';
-import { download } from '../download';
+import { saveFile } from '../download';
 import { ASSISTANT_INSTRUCTIONS, buildAddLink } from '@/core/links';
 import { isLocalUrl, type AiConfig } from '@/services/ai-service';
 import { useUi } from '@/state/ui-store';
@@ -391,15 +391,15 @@ export function CalendarSettings() {
       pushToast({ message: errorMessage(err), tone: 'error' });
     }
   };
-  const exportIcs = () => {
+  const exportIcs = async () => {
     try {
       const r = app.calendars.exportIcs({ projectId: exportProject || null });
       if (!r.count) {
         pushToast({ message: 'No scheduled tasks to export', tone: 'error' });
         return;
       }
-      download(r.filename, r.text, 'text/calendar');
-      pushToast({ message: `Exported ${r.count} task${r.count === 1 ? '' : 's'}`, tone: 'success' });
+      const where = await saveFile(app.platform, r.filename, r.text, 'text/calendar');
+      pushToast({ message: `Exported ${r.count} task${r.count === 1 ? '' : 's'}${where ? `. ${where}` : ''}`, tone: 'success' });
     } catch (err) {
       pushToast({ message: errorMessage(err), tone: 'error' });
     }
@@ -485,7 +485,7 @@ export function CalendarSettings() {
               ))}
             </Select>
           </Field>
-          <Button size="sm" onClick={exportIcs}>
+          <Button size="sm" onClick={() => void exportIcs()}>
             <Download size={14} /> Export .ics
           </Button>
         </div>

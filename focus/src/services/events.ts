@@ -41,6 +41,19 @@ export class EventBus {
     }
   }
 
+  /** Run without delivering any events (e.g. imports must not trigger automations). */
+  quietly<T>(fn: () => T): T {
+    this.depth++;
+    const before = this.queue.length;
+    try {
+      return fn();
+    } finally {
+      this.queue.length = before;
+      this.depth--;
+      if (this.depth === 0) this.drain();
+    }
+  }
+
   emit(e: DomainEvent) {
     this.queue.push(e);
     if (this.depth === 0) this.drain();

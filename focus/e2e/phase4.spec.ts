@@ -130,3 +130,43 @@ test('external calendar: subscribe, see events, import a file, export tasks', as
   const text = await (await file.createReadStream()).toArray().then((c) => Buffer.concat(c).toString());
   expect(text).toContain('SUMMARY:Bins out');
 });
+
+test('CSV export, then import with a preview and undo', async ({ page }) => {
+  await startFresh(page);
+  await page.goto('/#/inbox');
+  for (const t of ['Renew passport p1', 'Fix gate tomorrow']) {
+    const input = await quickAdd(page, t);
+    await input.press('Enter');
+    await page.keyboard.press('Escape');
+  }
+  await page.goto('/#/settings');
+  const dl = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export CSV' }).click();
+  const file = await dl;
+  expect(file.suggestedFilename()).toMatch(/^focus-tasks-\d{4}-\d{2}-\d{2}\.csv$/);
+  const csv = Buffer.concat(await (await file.createReadStream()).toArray()).toString();
+  expect(csv).toContain('Renew passport');
+
+  // Re-importing the same file finds only duplicates.
+  await page.getByLabel('Choose a file to import').setInputFiles({ name: 'tasks.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) });
+  await expect(page.getByRole('dialog', { name: 'Import tasks' })).toContainText('0 tasks to add, 2 skipped');
+  await page.getByRole('button', { name: 'Cancel' }).click();
+
+  // A Todoist file creates a project; Undo removes it again.
+  const todoist = 'TYPE,CONTENT,DESCRIPTION,PRIORITY,INDENT,AUTHOR,RESPONSIBLE,DATE,DATE_LANG,TIMEZONE\ntask,Buy paint @diy,,2,1,,,,en,\ntask,Choose colour,,4,2,,,,en,\n';
+  await page.getByLabel('Choose a file to import').setInputFiles({ name: 'Decorating.csv', mimeType: 'text/csv', buffer: Buffer.from(todoist) });
+  const dialog = page.getByRole('dialog', { name: 'Import tasks' });
+  await expect(dialog).toContainText('Todoist project');
+  await expect(dialog).toContainText('New projects: Decorating');
+  await dialog.getByRole('button', { name: 'Import 2 tasks' }).click();
+  await expect(page.getByText('Imported 2 tasks')).toBeVisible();
+  await page.goto('/#/projects');
+  await expect(page.getByRole('main').getByText('Decorating')).toBeVisible();
+  await page.goto('/#/settings');
+  await page.getByLabel('Choose a file to import').setInputFiles({ name: 'Garden.csv', mimeType: 'text/csv', buffer: Buffer.from(todoist) });
+  await page.getByRole('dialog', { name: 'Import tasks' }).getByRole('button', { name: 'Import 2 tasks' }).click();
+  await page.getByRole('button', { name: 'Undo' }).last().click();
+  await page.goto('/#/projects');
+  await expect(page.getByRole('main').getByText('Decorating')).toBeVisible();
+  await expect(page.getByRole('main').getByText('Garden')).toHaveCount(0);
+});

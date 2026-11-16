@@ -1,4 +1,5 @@
 mod http;
+mod exports;
 mod secrets;
 mod storage;
 
@@ -117,6 +118,27 @@ async fn secret_delete(app: tauri::AppHandle, key: String) -> Result<(), String>
     }
 }
 
+/// Save an export: desktop writes it to the Downloads folder (returns the path);
+/// Android opens the share sheet (returns None).
+#[tauri::command]
+async fn export_file(app: tauri::AppHandle, name: String, base64: String, mime: String) -> Result<Option<String>, String> {
+    #[cfg(target_os = "android")]
+    {
+        let _ = &mime;
+        secrets::android::share_file(&app, &name, &base64, &mime)?;
+        return Ok(None);
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = &mime;
+        let bytes = exports::decode_base64(&base64)?;
+        let dir = app.path().download_dir().map_err(|e| e.to_string())?;
+        let path = exports::unique_path(&dir, &name)?;
+        std::fs::write(&path, bytes).map_err(|e| e.to_string())?;
+        Ok(Some(path.to_string_lossy().into_owned()))
+    }
+}
+
 #[tauri::command]
 async fn http_request(request: http::HttpRequest) -> Result<http::HttpResponse, String> {
     http::send(request).await
@@ -158,7 +180,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             db_load, db_load_previous, db_save, db_snapshot, file_put, file_get, file_exists, file_delete, file_keys, data_dir,
-            secret_set, secret_get, secret_delete, http_request
+            secret_set, secret_get, secret_delete, http_request, export_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running Focus");

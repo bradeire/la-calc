@@ -9,7 +9,8 @@ import { errorMessage, useAction, useApp, useQuery, useSettings } from '../hooks
 import { Button, ConfirmDialog, Select, Switch, cx } from '../primitives';
 import { ViewBody } from '../components/common';
 import { ViewHeader } from '../layout/Chrome';
-import { download } from '../download';
+import { saveFile } from '../download';
+import { TransferControls } from '../components/TransferControls';
 import { AddFromAssistantSettings, AiSettings, CalendarSettings, WebhookSettings } from './IntegrationSettings';
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
@@ -71,8 +72,8 @@ export function SettingsView() {
       const json = JSON.stringify(backup);
       app.data.verifyJsonBackup(json); // round-trip check before handing the file over
       app.data.recordBackup('json', json.length, null, 'verified');
-      download(`focus-backup-${stamp()}.json`, json, 'application/json');
-      pushToast({ message: 'Backup created and verified', tone: 'success' });
+      const where = await saveFile(app.platform, `focus-backup-${stamp()}.json`, json, 'application/json');
+      pushToast({ message: `Backup created and verified${where ? `. ${where}` : ''}`, tone: 'success' });
     } catch (err) {
       pushToast({ message: errorMessage(err), tone: 'error' });
     }
@@ -81,8 +82,8 @@ export function SettingsView() {
     try {
       const { bytes, sha256 } = await app.data.exportSqlite();
       app.data.verifySqlite(bytes);
-      download(`focus-${stamp()}.sqlite`, bytes as BlobPart, 'application/vnd.sqlite3');
-      pushToast({ message: `Database exported (SHA-256 ${sha256.slice(0, 12)}…)`, tone: 'success' });
+      const where = await saveFile(app.platform, `focus-${stamp()}.sqlite`, bytes, 'application/vnd.sqlite3');
+      pushToast({ message: `Database exported (SHA-256 ${sha256.slice(0, 12)}…)${where ? `. ${where}` : ''}`, tone: 'success' });
     } catch (err) {
       pushToast({ message: errorMessage(err), tone: 'error' });
     }
@@ -236,6 +237,7 @@ export function SettingsView() {
               <Upload size={14} /> Choose file
             </Button>
           </Item>
+          <TransferControls />
           <Item label="Demonstration data" hint={hasSample ? 'Removing it keeps any tasks you added yourself.' : 'Adds example projects, labels and tasks.'}>
             {hasSample ? (
               <Button size="sm" onClick={() => setConfirmRemoveSample(true)}>Remove</Button>

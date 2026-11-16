@@ -1,9 +1,10 @@
-/** Offer a file to the user to save (browser download). */
-export function download(name: string, data: BlobPart, type: string) {
-  const url = URL.createObjectURL(new Blob([data], { type }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+import type { Platform } from '@/platform/types';
+
+/**
+ * Save an export through the platform (browser download, Downloads folder on desktop,
+ * share sheet on Android). Returns a message describing where it went, if known.
+ */
+export async function saveFile(platform: Platform, name: string, data: Uint8Array | string, mime: string): Promise<string | null> {
+  const path = await platform.exportFile(name, data, mime);
+  return path ? `Saved to ${path}` : null;
 }

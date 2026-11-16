@@ -135,6 +135,16 @@ const tauriLinks: LinkAdapter = {
   },
 };
 
+function toBase64(data: Uint8Array | string): string {
+  const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+/** Exports via Rust (src-tauri/src/lib.rs export_file): Downloads folder on desktop, share sheet on Android. */
+const tauriExport = (name: string, data: Uint8Array | string, mime: string) => invoke<string | null>('export_file', { name, base64: toBase64(data), mime });
+
 export function createTauriPlatform(): Platform {
   return {
     kind: 'tauri',
@@ -146,6 +156,7 @@ export function createTauriPlatform(): Platform {
     secrets: /iPhone|iPad/i.test(navigator.userAgent) ? new MemorySecretStore() : tauriSecrets,
     http: tauriHttp,
     links: tauriLinks,
+    exportFile: tauriExport,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,
   };
