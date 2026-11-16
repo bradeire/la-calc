@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarRange, ChevronLeft, ChevronRight, Scale } from 'lucide-react';
+import { PlanDialog, usePlan, WorkloadBar } from '../components/Planning';
 import { addDays, diffDays, formatLongDate, startOfWeek, weekdayIndex, WEEKDAY_SHORT } from '@/core/dates';
 import type { Task } from '@/core/domain/types';
 import { useAction, useApp, useDatePrefs, useQuery, useToday } from '../hooks';
@@ -22,6 +23,9 @@ export function UpcomingView() {
     [today, start],
   );
   const [dropDay, setDropDay] = useState<string | null>(null);
+  const [planOpen, setPlanOpen] = useState(false);
+  const { attention } = usePlan();
+  const loads = useQuery(() => new Map(app.planning.workload(start, end).map((l) => [l.date, l])), [start, end]);
 
   // Each task is listed once: on its scheduled date if in range, otherwise on its deadline.
   const byDay = useMemo(() => {
@@ -45,6 +49,9 @@ export function UpcomingView() {
         icon={<CalendarRange size={22} className="text-violet-500" />}
         actions={
           <>
+            <Button size="sm" variant={attention ? 'secondary' : 'ghost'} onClick={() => setPlanOpen(true)}>
+              <Scale size={14} /> Review plan{attention ? ` (${attention})` : ''}
+            </Button>
             <IconButton label="Previous week" onClick={() => setStart((s) => (diffDays(s, today) <= 7 ? today : addDays(s, -7)))} disabled={start <= today}>
               <ChevronLeft size={18} />
             </IconButton>
@@ -96,6 +103,7 @@ export function UpcomingView() {
                   <>
                     {d === today ? 'Today · ' : d === addDays(today, 1) ? 'Tomorrow · ' : ''}
                     <span className="font-normal text-muted">{formatLongDate(d, prefs)}</span>
+                    {loads.get(d) && (loads.get(d)!.taskIds.length > 0) && <span className="ml-2 inline-block align-middle"><WorkloadBar load={loads.get(d)!} /></span>}
                   </>
                 }
                 count={list.length || undefined}
@@ -109,7 +117,7 @@ export function UpcomingView() {
                 onDrop={(e) => {
                   setDropDay(null);
                   const id = e.dataTransfer.getData(DRAG_MIME);
-                  if (id) act(() => app.tasks.update(id, { scheduledDate: d }));
+                  if (id) act((force) => app.tasks.update(id, { scheduledDate: d }, { force }));
                 }}
               >
                 <TaskList tasks={list} tree={false} showProject hideDate draggable ariaLabel={`Tasks for ${formatLongDate(d, prefs)}`} />
@@ -122,6 +130,7 @@ export function UpcomingView() {
           <Button onClick={() => setDays((n) => n + 14)}>Show two more weeks</Button>
         </div>
       </ViewBody>
+      <PlanDialog open={planOpen} onClose={() => setPlanOpen(false)} />
     </>
   );
 }

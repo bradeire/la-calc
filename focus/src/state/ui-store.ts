@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { QuickAddDefaults } from '@/services/quick-add-service';
+import type { DueReminder } from '@/services/reminder-service';
 
 export interface Toast {
   id: number;
@@ -31,6 +32,16 @@ interface UiState {
 
   shortcutsOpen: boolean;
   setShortcutsOpen: (v: boolean) => void;
+
+  /** Reminders delivered and awaiting the user's action in the in-app panel. */
+  activeReminders: DueReminder[];
+  addReminders: (r: DueReminder[]) => void;
+  removeReminder: (id: string) => void;
+
+  /** "Do it anyway?" prompt for ConfirmationRequired errors. */
+  confirm: { message: string; confirmLabel: string; onConfirm: () => void } | null;
+  askConfirm: (c: { message: string; confirmLabel: string; onConfirm: () => void }) => void;
+  closeConfirm: () => void;
 }
 
 let toastId = 0;
@@ -90,4 +101,15 @@ export const useUi = create<UiState>((set, get) => ({
 
   shortcutsOpen: false,
   setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
+
+  activeReminders: [],
+  addReminders: (r) => {
+    const existing = new Set(get().activeReminders.map((x) => x.reminder.id));
+    set({ activeReminders: [...get().activeReminders, ...r.filter((x) => !existing.has(x.reminder.id))] });
+  },
+  removeReminder: (id) => set({ activeReminders: get().activeReminders.filter((x) => x.reminder.id !== id) }),
+
+  confirm: null,
+  askConfirm: (c) => set({ confirm: c }),
+  closeConfirm: () => set({ confirm: null }),
 }));

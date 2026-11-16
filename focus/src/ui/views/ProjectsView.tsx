@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArchiveRestore, FolderKanban, Plus, Star } from 'lucide-react';
+import { ArchiveRestore, FolderKanban, LayoutTemplate, Plus, Star } from 'lucide-react';
+import { TemplateDialog } from '../components/TemplateDialog';
 import { useAction, useApp, useQuery } from '../hooks';
 import { go } from '../router';
 import { Button, EmptyState, IconButton } from '../primitives';
@@ -16,6 +17,7 @@ export function ProjectsView() {
   const archived = useQuery(() => app.repos.projects.listArchived(), []);
   const stats = useQuery(() => app.repos.projects.stats(), []);
   const [creating, setCreating] = useState(false);
+  const [fromTemplate, setFromTemplate] = useState(false);
   const depth = (id: string | null, n = 0): number => {
     const p = projects.find((x) => x.id === id);
     return p?.parentId && n < 10 ? depth(p.parentId, n + 1) : n;
@@ -26,9 +28,14 @@ export function ProjectsView() {
         title="Projects"
         icon={<FolderKanban size={22} className="text-accent" />}
         actions={
-          <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
-            <Plus size={15} /> New
-          </Button>
+          <>
+            <Button size="sm" variant="ghost" onClick={() => setFromTemplate(true)}>
+              <LayoutTemplate size={15} /> From template
+            </Button>
+            <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
+              <Plus size={15} /> New
+            </Button>
+          </>
         }
       />
       <ViewBody>
@@ -85,6 +92,7 @@ export function ProjectsView() {
         )}
       </ViewBody>
       <ProjectDialog open={creating} onClose={() => setCreating(false)} />
+      <TemplateDialog open={fromTemplate} onClose={() => setFromTemplate(false)} />
     </>
   );
 }

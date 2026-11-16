@@ -25,11 +25,31 @@ export interface LifecycleAdapter {
   onPause(cb: () => void | Promise<void>): () => void;
 }
 
+export type NotificationPermissionState = 'granted' | 'denied' | 'default' | 'unsupported';
+
+export interface SystemNotification {
+  /** Reminder id (used as the notification tag, so repeats replace rather than stack). */
+  id: string;
+  title: string;
+  body: string;
+}
+
+/** System notifications. In-app reminders work without this; it adds OS-level alerts. */
+export interface NotificationAdapter {
+  permission(): Promise<NotificationPermissionState>;
+  requestPermission(): Promise<NotificationPermissionState>;
+  /** Returns false if it could not be shown (no permission, unsupported). */
+  show(n: SystemNotification): Promise<boolean>;
+  /** Actions chosen on a notification (Complete / Snooze), where the platform supports them. */
+  onAction(cb: (a: { reminderId: string; action: 'complete' | 'snooze' | 'open' }) => void): () => void;
+}
+
 export interface Platform {
   kind: 'web' | 'tauri' | 'memory';
   persistence: PersistenceAdapter;
   files: FileStore;
   lifecycle: LifecycleAdapter;
+  notifications: NotificationAdapter;
   /** Acquire exclusive ownership of the database; false if another window has it. */
   acquireLock(): Promise<boolean>;
 }

@@ -1,4 +1,4 @@
-import type { FileStore, LifecycleAdapter, PersistenceAdapter, Platform } from './types';
+import type { FileStore, LifecycleAdapter, NotificationAdapter, NotificationPermissionState, PersistenceAdapter, Platform } from './types';
 
 const DB_NAME = 'focus';
 const DB_VERSION = 1;
@@ -136,12 +136,53 @@ async function acquireLock(): Promise<boolean> {
   });
 }
 
+/**
+ * Web notifications. With a service worker (installed PWA / served over HTTPS) they carry
+ * Complete and Snooze buttons; actions come back to the page as messages.
+ */
+export const webNotifications: NotificationAdapter = {
+  async permission(): Promise<NotificationPermissionState> {
+    return typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
+  },
+  async requestPermission(): Promise<NotificationPermissionState> {
+    if (typeof Notification === 'undefined') return 'unsupported';
+    return Notification.requestPermission();
+  },
+  async show(n) {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+    const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
+    if (reg) {
+      await reg.showNotification(n.title, {
+        body: n.body,
+        tag: n.id,
+        icon: './icon-192.png',
+        data: { reminderId: n.id },
+        // Not in the TS DOM lib yet, but supported by Chromium (desktop and Android).
+        ...({ actions: [{ action: 'complete', title: 'Complete' }, { action: 'snooze', title: 'Snooze 10 min' }] } as object),
+      });
+    } else {
+      new Notification(n.title, { body: n.body, tag: n.id, icon: './icon-192.png' });
+    }
+    return true;
+  },
+  onAction(cb) {
+    if (!('serviceWorker' in navigator)) return () => {};
+    const handler = (e: MessageEvent) => {
+      const d = e.data as { type?: string; reminderId?: string; action?: string };
+      if (d?.type === 'focus-reminder' && d.reminderId) cb({ reminderId: d.reminderId, action: (d.action as 'complete' | 'snooze') || 'open' });
+    };
+    navigator.serviceWorker.addEventListener('message', handler);
+    return () => navigator.serviceWorker.removeEventListener('message', handler);
+  },
+};
+
 export function createWebPlatform(): Platform {
   return {
     kind: 'web',
     persistence: new IndexedDbPersistence(),
     files: new IndexedDbFileStore(),
     lifecycle: webLifecycle,
+    notifications: webNotifications,
     acquireLock,
   };
 }

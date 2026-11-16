@@ -7,7 +7,7 @@ Status levels (spec §11.7): **Not started** · **In progress** · **Implemented
 **No feature has been verified on a physical device yet.** A native Tauri build exists and has been verified on Linux
 (WebKitGTK); Windows and Android builds must be produced on those platforms (see PLATFORM_SUPPORT.md).
 
-_Last updated: 2026-11-16 (session 2)._
+_Last updated: 2026-11-16 (session 3 — Phase 2)._
 
 ## Phase 1 — Core application
 
@@ -27,7 +27,6 @@ _Last updated: 2026-11-16 (session 2)._
 | Project sections (add, rename, reorder, delete keeping tasks) | Tested | |
 | Project layouts: List, Board, Table, Calendar (month) | Implemented | Board/Table covered by E2E; per-project default layout persisted |
 | Project notes and attachments | Tested | E2E: add file, reload, still present |
-| Project templates | Not started | Phase 2 (table exists) |
 | Labels: CRUD, colours, unique names, Quick Add creation, label view | Tested | |
 | Inbox, Today, Upcoming, Search, Trash views | Tested | |
 | Full-text search (FTS4: titles, descriptions, comments, project & label names) | Tested | prefix + accent-insensitive |
@@ -36,7 +35,7 @@ _Last updated: 2026-11-16 (session 2)._
 | Comments | Tested | |
 | Attachments (stored locally, executables blocked, 50 MB cap) | Tested | |
 | Activity history | Tested | |
-| Reminder configuration (absolute & relative) | Implemented | **Stored only — notifications are not delivered yet (Phase 2)** |
+| Reminder configuration (absolute & relative) | Tested | delivery: see Phase 2 below |
 | Time tracking: timer, manual entry, corrections | Tested | reports are Phase 4 |
 | Bulk select & bulk actions (desktop: Ctrl/Shift-click, X key) | Implemented | |
 | Drag & drop: reorder, move to section/project, reschedule on Upcoming/Calendar | Implemented | desktop mouse only; touch uses menus/swipe |
@@ -52,12 +51,34 @@ _Last updated: 2026-11-16 (session 2)._
 | Large lists (virtualised over 150 rows) | Tested | 5,000-task Inbox: 0.2 s render; 20,000-task query benchmarks |
 | Native shell (Tauri 2): atomic file storage, single instance, flush on close | Tested (Linux) | Rust unit tests + native persistence round trip under Xvfb |
 
+## Phase 2 — Advanced planning
+
+| Feature | Status | Evidence / notes |
+|---|---|---|
+| Calendar: day, 3-day, week (time grid), month, agenda | Tested | E2E: click slot to add, drag to move, drag edge to resize |
+| Calendar: deadlines shown separately, projected repeats, overdue highlight, working-hours shading, now line | Implemented | reviewed in screenshots |
+| Calendar: filter by project (incl. sub-projects) and label | Implemented | |
+| Calendar drag on touch (press and hold) | Implemented | not yet tested on hardware |
+| Start date / scheduled / deadline independence | Tested | start-date chip; Today hides not-yet-started pinned tasks |
+| Workload: capacity from working hours, per-day load bars, default estimate setting | Tested | engine tests + UI |
+| Conflict detection: overload, overlaps, after deadline, before start, dependency order, deadlines at risk, overdue | Tested | 12 engine tests |
+| Suggested rescheduling with Accept / Reject / Accept all (undoable) | Tested | E2E + service test; never moves fixed-time tasks |
+| Dependencies: multiple, cycle and self-link prevention, blocked badges, "waiting on / blocks" in details | Tested | |
+| Dependency enforcement: confirm before completing a blocked task or scheduling out of order | Tested | E2E "Complete anyway" |
+| Dependency visualisation | Implemented (lists) | chain shown in task details and badges; a graph view is not built |
+| Filter engine: AND/OR/NOT, nesting, labels, dates & ranges, priority, status, project, duration, deadline, dependencies, text | Tested | all 7 spec example filters |
+| Visual filter builder + advanced query language, kept in sync | Tested | E2E |
+| Saved filters, pinned to sidebar | Tested | |
+| Reminders delivered in-app (Complete / Snooze / Dismiss), exactly once, re-armed on reschedule | Tested | E2E with controlled clock |
+| System notifications: web (with Complete/Snooze actions via service worker), desktop (Tauri plugin) | Implemented | desktop notification path compiled, not exercised on hardware |
+| Missed reminders summarised on next launch | Tested (logic) | |
+| Reminders while the app is fully closed | Not started | needs Android native scheduling (see PLATFORM_SUPPORT.md) |
+| Project templates: save project as template, create from template, relative dates, subtasks, labels, dependencies | Tested | built-in "Holiday planning" |
+
 ## Not yet started (later phases)
 
-Filters (Phase 2) · Insights/dashboard widgets (Phase 4) · Calendar day/3-day/week/agenda with time blocks (Phase 2) ·
-dependencies UI (Phase 2; table exists) · smart scheduling (Phase 2) · notification delivery (Phase 2) · templates (Phase 2) ·
-voice capture, AI, automations, Home Assistant, email/document capture (Phase 3) · reports, goals, integrations, CSV,
-local API (Phase 4) · native Android/Windows/macOS/iOS builds (Phase 5).
+Voice capture, AI, automations, Home Assistant, email/document capture (Phase 3) · Insights/dashboard, reports, goals,
+integrations, CSV, local API (Phase 4) · Android/Windows release builds on hardware (Phase 5).
 
-**Navigation note:** the spec lists Filters and Insights as primary sections. They are deliberately *absent* from
-navigation until they work, rather than shown as placeholder screens.
+**Navigation note:** Insights (Phase 4) is deliberately *absent* from navigation until it works, rather than shown
+as a placeholder screen.

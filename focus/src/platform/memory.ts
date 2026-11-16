@@ -48,6 +48,12 @@ export function createMemoryPlatform(): Platform & { persistence: MemoryPersiste
     persistence: new MemoryPersistence(),
     files: new MemoryFileStore(),
     lifecycle: { onPause: () => () => {} },
+    notifications: {
+      permission: async () => 'unsupported',
+      requestPermission: async () => 'unsupported',
+      show: async () => false,
+      onAction: () => () => {},
+    },
     acquireLock: async () => true,
   };
 }

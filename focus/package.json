@@ -1,7 +1,7 @@
 {
   "name": "focus",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Focus – a local-first, cross-platform personal productivity application",
   "scripts": {
@@ -21,6 +21,7 @@
   "dependencies": {
     "@tanstack/react-virtual": "3.14.23",
     "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-notification": "2.7.0",
     "date-fns": "4.4.0",
     "lucide-react": "1.73.0",
     "react": "19.3.1",

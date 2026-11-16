@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, u
 import type { AppContainer } from '@/app/container';
 import { todayISO, type DatePrefs } from '@/core/dates';
 import type { Settings } from '@/data/repositories/settings';
-import { NotFoundError, ValidationError, type UndoAction } from '@/services/events';
+import { ConfirmationRequired, NotFoundError, ValidationError, type UndoAction } from '@/services/events';
 import { useUi } from '@/state/ui-store';
 
 const AppCtx = createContext<AppContainer | null>(null);
@@ -80,34 +80,48 @@ function isUndo(v: unknown): v is UndoAction {
  */
 export function useAction() {
   const pushToast = useUi((s) => s.pushToast);
+  const askConfirm = useUi((s) => s.askConfirm);
   return useCallback(
-    <T,>(fn: () => T, opts: { success?: string } = {}): T | undefined => {
-      try {
-        const r = fn();
-        if (isUndo(r)) {
-          pushToast({
-            message: r.label,
-            action: {
-              label: 'Undo',
-              run: () => {
-                try {
-                  r.undo();
-                } catch (err) {
-                  console.error(err);
-                  pushToast({ message: errorMessage(err), tone: 'error' });
-                }
+    /**
+     * Returns the action's result, or undefined if it failed (so actions should return a value).
+     * `fn` receives `force`: false on the first attempt. If the service raises
+     * ConfirmationRequired (e.g. completing a blocked task), the user is asked and,
+     * if they agree, `fn(true)` runs.
+     */
+    <T,>(fn: (force: boolean) => T, opts: { success?: string } = {}): T | undefined => {
+      const attempt = (force: boolean): T | undefined => {
+        try {
+          const r = fn(force);
+          if (isUndo(r)) {
+            pushToast({
+              message: r.label,
+              action: {
+                label: 'Undo',
+                run: () => {
+                  try {
+                    r.undo();
+                  } catch (err) {
+                    console.error(err);
+                    pushToast({ message: errorMessage(err), tone: 'error' });
+                  }
+                },
               },
-            },
-          });
-        } else if (opts.success) pushToast({ message: opts.success, tone: 'success' });
-        return r;
-      } catch (err) {
-        if (!(err instanceof ValidationError)) console.error(err);
-        pushToast({ message: errorMessage(err), tone: 'error' });
-        return undefined;
-      }
+            });
+          } else if (opts.success) pushToast({ message: opts.success, tone: 'success' });
+          return r;
+        } catch (err) {
+          if (err instanceof ConfirmationRequired && !force) {
+            askConfirm({ message: err.message, confirmLabel: err.confirmLabel, onConfirm: () => void attempt(true) });
+            return undefined;
+          }
+          if (!(err instanceof ValidationError)) console.error(err);
+          pushToast({ message: errorMessage(err), tone: 'error' });
+          return undefined;
+        }
+      };
+      return attempt(false);
     },
-    [pushToast],
+    [pushToast, askConfirm],
   );
 }
 

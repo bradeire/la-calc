@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import {
-  CalendarDays, CalendarRange, ChevronRight, CircleAlert, CloudCheck, Inbox, LoaderCircle, PanelLeftClose, Plus, Search, Settings, Star,
+  CalendarDays, CalendarRange, ChevronRight, CircleAlert, CloudCheck, Filter, Inbox, LoaderCircle, PanelLeftClose, Plus, Search, Settings, Star,
   Sun, Tag, Target, Trash2,
 } from 'lucide-react';
 import type { Project } from '@/core/domain/types';
@@ -85,6 +85,7 @@ export function Sidebar() {
   const projects = useQuery(() => orderProjects(app.repos.projects.list()), []);
   const stats = useQuery(() => app.repos.projects.stats(), []);
   const favourites = projects.filter((p) => p.isFavorite);
+  const pinnedFilters = useQuery(() => app.filters.list().filter((f) => f.isFavorite), []);
   const hasChildren = (id: string) => projects.some((p) => p.parentId === id);
   const isHidden = (p: Project): boolean => {
     let cur = p.parentId ? projects.find((x) => x.id === p.parentId) : undefined;
@@ -142,15 +143,16 @@ export function Sidebar() {
             route={{ name: 'today' }}
             count={todayCount}
             active={r.name === 'today'}
-            onDropTask={(id) => act(() => app.tasks.update(id, { scheduledDate: today }))}
+            onDropTask={(id) => act((force) => app.tasks.update(id, { scheduledDate: today }, { force }))}
           />
           <NavItem icon={<CalendarRange size={16} className="text-violet-500" />} label="Upcoming" route={{ name: 'upcoming' }} active={r.name === 'upcoming'} />
           <NavItem icon={<CalendarDays size={16} className="text-warn" />} label="Calendar" route={{ name: 'calendar' }} active={r.name === 'calendar'} />
           <NavItem icon={<Target size={16} className="text-danger" />} label="Focus" route={{ name: 'focus' }} active={r.name === 'focus'} />
+          <NavItem icon={<Filter size={16} className="text-p3" />} label="Filters" route={{ name: 'filters' }} active={r.name === 'filters' || r.name === 'filterEdit'} />
           <NavItem icon={<Tag size={16} className="text-muted" />} label="Labels" route={{ name: 'labels' }} active={r.name === 'labels' || r.name === 'label'} />
         </div>
 
-        {favourites.length > 0 && (
+        {(favourites.length > 0 || pinnedFilters.length > 0) && (
           <div className="mt-4">
             <h3 className="flex items-center gap-1 px-2 pb-1 text-[0.75rem] font-semibold uppercase tracking-wide text-subtle">
               <Star size={11} /> Favourites
@@ -165,6 +167,9 @@ export function Sidebar() {
                 active={r.name === 'project' && r.id === p.id}
                 onDropTask={moveTo(p.id)}
               />
+            ))}
+            {pinnedFilters.map((f) => (
+              <NavItem key={f.id} icon={<Filter size={15} style={{ color: f.color }} />} label={f.name} route={{ name: 'filter', id: f.id }} active={r.name === 'filter' && r.id === f.id} />
             ))}
           </div>
         )}

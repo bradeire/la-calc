@@ -174,9 +174,9 @@ export class TaskRepository {
     return this.db
       .all(
         `${SELECT} WHERE t.deleted_at IS NULL AND ${OPEN} AND ${VISIBLE_PROJECT}
-         AND (t.scheduled_date <= ? OR t.deadline <= ? OR t.pinned_today = 1)
+         AND (t.scheduled_date <= ? OR t.deadline <= ? OR (t.pinned_today = 1 AND (t.start_date IS NULL OR t.start_date <= ?)))
          ORDER BY COALESCE(t.scheduled_date, t.deadline, '0000'), t.scheduled_time IS NULL, t.scheduled_time, t.priority, t.sort_order`,
-        [today, today],
+        [today, today, today],
       )
       .map(mapTask);
   }
@@ -314,8 +314,8 @@ export class TaskRepository {
     return num(
       this.db.get<{ n: number }>(
         `SELECT COUNT(*) AS n FROM tasks t WHERE t.deleted_at IS NULL AND ${OPEN} AND ${VISIBLE_PROJECT}
-         AND (t.scheduled_date <= ? OR t.deadline <= ? OR t.pinned_today = 1)`,
-        [where.today, where.today],
+         AND (t.scheduled_date <= ? OR t.deadline <= ? OR (t.pinned_today = 1 AND (t.start_date IS NULL OR t.start_date <= ?)))`,
+        [where.today, where.today, where.today],
       )?.n,
     );
   }

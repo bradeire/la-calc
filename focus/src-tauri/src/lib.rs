@@ -97,6 +97,7 @@ pub fn run() {
         }));
     }
     builder
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             let dir = app.path().app_data_dir()?;
             let storage = Storage::new(dir).map_err(|e| -> Box<dyn std::error::Error> { e.into() })?;

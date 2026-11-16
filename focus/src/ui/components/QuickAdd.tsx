@@ -76,7 +76,7 @@ export function QuickAdd() {
 
   // Effective values = parsed, then defaults from the current view, then manual overrides.
   const scheduledDate = ov.scheduledDate !== undefined ? ov.scheduledDate : (parsed.scheduledDate ?? defaults.scheduledDate ?? null);
-  const scheduledTime = ov.scheduledTime !== undefined ? ov.scheduledTime : parsed.scheduledTime;
+  const scheduledTime = ov.scheduledTime !== undefined ? ov.scheduledTime : (parsed.scheduledTime ?? (parsed.scheduledDate ? null : (defaults.scheduledTime ?? null)));
   const deadline = ov.deadline !== undefined ? ov.deadline : parsed.deadline;
   const priority: Priority = ov.priority ?? parsed.priority ?? 4;
   const placeProjectId = ov.place ? ov.place.projectId : parsed.project ? parsed.project.id : (defaults.projectId ?? null);

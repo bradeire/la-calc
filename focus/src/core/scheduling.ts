@@ -60,7 +60,8 @@ export function workload(tasks: readonly Task[], from: ISODate, to: ISODate, o: 
   }
   for (const d of days) {
     d.planned = d.estimated + d.unestimated * o.defaultEstimate;
-    d.overloaded = d.planned > d.capacity && d.taskIds.length > 0;
+    // Days without working hours (e.g. weekends) hold deliberately planned personal tasks; they are not "overloaded".
+    d.overloaded = d.capacity > 0 && d.planned > d.capacity;
   }
   return days;
 }
@@ -206,7 +207,7 @@ export function suggestSchedule(openTasks: readonly Task[], edges: readonly Depe
     planned.set(t.id, to);
     out.push({ key: `${t.id}:${to}`, taskId: t.id, from: t.scheduledDate, to, reason });
   };
-  const fmtLate = (late: boolean) => (late ? ' (after its deadline — no earlier free time)' : '');
+  const fmtLate = (late: boolean) => (late ? ' — no free time before the deadline' : '');
 
   // 1. Overdue work, most important first.
   const overdue = openTasks
@@ -214,12 +215,12 @@ export function suggestSchedule(openTasks: readonly Task[], edges: readonly Depe
     .sort((a, b) => a.priority - b.priority || compareISO(a.deadline, b.deadline));
   for (const t of overdue) {
     const slot = findDay(t);
-    if (slot) place(t, slot.date, `Overdue by ${diffDays(o.today, t.scheduledDate!)} day(s)${fmtLate(slot.late)}`);
+    if (slot) place(t, slot.date, `Overdue by ${diffDays(o.today, t.scheduledDate!)} day${diffDays(o.today, t.scheduledDate!) === 1 ? '' : 's'}${fmtLate(slot.late)}`);
   }
 
   // 2. Relieve overloaded days by moving the least important flexible tasks later.
   for (const day of [...loads.values()]) {
-    if (day.planned <= day.capacity) continue;
+    if (day.capacity === 0 || day.planned <= day.capacity) continue;
     const movable = openTasks
       .filter((t) => dateOf(t.id) === day.date && !t.scheduledTime && t.deadline !== day.date)
       // Least important first; among equals prefer tasks without deadlines, then the smallest move.
@@ -228,18 +229,19 @@ export function suggestSchedule(openTasks: readonly Task[], edges: readonly Depe
       if (day.planned <= day.capacity) break;
       const slot = findDay(t, day.date);
       if (slot && !slot.late) {
-        place(t, slot.date, `${day.date} is over capacity by ${Math.round(day.planned - day.capacity)} min; P${t.priority} task can move`);
+        place(t, slot.date, `That day is ${Math.round(day.planned - day.capacity)} min over capacity; this P${t.priority} task is flexible`);
       }
     }
   }
 
-  // 3. Unscheduled work with an approaching deadline.
+  // 3. Unscheduled work whose deadline is within a week (further-off deadlines are left to the user).
+  const soon = addDays(o.today, 7);
   const unscheduled = openTasks
-    .filter((t) => !t.scheduledDate && t.deadline && t.deadline <= horizonEnd)
+    .filter((t) => !t.scheduledDate && t.deadline && t.deadline <= soon)
     .sort((a, b) => compareISO(a.deadline, b.deadline) || a.priority - b.priority);
   for (const t of unscheduled) {
     const slot = findDay(t);
-    if (slot) place(t, slot.date, `Deadline ${t.deadline} with no planned time${fmtLate(slot.late)}`);
+    if (slot) place(t, slot.date, `${t.deadline! < o.today ? 'Deadline has passed' : `Due in ${diffDays(t.deadline!, o.today)} day${diffDays(t.deadline!, o.today) === 1 ? '' : 's'}`} with no planned time${fmtLate(slot.late)}`);
   }
 
   // 4. Dependants planned before their prerequisite.

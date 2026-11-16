@@ -14,6 +14,7 @@ import { Button, IconButton, Input, MenuItem, MenuSeparator, Popover, Select, Sw
 import { DatePopover, LabelPopover, PriorityPopover, ProjectPopover, usePopover } from './pickers';
 import { LabelChip, PRIORITY_LABEL, PriorityFlag, ProjectIcon } from './meta';
 import { TaskList } from './TaskList';
+import { DependenciesSection } from './DependenciesSection';
 
 export function TaskDetail({ taskId, variant }: { taskId: string; variant: 'panel' | 'sheet' }) {
   const app = useApp();
@@ -114,7 +115,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
   const subtasks = useQuery(() => app.repos.tasks.getMany(app.repos.tasks.descendantIds(task.id)), [task.id]);
   const open = isOpenStatus(task.status);
 
-  const update = (patch: Parameters<typeof app.tasks.update>[1]) => act(() => app.tasks.update(task.id, patch));
+  const update = (patch: Parameters<typeof app.tasks.update>[1]) => act((force) => app.tasks.update(task.id, patch, { force }));
   const saveTitle = () => {
     const t = title.trim();
     if (!t) return setTitle(task.title);
@@ -162,7 +163,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
             role="checkbox"
             aria-checked={!open}
             aria-label={open ? 'Complete task' : 'Reopen task'}
-            onClick={() => act(() => (open ? app.tasks.complete(task.id) : app.tasks.reopen(task.id)))}
+            onClick={() => act((force) => (open ? app.tasks.complete(task.id, { force }) : app.tasks.reopen(task.id)))}
             className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2"
             style={{ borderColor: `var(--p${task.priority})`, background: open ? 'transparent' : `var(--p${task.priority})` }}
           />
@@ -276,6 +277,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
           <InlineSubtaskAdd parent={task} />
         </Section>
 
+        <DependenciesSection task={task} />
         <TimeSection task={task} />
         <RemindersSection task={task} />
         <CommentsSection task={task} />
@@ -376,7 +378,7 @@ function RecurrenceEditor({ task }: { task: Task }) {
     const rule = { ...parsed, basis };
     const from = task.scheduledDate ?? todayISO();
     const first = firstOccurrenceOnOrAfter(rule, from) ?? from;
-    act(() => app.tasks.update(task.id, { recurrence: { ...rule, anchor: first }, recurrenceText: describeRule(rule), scheduledDate: first }));
+    act((force) => app.tasks.update(task.id, { recurrence: { ...rule, anchor: first }, recurrenceText: describeRule(rule), scheduledDate: first }, { force }));
     setEditing(false);
     setText('');
   };
@@ -618,7 +620,7 @@ function RemindersSection({ task }: { task: Task }) {
         </span>
       </div>
       <p className="mt-2 text-[0.78rem] text-subtle">
-        Reminders are saved with the task. Notification delivery is not enabled in this version yet.
+        Reminders appear while Focus is open (or running in the background on desktop). Turn on system notifications in Settings. Phones need the Android app for reminders while Focus is closed.
       </p>
     </Section>
   );
@@ -744,7 +746,7 @@ export function AttachmentsSection({ target }: { target: { taskId: string } | { 
 
 const ACTION_TEXT: Record<string, string> = {
   created: 'Created', completed: 'Completed', reopened: 'Reopened', deleted: 'Deleted', restored: 'Restored',
-  'comment.added': 'Comment added', 'attachment.added': 'Attachment added', 'timer.started': 'Timer started', 'timer.stopped': 'Timer stopped',
+  'comment.added': 'Comment added', 'dependency.added': 'Now waiting on another task', 'dependency.removed': 'Dependency removed', 'attachment.added': 'Attachment added', 'timer.started': 'Timer started', 'timer.stopped': 'Timer stopped',
 };
 const FIELD_TEXT: Record<string, string> = {
   title: 'title', description: 'description', projectId: 'project', sectionId: 'section', parentId: 'parent', priority: 'priority',

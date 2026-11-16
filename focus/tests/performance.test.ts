@@ -46,3 +46,18 @@ describe('performance with 20,000 tasks', () => {
     expect(r.counts).toBeLessThan(200);
   }, 120_000);
 });
+
+describe('blocked lookup at scale', () => {
+  it('stays fast for a 5,000-task list', async () => {
+    const { app, db } = await makeApp();
+    db.transaction(() => {
+      for (let i = 0; i < 5000; i++) app.tasks.create({ title: `t${i}` });
+    });
+    const ids = app.repos.tasks.listInbox().map((t) => t.id);
+    app.tasks.addDependency(ids[1]!, ids[0]!);
+    const s = performance.now();
+    const blocked = app.repos.dependencies.blockedIds(ids);
+    expect(performance.now() - s).toBeLessThan(100);
+    expect([...blocked]).toEqual([ids[1]]);
+  }, 60_000);
+});

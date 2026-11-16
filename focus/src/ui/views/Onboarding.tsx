@@ -91,7 +91,7 @@ export function Onboarding() {
               </span>
             </div>
             <p className="rounded-lg bg-surface-2 px-3 py-2 text-[0.82rem] text-muted">
-              Notifications: reminders can be added to tasks now; delivering them as system notifications is not enabled in this version yet.
+              Reminders appear inside Focus while it is open. You can also turn on system notifications in Settings → Notifications.
             </p>
             <Button variant="primary" className="h-11" onClick={() => set('onboarded', true)}>
               Get started <ArrowRight size={16} />

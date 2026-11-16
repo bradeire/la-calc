@@ -3,6 +3,7 @@ import { formatLongDate } from '@/core/dates';
 import { useAction, useApp, useDatePrefs, useQuery, useToday } from '../hooks';
 import { Button, EmptyState } from '../primitives';
 import { AddTaskRow, GroupHeading, ViewBody } from '../components/common';
+import { WorkloadBar } from '../components/Planning';
 import { TaskList } from '../components/TaskList';
 import { ViewHeader } from '../layout/Chrome';
 
@@ -12,6 +13,7 @@ export function TodayView() {
   const today = useToday();
   const prefs = useDatePrefs();
   const tasks = useQuery(() => app.repos.tasks.listToday(today), [today]);
+  const load = useQuery(() => app.planning.workload(today, today)[0], [today]);
   const overdue = tasks.filter((t) => (t.scheduledDate && t.scheduledDate < today) || (!t.scheduledDate && t.deadline && t.deadline < today));
   const rest = tasks.filter((t) => !overdue.includes(t));
   const doneToday = useQuery(
@@ -21,7 +23,16 @@ export function TodayView() {
 
   return (
     <>
-      <ViewHeader title="Today" icon={<Sun size={22} className="text-ok" />} subtitle={formatLongDate(today, prefs)} />
+      <ViewHeader
+        title="Today"
+        icon={<Sun size={22} className="text-ok" />}
+        subtitle={
+          <span className="inline-flex items-center gap-2">
+            {formatLongDate(today, prefs)}
+            {load && load.taskIds.length > 0 && <WorkloadBar load={load} />}
+          </span>
+        }
+      />
       <ViewBody>
         {overdue.length > 0 && (
           <GroupHeading
@@ -34,10 +45,11 @@ export function TodayView() {
                 size="sm"
                 variant="ghost"
                 onClick={() =>
-                  act(() =>
+                  act((force) =>
                     app.tasks.bulkUpdate(
                       overdue.filter((t) => t.scheduledDate).map((t) => t.id),
                       { scheduledDate: today },
+                      { force },
                     ),
                   )
                 }

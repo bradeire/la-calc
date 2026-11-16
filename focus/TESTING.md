@@ -17,13 +17,18 @@ npm run check       # typecheck + lint + test + build
 | Database, migrations, boot, recovery | `tests/database.test.ts` | 12 |
 | Task service (lifecycle, subtasks, recurrence, views, time) | `tests/task-service.test.ts` | 22 |
 | Projects, labels, sample data, backup/restore | `tests/data-service.test.ts` | 12 |
-| Performance (20,000 tasks) | `tests/performance.test.ts` | 1 |
-| **Total Vitest** | | **141 passing** |
+| Performance (20,000 tasks; blocked lookup at 5,000) | `tests/performance.test.ts` | 2 |
+| Filters engine + query language | `src/core/filters/filters.test.ts` | 18 |
+| Scheduling engine | `src/core/scheduling.test.ts` | 12 |
+| Calendar layout | `src/core/calendar-layout.test.ts` | 3 |
+| Dependencies, reminders, templates, saved filters, scheduler, planning | `tests/phase2.test.ts` | 14 |
+| **Total Vitest** | | **189 passing** |
 | Rust storage (atomic save, rotation, path-escape rejection) | `src-tauri/src/storage.rs` | 3 |
 | End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | 26 (13 × 2) |
 | Offline reload, accessibility audit | `e2e/quality.spec.ts` | 3 |
 | 5,000-task rendering | `e2e/performance.spec.ts` | 1 |
-| **Total Playwright** | | **30 passing** (2 desktop-only tests skipped on Pixel) |
+| Phase 2: filters, dependencies, templates, calendar drag/resize, reminders, planning | `e2e/phase2.spec.ts` | 11 (calendar drag desktop-only) |
+| **Total Playwright** | | **41 passing**, 3 skipped (desktop-only tests on Pixel) |
 
 Integration tests run on sql.js in Node, i.e. the same SQLite engine the app ships, not a mock.
 The in-memory platform (`src/platform/memory.ts`) is used only in tests.
@@ -41,6 +46,10 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 - The installed PWA did not work offline: cached modules never matched because of `Vary: Origin`.
 - "Add file" did nothing while the attachments section was collapsed.
 - A new database was not written to storage until the first edit, so migrations repeated on every launch.
+- Snoozing a reminder left it on screen (void return treated as failure); manual time "Log" never cleared.
+- "Waiting on…" picker did nothing while its section was collapsed; it suggested nothing for Inbox tasks.
+- The blocked-task lookup took 1.4 s for 5,000 tasks (huge SQL IN list) — now ~1 ms.
+- Weekend tasks were reported as "overload" and moved to Monday.
 
 ## Manual checks per release
 

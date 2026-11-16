@@ -90,7 +90,7 @@ export function FocusView() {
                       role="checkbox"
                       aria-checked={!!s.completedAt}
                       aria-label={`Complete ${s.title}`}
-                      onClick={() => act(() => (s.completedAt ? app.tasks.reopen(s.id) : app.tasks.complete(s.id)))}
+                      onClick={() => act((force) => (s.completedAt ? app.tasks.reopen(s.id) : app.tasks.complete(s.id, { force })))}
                       className="flex h-4 w-4 items-center justify-center rounded-full border-[1.5px] border-line-strong"
                     >
                       {s.completedAt && <Check size={10} />}
@@ -126,7 +126,7 @@ export function FocusView() {
                 <Button
                   variant="primary"
                   onClick={() => {
-                    act(() => app.tasks.complete(current.id));
+                    act((force) => app.tasks.complete(current.id, { force }));
                     moveOn();
                   }}
                 >

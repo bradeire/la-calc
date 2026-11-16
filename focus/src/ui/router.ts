@@ -12,6 +12,9 @@ export type Route =
   | { name: 'labels' }
   | { name: 'label'; id: string }
   | { name: 'search'; q: string }
+  | { name: 'filters' }
+  | { name: 'filter'; id: string }
+  | { name: 'filterEdit'; id: string | null }
   | { name: 'settings' }
   | { name: 'trash' }
   | { name: 'notfound' };
@@ -41,6 +44,12 @@ export function parseHash(hash: string): Location {
     case 'labels': route = { name: 'labels' }; break;
     case 'label': route = parts[1] ? { name: 'label', id: parts[1] } : { name: 'labels' }; break;
     case 'search': route = { name: 'search', q: params.get('q') ?? '' }; break;
+    case 'filters': route = { name: 'filters' }; break;
+    case 'filter':
+      if (parts[1] === 'new') route = { name: 'filterEdit', id: null };
+      else if (parts[1] && parts[2] === 'edit') route = { name: 'filterEdit', id: parts[1] };
+      else route = parts[1] ? { name: 'filter', id: parts[1] } : { name: 'filters' };
+      break;
     case 'settings': route = { name: 'settings' }; break;
     case 'trash': route = { name: 'trash' }; break;
     default: route = { name: 'notfound' };
@@ -52,6 +61,8 @@ export function routePath(r: Route): string {
   switch (r.name) {
     case 'project': return `/project/${r.id}`;
     case 'label': return `/label/${r.id}`;
+    case 'filter': return `/filter/${r.id}`;
+    case 'filterEdit': return r.id ? `/filter/${r.id}/edit` : '/filter/new';
     case 'search': return r.q ? `/search?q=${encodeURIComponent(r.q)}` : '/search';
     case 'notfound': return '/today';
     default: return `/${r.name}`;

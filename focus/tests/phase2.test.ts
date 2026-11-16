@@ -154,3 +154,38 @@ describe('saved filters', () => {
     expect(app.filters.run(saved.definition!.root).map((t) => t.title)).toEqual(['overdue home']);
   });
 });
+
+describe('reminder scheduler', () => {
+  it('delivers each due reminder exactly once', async () => {
+    const { ReminderScheduler } = await import('@/app/reminder-scheduler');
+    const { app } = await makeApp();
+    const t = app.tasks.create({ title: 'Call', scheduledDate: '2026-11-20', scheduledTime: '10:00' });
+    app.content.addReminder(t.id, { kind: 'relative', offsetMinutes: 0 });
+    let now = new Date(2026, 10, 20, 9, 0);
+    const delivered: string[] = [];
+    const s = new ReminderScheduler(app, (items) => delivered.push(...items.map((i) => i.task.title)), () => now);
+    s.tick();
+    expect(delivered).toEqual([]);
+    now = new Date(2026, 10, 20, 10, 0, 5);
+    s.tick();
+    s.tick();
+    expect(delivered).toEqual(['Call']);
+    s.stop();
+  });
+});
+
+describe('planning service', () => {
+  it('suggests relieving an overloaded day and accepting applies it with undo', async () => {
+    const { app } = await makeApp(new Date(2026, 10, 16, 8)); // Monday
+    app.repos.settings.set('workingHours', { days: [0, 1, 2, 3, 4], start: '09:00', end: '12:00' });
+    app.tasks.create({ title: 'Big', scheduledDate: '2026-11-16', durationMinutes: 150, priority: 1 });
+    const small = app.tasks.create({ title: 'Small', scheduledDate: '2026-11-16', durationMinutes: 60, priority: 4 });
+    expect(app.planning.conflicts().some((c) => c.kind === 'overloaded')).toBe(true);
+    const s = app.planning.suggestions();
+    expect(s).toEqual([expect.objectContaining({ taskId: small.id, to: '2026-11-17' })]);
+    const undo = app.planning.accept(s);
+    expect(app.repos.tasks.get(small.id)!.scheduledDate).toBe('2026-11-17');
+    undo.undo();
+    expect(app.repos.tasks.get(small.id)!.scheduledDate).toBe('2026-11-16');
+  });
+});

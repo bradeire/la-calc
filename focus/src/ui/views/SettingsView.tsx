@@ -1,5 +1,5 @@
-import { useRef, useState, type ReactNode } from 'react';
-import { Database, Download, FlaskConical, Keyboard, Monitor, Moon, Palette, Settings as SettingsIcon, Sun, Upload } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Bell, Database, Download, FlaskConical, Keyboard, Monitor, Moon, Palette, Settings as SettingsIcon, Sun, Upload } from 'lucide-react';
 import { WEEKDAY_SHORT } from '@/core/dates';
 import { LATEST_SCHEMA_VERSION } from '@/data/migrations';
 import { ACCENTS, type Settings } from '@/data/repositories/settings';
@@ -186,6 +186,11 @@ export function SettingsView() {
             –
             <input type="time" aria-label="Working day ends" value={s.workingHours.end} onChange={(e) => set('workingHours', { ...s.workingHours, end: e.target.value })} className="rounded-md border border-line bg-surface px-2 py-1" />
           </Item>
+          <Item label="Default estimate" htmlFor="default-estimate" hint="Minutes assumed for tasks without an estimate when calculating workload.">
+            <Select id="default-estimate" value={s.defaultEstimate} onChange={(e) => set('defaultEstimate', Number(e.target.value))}>
+              {[0, 15, 30, 45, 60].map((m) => <option key={m} value={m}>{m ? `${m} minutes` : 'Ignore unestimated tasks'}</option>)}
+            </Select>
+          </Item>
           <Item label="Working days">
             <div className="flex gap-1" role="group" aria-label="Working days">
               {WEEKDAY_SHORT.map((d, i) => {
@@ -199,6 +204,8 @@ export function SettingsView() {
             </div>
           </Item>
         </Group>
+
+        <NotificationSettings />
 
         <Group title="Tasks" icon={<FlaskConical size={16} />}>
           <Item label="Complete a parent when all its subtasks are done" hint="Off by default: finishing subtasks doesn’t always mean the parent is finished.">
@@ -270,5 +277,50 @@ export function SettingsView() {
         }}
       />
     </>
+  );
+}
+
+function NotificationSettings() {
+  const app = useApp();
+  const s = useSettings();
+  const set = useSetting();
+  const pushToast = useUi((st) => st.pushToast);
+  const [perm, setPerm] = useState<string>('…');
+  useEffect(() => {
+    void app.platform.notifications.permission().then(setPerm);
+  }, [app]);
+  const enable = async (on: boolean) => {
+    if (on) {
+      const p = await app.platform.notifications.requestPermission();
+      setPerm(p);
+      if (p !== 'granted') {
+        pushToast({ message: p === 'unsupported' ? 'System notifications are not supported here; reminders still appear inside Focus.' : 'Notifications were not allowed. You can allow them in your browser or system settings.', tone: 'error' });
+        return;
+      }
+    }
+    set('notificationsEnabled', on);
+  };
+  const test = async () => {
+    const ok = await app.platform.notifications.show({ id: 'test', title: 'Focus test notification', body: 'Notifications are working.' });
+    pushToast({ message: ok ? 'Test notification sent' : 'Could not show a notification — check permissions', tone: ok ? 'success' : 'error' });
+  };
+  const permText: Record<string, string> = { granted: 'Allowed', denied: 'Blocked in system/browser settings', default: 'Not yet allowed', unsupported: 'Not supported here' };
+  return (
+    <Group title="Notifications" icon={<Bell size={16} />}>
+      <Item label="System notifications for reminders" hint={`Permission: ${permText[perm] ?? perm}. Reminders always appear inside Focus while it is open.`}>
+        <Switch checked={s.notificationsEnabled && perm === 'granted'} onChange={(v) => void enable(v)} label="System notifications for reminders" />
+      </Item>
+      <Item label="Send a test notification">
+        <Button size="sm" disabled={perm !== 'granted'} onClick={() => void test()}>
+          Test
+        </Button>
+      </Item>
+      <Item
+        label="When are reminders delivered?"
+        hint="While Focus is open, or running in the background on desktop. If Focus was closed, missed reminders are shown together when you next open it. Delivery while the app is fully closed needs the Android app (not built yet)."
+      >
+        <span />
+      </Item>
+    </Group>
   );
 }

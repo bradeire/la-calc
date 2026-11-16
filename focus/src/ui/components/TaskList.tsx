@@ -1,12 +1,12 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as RPointerEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-  ArrowUpLeft, CalendarDays, Check, Clock, ChevronRight, CircleDot, Copy, Ellipsis, FolderInput, Hourglass, ListPlus, MessageSquare,
+  ArrowUpLeft, CalendarDays, CalendarRange, Check, Clock, Lock, ChevronRight, CircleDot, Copy, Ellipsis, FolderInput, Hourglass, ListPlus, MessageSquare,
   Paperclip, PencilLine, Trash2,
 } from 'lucide-react';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Label, type Priority, type Project, type Task, type TaskStatus } from '@/core/domain/types';
 import { buildTree, flattenTree, type TaskNode } from '@/core/tree';
-import { formatTime, type DatePrefs } from '@/core/dates';
+import { formatRelativeDate, formatTime, type DatePrefs } from '@/core/dates';
 import { useUi } from '@/state/ui-store';
 import { useAction, useApp, useDatePrefs, useQuery, useToday } from '../hooks';
 import { openTask } from '../router';
@@ -22,6 +22,7 @@ interface Ctx {
   progress: Map<string, { done: number; total: number }>;
   comments: Map<string, number>;
   attachments: Set<string>;
+  blocked: Set<string>;
   today: string;
   prefs: DatePrefs;
   showProject: boolean;
@@ -60,6 +61,7 @@ export function TaskList({ tasks, tree = true, showProject = false, reorderable 
     () => new Set(app.repos.db.all<{ task_id: string }>('SELECT DISTINCT task_id FROM attachments WHERE deleted_at IS NULL AND task_id IS NOT NULL').map((r) => r.task_id)),
     [],
   );
+  const blocked = useQuery(() => app.repos.dependencies.blockedIds(ids), [ids]);
 
   const rows: TaskNode[] = useMemo(() => {
     if (!tree) return tasks.map((t) => ({ task: t, depth: 0, children: [] }));
@@ -67,8 +69,8 @@ export function TaskList({ tasks, tree = true, showProject = false, reorderable 
   }, [tasks, tree, localCollapsed]);
 
   const ctx: Ctx = useMemo(
-    () => ({ labels, projects, progress, comments, attachments, today, prefs, showProject, reorderable, draggable: draggable || reorderable, selection }),
-    [labels, projects, progress, comments, attachments, today, prefs, showProject, reorderable, draggable, selection],
+    () => ({ labels, projects, progress, comments, attachments, blocked, today, prefs, showProject, reorderable, draggable: draggable || reorderable, selection }),
+    [labels, projects, progress, comments, attachments, blocked, today, prefs, showProject, reorderable, draggable, selection],
   );
   const listRef = useRef<HTMLUListElement>(null);
   const virtual = rows.length > VIRTUALIZE_AFTER;
@@ -233,7 +235,7 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
     setCompleting(true);
     navigator.vibrate?.(10);
     setTimeout(() => {
-      act(() => app.tasks.complete(task.id));
+      act((force) => app.tasks.complete(task.id, { force }));
       setCompleting(false);
     }, 220);
   };
@@ -402,6 +404,16 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
             )}
             <DeadlineChip deadline={task.deadline} today={ctx.today} prefs={ctx.prefs} />
             <DurationChip minutes={task.durationMinutes} />
+            {ctx.blocked.has(task.id) && open && (
+              <span className="inline-flex items-center gap-1 text-warn" title="Waiting on unfinished tasks">
+                <Lock size={12} aria-hidden /> Blocked
+              </span>
+            )}
+            {task.startDate && task.startDate > ctx.today && (
+              <span className="inline-flex items-center gap-1 text-muted" title="Start date">
+                <CalendarRange size={12} aria-hidden /> Starts {formatRelativeDate(task.startDate, ctx.today, ctx.prefs)}
+              </span>
+            )}
             {task.status === 'waiting' && (
               <span className="inline-flex items-center gap-1 text-p3">
                 <Hourglass size={12} aria-hidden /> Waiting
@@ -458,7 +470,7 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
         open={datePop.open}
         onClose={datePop.hide}
         value={task.scheduledDate}
-        onChange={(d) => act(() => app.tasks.update(task.id, { scheduledDate: d }))}
+        onChange={(d) => act((force) => app.tasks.update(task.id, { scheduledDate: d }, { force }))}
         allowTime
         time={task.scheduledTime}
         onTimeChange={(t) => act(() => app.tasks.update(task.id, { scheduledTime: t }))}

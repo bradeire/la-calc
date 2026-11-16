@@ -94,6 +94,14 @@ describe('suggestions', () => {
     const s = suggestSchedule(tasks, [{ taskId: 'dep', dependsOnId: 'pre' }], o);
     expect(s).toEqual([expect.objectContaining({ taskId: 'dep', to: '2026-11-19' })]);
   });
+  it('does not treat weekend tasks as overload', () => {
+    const tasks = [t('sat', { scheduledDate: '2026-11-21', durationMinutes: 120 })];
+    expect(findConflicts(tasks, [], o).some((c) => c.kind === 'overloaded')).toBe(false);
+    expect(suggestSchedule(tasks, [], o)).toEqual([]);
+  });
+  it('leaves far-off deadlines alone', () => {
+    expect(suggestSchedule([t('later', { deadline: '2026-11-28', durationMinutes: 60 })], [], o)).toEqual([]);
+  });
   it('skips weekends', () => {
     const tasks = [t('fri', { scheduledDate: '2026-11-20', durationMinutes: 240 }), t('more', { priority: 4, scheduledDate: '2026-11-20', durationMinutes: 60 })];
     expect(suggestSchedule(tasks, [], o)[0]).toMatchObject({ taskId: 'more', to: '2026-11-23' });

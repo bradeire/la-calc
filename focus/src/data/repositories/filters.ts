@@ -1,6 +1,6 @@
 import { filterDefinitionSchema, type FilterDefinition } from '@/core/filters/types';
-import type { DatabaseDriver, Row } from '../db/driver';
-import { bool, newId, nowIso, num, str, track } from './base';
+import type { DatabaseDriver, Row, SqlValue } from '../db/driver';
+import { bool, newId, nowIso, num, setClause, str, track } from './base';
 
 export interface SavedFilter {
   id: string;
@@ -13,12 +13,12 @@ export interface SavedFilter {
 }
 
 function map(r: Row): SavedFilter {
-  let definition: FilterDefinition | null = null;
+  let definition: FilterDefinition | null;
   try {
     const parsed = filterDefinitionSchema.safeParse(JSON.parse(str(r.definition_json)));
     definition = parsed.success ? (parsed.data as FilterDefinition) : null;
   } catch {
-    definition = null;
+    definition = null; // unreadable JSON: the filter shows as needing repair rather than crashing
   }
   return { id: str(r.id), name: str(r.name), query: str(r.query), definition, color: str(r.color), isFavorite: bool(r.is_favorite), sortOrder: num(r.sort_order) };
 }
@@ -37,16 +37,17 @@ export class SavedFilterRepository {
     return id;
   }
   update(id: string, f: Partial<{ name: string; query: string; definition: FilterDefinition; color: string; isFavorite: boolean; deletedAt: string | null }>) {
-    const cols: string[] = [];
-    const vals: (string | number | null)[] = [];
-    if (f.name !== undefined) (cols.push('name = ?'), vals.push(f.name));
-    if (f.query !== undefined) (cols.push('query = ?'), vals.push(f.query));
-    if (f.definition !== undefined) (cols.push('definition_json = ?'), vals.push(JSON.stringify(f.definition)));
-    if (f.color !== undefined) (cols.push('color = ?'), vals.push(f.color));
-    if (f.isFavorite !== undefined) (cols.push('is_favorite = ?'), vals.push(f.isFavorite ? 1 : 0));
-    if (f.deletedAt !== undefined) (cols.push('deleted_at = ?'), vals.push(f.deletedAt));
-    if (!cols.length) return;
-    this.db.run(`UPDATE saved_filters SET ${cols.join(', ')}, updated_at = ? WHERE id = ?`, [...vals, nowIso(), id]);
+    const cols: Record<string, SqlValue> = {};
+    if (f.name !== undefined) cols.name = f.name;
+    if (f.query !== undefined) cols.query = f.query;
+    if (f.definition !== undefined) cols.definition_json = JSON.stringify(f.definition);
+    if (f.color !== undefined) cols.color = f.color;
+    if (f.isFavorite !== undefined) cols.is_favorite = f.isFavorite ? 1 : 0;
+    if (f.deletedAt !== undefined) cols.deleted_at = f.deletedAt;
+    if (!Object.keys(cols).length) return;
+    cols.updated_at = nowIso();
+    const { sql, values } = setClause(cols);
+    this.db.run(`UPDATE saved_filters SET ${sql} WHERE id = ?`, [...values, id]);
     track(this.db, 'saved_filters', id, 'update');
   }
   list(): SavedFilter[] {

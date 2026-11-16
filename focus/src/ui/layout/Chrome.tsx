@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CalendarDays, Check, CircleCheck, Ellipsis, Flag, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X } from 'lucide-react';
+import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X } from 'lucide-react';
 import { useUi } from '@/state/ui-store';
 import { useAction, useApp, useIsDesktop, useToday } from '../hooks';
 import { go, parseHash, quickAddDefaultsFor, useLocation } from '../router';
 import { todayISO } from '@/core/dates';
-import { Button, Dialog, IconButton, Kbd, MenuItem, Popover, cx } from '../primitives';
+import { Button, ConfirmDialog, Dialog, IconButton, Kbd, MenuItem, Popover, cx } from '../primitives';
 import { DatePopover, PriorityPopover, ProjectPopover, usePopover } from '../components/pickers';
 import { SaveIndicator } from './Sidebar';
 
@@ -51,7 +51,7 @@ export function BottomNav() {
     { name: 'upcoming', label: 'Upcoming', icon: CalendarDays },
     { name: 'projects', label: 'Browse', icon: Menu },
   ] as const;
-  const isBrowse = ['projects', 'project', 'labels', 'label', 'settings', 'trash', 'calendar', 'focus', 'search'].includes(r);
+  const isBrowse = ['projects', 'project', 'labels', 'label', 'settings', 'trash', 'calendar', 'focus', 'search', 'filters', 'filter', 'filterEdit'].includes(r);
   return (
     <nav aria-label="Main" className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-xl items-stretch">
@@ -84,6 +84,7 @@ export function BottomNav() {
         <div role="menu" className="py-1">
           <MenuItem icon={<CalendarDays size={17} />} onClick={() => (more.hide(), go({ name: 'calendar' }))}>Calendar</MenuItem>
           <MenuItem icon={<Target size={17} />} onClick={() => (more.hide(), go({ name: 'focus' }))}>Focus mode</MenuItem>
+          <MenuItem icon={<Filter size={17} />} onClick={() => (more.hide(), go({ name: 'filters' }))}>Filters</MenuItem>
           <MenuItem icon={<Tag size={17} />} onClick={() => (more.hide(), go({ name: 'labels' }))}>Labels</MenuItem>
           <MenuItem icon={<Search size={17} />} onClick={() => (more.hide(), go({ name: 'search', q: '' }))}>Search</MenuItem>
           <MenuItem icon={<Trash2 size={17} />} onClick={() => (more.hide(), go({ name: 'trash' }))}>Trash</MenuItem>
@@ -174,15 +175,15 @@ export function SelectionBar() {
     clear();
   }, [loc.route, clear]);
   if (!selection.length) return null;
-  const run = (fn: () => unknown) => {
-    act(fn as () => never);
+  const run = (fn: (force: boolean) => unknown) => {
+    act(fn);
     clear();
   };
   return (
     <div className="anim-pop fixed inset-x-3 bottom-24 z-40 mx-auto flex max-w-xl items-center gap-1 rounded-2xl border border-line bg-surface px-2 py-1.5 shadow-pop lg:bottom-6" role="toolbar" aria-label="Selected tasks">
       <span className="px-2 text-[0.88rem] font-medium">{selection.length} selected</span>
       <div className="ml-auto flex items-center gap-0.5">
-        <IconButton label="Complete selected" onClick={() => run(() => app.tasks.bulkComplete(selection))}>
+        <IconButton label="Complete selected" onClick={() => run((force) => app.tasks.bulkComplete(selection, { force }))}>
           <Check size={17} />
         </IconButton>
         <IconButton ref={date.ref} label="Schedule selected" onClick={date.toggle}>
@@ -201,7 +202,7 @@ export function SelectionBar() {
           <X size={17} />
         </IconButton>
       </div>
-      <DatePopover anchor={date.ref} open={date.open} onClose={date.hide} value={null} onChange={(d) => run(() => app.tasks.bulkUpdate(selection, { scheduledDate: d }))} />
+      <DatePopover anchor={date.ref} open={date.open} onClose={date.hide} value={null} onChange={(d) => run((force) => app.tasks.bulkUpdate(selection, { scheduledDate: d }, { force }))} />
       <PriorityPopover anchor={prio.ref} open={prio.open} onClose={prio.hide} value={4} onChange={(p) => run(() => app.tasks.bulkUpdate(selection, { priority: p }))} />
       <ProjectPopover anchor={move.ref} open={move.open} onClose={move.hide} value={{ projectId: null }} onChange={(v) => run(() => app.tasks.move(selection, v))} />
     </div>
@@ -213,6 +214,7 @@ const SHORTCUTS: [string, string][] = [
   ['/', 'Search'],
   ['G then I / T / U / C / P / L', 'Go to Inbox, Today, Upcoming, Calendar, Projects, Labels'],
   ['G then F', 'Focus mode'],
+  ['G then V', 'Filters'],
   ['G then S', 'Settings'],
   ['↑ ↓ or J K', 'Move between tasks'],
   ['Enter', 'Open task'],
@@ -260,7 +262,7 @@ export function useGlobalShortcuts() {
         setPending(false);
         const map: Record<string, Parameters<typeof go>[0]> = {
           i: { name: 'inbox' }, t: { name: 'today' }, u: { name: 'upcoming' }, c: { name: 'calendar' }, p: { name: 'projects' },
-          l: { name: 'labels' }, f: { name: 'focus' }, s: { name: 'settings' },
+          l: { name: 'labels' }, f: { name: 'focus' }, s: { name: 'settings' }, v: { name: 'filters' },
         };
         if (map[k]) {
           e.preventDefault();
@@ -291,4 +293,20 @@ export function useGlobalShortcuts() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+}
+
+/** Global prompt shown when an action needs confirmation (e.g. completing a blocked task). */
+export function GlobalConfirm() {
+  const c = useUi((s) => s.confirm);
+  const close = useUi((s) => s.closeConfirm);
+  return (
+    <ConfirmDialog
+      open={!!c}
+      onClose={close}
+      title="Are you sure?"
+      body={c?.message ?? ''}
+      confirmLabel={c?.confirmLabel ?? 'Continue'}
+      onConfirm={() => c?.onConfirm()}
+    />
+  );
 }

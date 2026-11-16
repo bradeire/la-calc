@@ -12,6 +12,7 @@ import { QuickAddService } from '@/services/quick-add-service';
 import { FilterService } from '@/services/filter-service';
 import { ReminderService } from '@/services/reminder-service';
 import { TemplateService } from '@/services/template-service';
+import { PlanningService } from '@/services/planning-service';
 import { systemClock, TaskService, type Clock } from '@/services/task-service';
 
 export type SaveStatus = 'saved' | 'pending' | 'saving' | 'error';
@@ -88,6 +89,7 @@ export interface AppContainer {
   filters: FilterService;
   reminders: ReminderService;
   templates: TemplateService;
+  planning: PlanningService;
   saver: Saver;
   platform: Platform;
   /** Replace the live database (after restore), keeping services wired. */
@@ -117,10 +119,11 @@ export function createContainer(
     const filters = new FilterService(repos, () => clock.now());
     const reminders = new ReminderService(repos);
     const templates = new TemplateService(repos, tasks, projects, labels);
+    const planning = new PlanningService(repos, tasks, () => clock.now());
     const saver = new Saver(db, platform);
     teardown.push(db.subscribe(() => saver.schedule()));
     teardown.push(platform.lifecycle.onPause(() => saver.flush()));
-    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, saver };
+    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, saver };
   };
 
   const container: AppContainer = {

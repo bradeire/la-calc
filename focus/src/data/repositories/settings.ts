@@ -24,6 +24,8 @@ export const settingsSchema = z.object({
     })
     .default({ days: [0, 1, 2, 3, 4], start: '09:00', end: '17:30' }),
   autoCompleteParent: z.boolean().default(false),
+  /** Minutes assumed for tasks without an estimate when calculating workload. */
+  defaultEstimate: z.number().int().min(0).max(480).default(30),
   showCompletedInProjects: z.boolean().default(false),
   notificationsEnabled: z.boolean().default(false),
   reduceMotion: z.enum(['system', 'on', 'off']).default('system'),

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.0 — 2026-11-16 (Phase 2: advanced planning)
+
+### Added
+- Calendar day, 3-day, week (time grid with drag-to-move, drag-to-resize, click-to-add), month and agenda views,
+  with project/label filters, deadlines, projected repeats, working-hours shading and a current-time line.
+- Task dependencies with cycle prevention, blocked badges and "Complete anyway" / "Schedule anyway" confirmations.
+- Filters: visual builder and query language kept in sync; saved and pinned filters; quick-start presets.
+- Workload bars, conflict detection and suggested rescheduling with accept/reject (Upcoming → Review plan).
+- Reminders delivered in-app with Complete/Snooze/Dismiss, plus optional system notifications (web and desktop).
+- Project templates: save any project as a template; built-in "Holiday planning".
+- Settings: notifications, default estimate.
+
+### Fixed
+- Weekend tasks counted as overload; blocked-task lookup slow on large lists; several collapsed-section controls.
+
 ## 0.2.0 — 2026-11-16 (Phase 1 completion)
 
 ### Added

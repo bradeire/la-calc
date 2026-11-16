@@ -617,12 +617,15 @@ export class TaskService {
     });
   }
 
-  addManualTime(taskId: string, minutes: number, startedAt = nowIso(), note = ''): void {
+  /** Returns the task's new total of tracked minutes. */
+  addManualTime(taskId: string, minutes: number, startedAt = nowIso(), note = ''): number {
     if (!Number.isInteger(minutes) || minutes <= 0 || minutes > 24 * 60) throw new ValidationError('Enter between 1 and 1440 minutes');
-    this.r.db.transaction(() => {
+    return this.r.db.transaction(() => {
       this.must(taskId);
       this.r.time.addManual(taskId, startedAt, minutes, note);
-      this.r.tasks.update(taskId, { actualMinutes: this.r.time.totalMinutes(taskId) });
+      const total = this.r.time.totalMinutes(taskId);
+      this.r.tasks.update(taskId, { actualMinutes: total });
+      return total;
     });
   }
 

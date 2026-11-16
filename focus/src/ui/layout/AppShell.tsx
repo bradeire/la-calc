@@ -4,8 +4,9 @@ import { useIsDesktop, useSettings } from '../hooks';
 import { closeTask, navigate, useLocation } from '../router';
 import { cx } from '../primitives';
 import { QuickAdd } from '../components/QuickAdd';
+import { ReminderPanel, useReminderDelivery } from '../components/ReminderPanel';
 import { TaskDetail } from '../components/TaskDetail';
-import { BottomNav, QuickAddFab, SelectionBar, ShortcutsDialog, Toasts, useGlobalShortcuts } from './Chrome';
+import { BottomNav, GlobalConfirm, QuickAddFab, SelectionBar, ShortcutsDialog, Toasts, useGlobalShortcuts } from './Chrome';
 import { Sidebar } from './Sidebar';
 import { TodayView } from '../views/TodayView';
 import { InboxView } from '../views/InboxView';
@@ -18,6 +19,7 @@ import { TrashView } from '../views/TrashView';
 import { FocusView } from '../views/FocusView';
 import { CalendarView } from '../views/CalendarView';
 import { SettingsView } from '../views/SettingsView';
+import { FilterEditorView, FilterResultsView, FiltersView } from '../views/FiltersView';
 import { Onboarding } from '../views/Onboarding';
 
 function useApplyAppearance() {
@@ -81,6 +83,9 @@ function CurrentView() {
     case 'label': return <LabelView id={route.id} />;
     case 'search': return <SearchView q={route.q} />;
     case 'trash': return <TrashView />;
+    case 'filters': return <FiltersView />;
+    case 'filter': return <FilterResultsView id={route.id} />;
+    case 'filterEdit': return <FilterEditorView key={route.id ?? 'new'} id={route.id} />;
     case 'settings': return <SettingsView />;
     case 'focus': return <FocusView />;
     default: return <TodayView />;
@@ -95,6 +100,7 @@ export function AppShell() {
   const detailWidth = useUi((s) => s.detailWidth);
   useApplyAppearance();
   useGlobalShortcuts();
+  useReminderDelivery();
 
   // Esc closes the detail panel (dialogs handle their own Esc).
   useEffect(() => {
@@ -148,6 +154,8 @@ export function AppShell() {
       <QuickAdd />
       <SelectionBar />
       <ShortcutsDialog />
+      <GlobalConfirm />
+      <ReminderPanel />
       <Toasts />
     </div>
   );

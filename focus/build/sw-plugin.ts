@@ -30,6 +30,22 @@ self.addEventListener('activate', (e) => {
       .then(() => self.clients.claim()),
   );
 });
+// Reminder notifications: pass the chosen action back to an open Focus window (or open one).
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const reminderId = e.notification.data && e.notification.data.reminderId;
+  const action = e.action || 'open';
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      const client = list[0];
+      if (client) {
+        client.postMessage({ type: 'focus-reminder', reminderId, action });
+        return action === 'open' ? client.focus() : undefined;
+      }
+      return self.clients.openWindow('./');
+    }),
+  );
+});
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;

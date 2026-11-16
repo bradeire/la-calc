@@ -34,7 +34,7 @@ npm install
 npm run desktop:dev     # runs the native app with live reload
 npm run desktop:build   # creates the installer
 ```
-The installer appears in `src-tauri\target\release\bundle\nsis\Focus_0.2.0_x64-setup.exe`. It installs for the
+The installer appears in `src-tauri\target\release\bundle\nsis\Focus_0.3.0_x64-setup.exe`. It installs for the
 current user only, so no administrator rights are needed. The first build takes several minutes. Because the
 installer isn't code-signed, Windows SmartScreen will warn ("More info → Run anyway").
 
@@ -49,7 +49,9 @@ USB with USB debugging on. Native notification scheduling (Phase 2) will be asse
 
 ## Known limitations
 
-- **Reminders are stored but not delivered** (Phase 2: native notification scheduling).
+- **Reminders fire while Focus is running** (in-app, plus system notifications if enabled). They cannot fire while
+  the browser tab or desktop app is fully closed; missed ones are shown on the next launch. Background delivery on the
+  Pixel needs the Android build (ADR-010).
 - **Browser: one tab at a time.** A second tab shows an explanation instead of risking overwrites.
 - **Drag and drop** is mouse-only; on touch, use swipe, the ⋯ menu, or the task's project/section picker.
 - **Browser storage eviction**: the PWA requests persistent storage. Back up until you move to the native app.

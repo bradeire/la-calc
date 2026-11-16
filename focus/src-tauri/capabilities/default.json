@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Focus main window: core window/event APIs only. File access goes through Focus's own validated commands.",
   "windows": ["main"],
-  "permissions": ["core:default", "core:window:allow-destroy"]
+  "permissions": ["core:default", "core:window:allow-destroy", "notification:default"]
 }

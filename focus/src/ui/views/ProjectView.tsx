@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Archive, ArchiveRestore, ArrowDown, ArrowUp, Columns3, Ellipsis, Eye, EyeOff, FolderPlus, LayoutList, CalendarDays, Pencil, Plus,
+  Archive, ArchiveRestore, LayoutTemplate, ArrowDown, ArrowUp, Columns3, Ellipsis, Eye, EyeOff, FolderPlus, LayoutList, CalendarDays, Pencil, Plus,
   StickyNote, Table2, Trash2,
 } from 'lucide-react';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Priority, type Project, type ProjectLayout, type Section, type Task, type TaskStatus } from '@/core/domain/types';
@@ -108,6 +108,15 @@ export function ProjectView({ id }: { id: string }) {
           </MenuItem>
           <MenuItem icon={<FolderPlus size={15} />} onClick={() => (menu.hide(), setCreatingChild(true))}>Add sub-project</MenuItem>
           <MenuItem icon={<StickyNote size={15} />} onClick={() => (menu.hide(), setNotesOpen(true))}>Notes and files</MenuItem>
+          <MenuItem
+            icon={<LayoutTemplate size={15} />}
+            onClick={() => {
+              menu.hide();
+              void prompt.ask('Save as template', 'Template name', project.name).then((n) => n && act(() => app.templates.saveProjectAsTemplate(id, n), { success: `Saved template “${n}”` }));
+            }}
+          >
+            Save as template
+          </MenuItem>
           <MenuItem icon={showCompleted ? <EyeOff size={15} /> : <Eye size={15} />} onClick={() => (menu.hide(), setShowCompleted(!showCompleted))}>
             {showCompleted ? 'Hide completed' : 'Show completed'}
           </MenuItem>
@@ -427,7 +436,7 @@ function TableLayout({ tasks, sections }: { tasks: Task[]; sections: Section[] }
                 </Select>
               </td>
               <td className="px-2 py-1.5">
-                <input type="date" aria-label={`Scheduled date of ${t.title}`} value={t.scheduledDate ?? ''} onChange={(e) => act(() => app.tasks.update(t.id, { scheduledDate: e.target.value || null }))} className={cx('rounded bg-transparent px-1', t.scheduledDate && t.scheduledDate < today && 'text-danger')} />
+                <input type="date" aria-label={`Scheduled date of ${t.title}`} value={t.scheduledDate ?? ''} onChange={(e) => act((force) => app.tasks.update(t.id, { scheduledDate: e.target.value || null }, { force }))} className={cx('rounded bg-transparent px-1', t.scheduledDate && t.scheduledDate < today && 'text-danger')} />
               </td>
               <td className="px-2 py-1.5">
                 <input type="date" aria-label={`Deadline of ${t.title}`} value={t.deadline ?? ''} onChange={(e) => act(() => app.tasks.update(t.id, { deadline: e.target.value || null }))} className={cx('rounded bg-transparent px-1', t.deadline && t.deadline < today && 'text-danger')} />

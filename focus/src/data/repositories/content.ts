@@ -1,6 +1,6 @@
 import type { ActivityEntry, Attachment, Comment, Reminder, TimeEntry } from '@/core/domain/types';
 import type { DatabaseDriver, Row } from '../db/driver';
-import { newId, nowIso, num, numOrNull, str, strOrNull, track } from './base';
+import { newId, nowIso, num, numOrNull, setClause, str, strOrNull, track } from './base';
 
 const mapComment = (r: Row): Comment => ({
   id: str(r.id),
@@ -170,13 +170,13 @@ export class ReminderRepository {
     );
   }
   setState(id: string, s: { deliveredAt?: string | null; dismissedAt?: string | null; snoozedUntil?: string | null }) {
-    const cols: string[] = [];
-    const vals: (string | null)[] = [];
-    if (s.deliveredAt !== undefined) (cols.push('delivered_at = ?'), vals.push(s.deliveredAt));
-    if (s.dismissedAt !== undefined) (cols.push('dismissed_at = ?'), vals.push(s.dismissedAt));
-    if (s.snoozedUntil !== undefined) (cols.push('snoozed_until = ?'), vals.push(s.snoozedUntil));
-    if (!cols.length) return;
-    this.db.run(`UPDATE reminders SET ${cols.join(', ')} WHERE id = ?`, [...vals, id]);
+    const cols: Record<string, string | null> = {};
+    if (s.deliveredAt !== undefined) cols.delivered_at = s.deliveredAt;
+    if (s.dismissedAt !== undefined) cols.dismissed_at = s.dismissedAt;
+    if (s.snoozedUntil !== undefined) cols.snoozed_until = s.snoozedUntil;
+    if (!Object.keys(cols).length) return;
+    const { sql, values } = setClause(cols);
+    this.db.run(`UPDATE reminders SET ${sql} WHERE id = ?`, [...values, id]);
     track(this.db, 'reminders', id, 'update');
   }
 }

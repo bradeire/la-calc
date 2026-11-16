@@ -11,6 +11,8 @@ export interface QuickAddDefaults {
   sectionId?: string | null;
   parentId?: string | null;
   scheduledDate?: string | null;
+  /** Used only when the typed text gives no date/time (e.g. clicking a calendar slot). */
+  scheduledTime?: string | null;
   labelIds?: string[];
   pinnedToday?: boolean;
 }

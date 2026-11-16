@@ -45,14 +45,18 @@ export class ReminderService {
     this.r.db.transaction(() => ids.forEach((id) => this.r.reminders.setState(id, { deliveredAt: now.toISOString() })));
   }
 
-  snooze(id: string, minutes: number, now = new Date()) {
+  /** Returns the time the reminder will fire again. */
+  snooze(id: string, minutes: number, now = new Date()): Date {
     if (!Number.isFinite(minutes) || minutes < 1 || minutes > 60 * 24 * 7) throw new ValidationError('Snooze for between 1 minute and 7 days');
     if (!this.r.reminders.get(id)) throw new NotFoundError('That reminder');
-    this.r.reminders.setState(id, { deliveredAt: null, snoozedUntil: new Date(now.getTime() + minutes * 60000).toISOString() });
+    const until = new Date(now.getTime() + minutes * 60000);
+    this.r.reminders.setState(id, { deliveredAt: null, snoozedUntil: until.toISOString() });
+    return until;
   }
 
-  dismiss(id: string, now = new Date()) {
+  dismiss(id: string, now = new Date()): true {
     if (!this.r.reminders.get(id)) throw new NotFoundError('That reminder');
     this.r.reminders.setState(id, { dismissedAt: now.toISOString() });
+    return true;
   }
 }

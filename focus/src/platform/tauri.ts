@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import type { FileStore, LifecycleAdapter, PersistenceAdapter, Platform } from './types';
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import type { FileStore, LifecycleAdapter, NotificationAdapter, PersistenceAdapter, Platform } from './types';
 
 /**
  * Native platform (Tauri 2). The SQLite image is a real file in the app-data
@@ -68,12 +69,33 @@ const tauriLifecycle: LifecycleAdapter = {
   },
 };
 
+/**
+ * OS notifications via the official plugin. Desktop notifications have no action
+ * buttons, so Complete/Snooze happen in Focus's in-app reminder panel.
+ */
+const tauriNotifications: NotificationAdapter = {
+  async permission() {
+    return (await isPermissionGranted()) ? 'granted' : 'default';
+  },
+  async requestPermission() {
+    const r = await requestPermission();
+    return r === 'granted' ? 'granted' : r === 'denied' ? 'denied' : 'default';
+  },
+  async show(n) {
+    if (!(await isPermissionGranted())) return false;
+    sendNotification({ title: n.title, body: n.body });
+    return true;
+  },
+  onAction: () => () => {},
+};
+
 export function createTauriPlatform(): Platform {
   return {
     kind: 'tauri',
     persistence: new TauriPersistence(),
     files: new TauriFileStore(),
     lifecycle: tauriLifecycle,
+    notifications: tauriNotifications,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,
   };

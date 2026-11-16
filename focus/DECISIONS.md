@@ -249,3 +249,29 @@ against path traversal. (2) Atomic writes and rotation live in one audited place
 byte arrays.
 
 **Verified.** Linux/WebKitGTK build: create task → kill process → relaunch → task present (session 2).
+
+---
+
+## ADR-010 — Reminder delivery model
+
+**Status:** Accepted (2026-11-16)
+
+Reminders are computed from stored data (`src/core/reminders.ts`) and delivered by a scheduler that runs while
+Focus is running (`src/app/reminder-scheduler.ts`): it wakes exactly at the next due time (and at least every
+minute), marks each reminder delivered *before* showing it (so it never fires twice), and shows it in-app with
+Complete / Snooze / Dismiss. System notifications are an optional extra via the platform `NotificationAdapter`
+(web Notification API with service-worker actions; Tauri notification plugin on desktop). Reminders that came due
+while the app was closed are shown together on the next launch, not as a burst.
+
+**Limitation (honest):** neither a browser tab nor the desktop app can fire reminders while fully closed. True
+background delivery needs OS scheduling (Android `AlarmManager` via a native plugin) and will be built and tested
+with the Android app. A desktop tray mode (Phase 5) will keep the desktop app running when its window is closed.
+
+## ADR-011 — Calendar built in-house instead of FullCalendar
+
+**Status:** Accepted (2026-11-16) — supersedes the deferral in ADR-002
+
+The time grid, month and agenda views are built in-house (~600 lines plus a tested layout helper). FullCalendar's
+drag/resize uses its own event system, which would need adapters for Focus's undo, confirmation (dependency) and
+deadline semantics, and its touch interaction on Android webviews is unverified. The in-house grid uses pointer
+events with press-and-hold on touch, snaps to 15 minutes, and goes through the same services as every other edit.
