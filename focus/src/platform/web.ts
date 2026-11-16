@@ -1,4 +1,4 @@
-import type { FileStore, HttpAdapter, LifecycleAdapter, NotificationAdapter, NotificationPermissionState, PersistenceAdapter, Platform, SecretStore } from './types';
+import type { FileStore, HttpAdapter, LifecycleAdapter, LinkAdapter, NotificationAdapter, NotificationPermissionState, PersistenceAdapter, Platform, SecretStore } from './types';
 
 const DB_NAME = 'focus';
 const DB_VERSION = 1;
@@ -205,6 +205,23 @@ export const fetchHttp: HttpAdapter = {
   },
 };
 
+/**
+ * Browser: a link arrives as ?link=focus%3A%2F%2Fadd%3Ftext%3D… on the start URL (the form a
+ * registered web+focus: protocol handler or a forwarding page would use).
+ */
+export const webLinks: LinkAdapter = {
+  initial: async () => {
+    const q = new URLSearchParams(window.location.search);
+    const link = q.get('link');
+    if (!link) return [];
+    q.delete('link');
+    const rest = q.toString();
+    history.replaceState(history.state, '', window.location.pathname + (rest ? '?' + rest : '') + window.location.hash);
+    return [link];
+  },
+  listen: () => () => {},
+};
+
 export function createWebPlatform(): Platform {
   return {
     kind: 'web',
@@ -214,6 +231,7 @@ export function createWebPlatform(): Platform {
     notifications: webNotifications,
     secrets: new MemorySecretStore(),
     http: fetchHttp,
+    links: webLinks,
     acquireLock,
   };
 }

@@ -11,6 +11,8 @@
   subtasks, task suggestions, project summary, filter from words, template drafts, plan review, AI capture.
 - Voice dictation in Quick Add with clear online/on-device disclosure.
 - Native: OS keychain for secrets and Rust-side HTTP for integrations.
+- Tap-to-add links (`focus://add?text=…`) for adding tasks from Claude, with copyable instructions in Settings;
+  Android "Share → Focus" for text.
 - First Android build: signed arm64 release APK (Tauri Android project in `src-tauri/gen/android`).
 
 ### Fixed

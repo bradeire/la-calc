@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Bot, Pencil, Plus, ShieldCheck, Trash2, Webhook } from 'lucide-react';
+import { Bot, Copy, Link2, Pencil, Plus, ShieldCheck, Trash2, Webhook } from 'lucide-react';
+import { ASSISTANT_INSTRUCTIONS, buildAddLink } from '@/core/links';
 import { isLocalUrl, type AiConfig } from '@/services/ai-service';
 import { useUi } from '@/state/ui-store';
 import { errorMessage, useAction, useApp, useQuery } from '../hooks';
@@ -217,6 +218,55 @@ export function AiSettings() {
                 Withdraw consent
               </Button>
             </>
+          )}
+        </div>
+      </div>
+    </Group>
+  );
+}
+
+/** Tap-to-add links: instructions for Claude (or any assistant) to reply with focus:// links. */
+export function AddFromAssistantSettings() {
+  const app = useApp();
+  const pushToast = useUi((s) => s.pushToast);
+  const native = app.platform.kind === 'tauri';
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(ASSISTANT_INSTRUCTIONS);
+      pushToast({ message: 'Instructions copied', tone: 'success' });
+    } catch {
+      pushToast({ message: 'Could not copy: select the text and copy it instead', tone: 'error' });
+    }
+  };
+  return (
+    <Group title="Add tasks from Claude" icon={<Link2 size={16} />}>
+      <div className="flex flex-col gap-3 px-4 py-3 text-[0.93rem]">
+        <p>
+          Ask Claude (or another assistant) for tasks and it can reply with links. Tapping one opens Quick Add already
+          filled in; nothing is added until you press Add. Nothing is sent anywhere: the link carries the text to Focus.
+        </p>
+        <p className="text-[0.85rem] text-muted">
+          Paste these instructions into Claude once (Settings → Profile → personal preferences, or a project’s
+          instructions). On Android you can also share any Claude reply to Focus to pick tasks from it.
+        </p>
+        <textarea
+          readOnly
+          aria-label="Instructions for Claude"
+          value={ASSISTANT_INSTRUCTIONS}
+          onFocus={(e) => e.currentTarget.select()}
+          rows={7}
+          className="w-full resize-y rounded-lg border border-line bg-surface-2 p-2 font-mono text-[0.78rem] leading-snug"
+        />
+        <div className="flex flex-wrap items-center gap-3">
+          <Button size="sm" onClick={copy}>
+            <Copy size={14} /> Copy instructions
+          </Button>
+          {native ? (
+            <a className="text-[0.85rem] text-accent underline" href={buildAddLink('Try a Focus link tomorrow 9am p3')}>
+              Test a link
+            </a>
+          ) : (
+            <span className="text-[0.8rem] text-muted">Links open the installed Focus app (Android or desktop), not this browser tab.</span>
           )}
         </div>
       </div>

@@ -297,3 +297,13 @@ session only in the browser (browsers have no secure store; re-entering is the h
 written to SQLite (tested). Outbound HTTP for AI providers and webhooks goes through a Rust command (reqwest, rustls)
 that only allows http/https GET/POST, so the webview CSP stays strict and local services work without CORS setup.
 Mobile secure storage arrives with the mobile builds.
+
+## ADR-014 — Adding tasks from assistants: links that pre-fill, never create
+
+**Status:** Accepted (2026-11-16)
+
+Focus has no server for a cloud assistant to call. Instead it registers the `focus:` URL scheme (tauri-plugin-deep-link
+2.6.3; single-instance forwards links on Windows/Linux) and accepts Android text shares, converted to the same
+`focus://capture` link in `MainActivity`. A link only pre-fills Quick Add or Capture: links can come from anyone, so
+creation always needs a tap, text is sanitised and capped, and unknown actions are ignored. A direct connector for
+Claude on the same computer comes with the Phase 4 local API.

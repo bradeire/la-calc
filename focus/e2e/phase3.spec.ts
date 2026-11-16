@@ -173,3 +173,31 @@ test('voice: explains online recognition, then dictation fills Quick Add and is 
   await expect(page.getByLabel('Recognised details')).toContainText('Tomorrow');
   await expect(page.getByLabel('Recognised details')).toContainText('09:00');
 });
+
+test('tap-to-add link pre-fills Quick Add and adds nothing until confirmed', async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 10, 16, 9, 0) });
+  await startFresh(page);
+  const link = 'focus://add?text=Phone%20dentist%20tomorrow%2010am%20p2';
+  await page.goto('/?link=' + encodeURIComponent(link) + '#/inbox');
+  const input = page.getByRole('textbox', { name: /Task name/ });
+  await expect(input).toHaveText('Phone dentist tomorrow 10am p2');
+  // The link is consumed from the address so a reload does not reopen it.
+  await expect(page).not.toHaveURL(/link=/);
+  await expect(page.getByRole('listitem', { name: 'Phone dentist' })).toHaveCount(0);
+  await input.press('Enter');
+  await page.goto('/#/upcoming');
+  await expect(page.getByRole('listitem', { name: 'Phone dentist' })).toBeVisible();
+});
+
+test('capture link and unsafe links', async ({ page }) => {
+  await startFresh(page);
+  await page.goto('/?link=' + encodeURIComponent('focus://capture?text=Buy%20milk%0ARing%20the%20garage') + '#/inbox');
+  await expect(page.getByRole('textbox', { name: 'Text to capture from' })).toHaveValue('Buy milk\nRing the garage');
+  await page.keyboard.press('Escape');
+  // Unknown actions are ignored rather than acted on.
+  await page.goto('/?link=' + encodeURIComponent('focus://delete?text=everything') + '#/inbox');
+  await expect(page.getByRole('heading', { name: 'Inbox', level: 1 })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.goto('/#/settings');
+  await expect(page.getByRole('textbox', { name: 'Instructions for Claude' })).toHaveValue(/focus:\/\/add\?text=/);
+});

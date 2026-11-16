@@ -92,6 +92,8 @@ _Last updated: 2026-11-16 (session 4 — Phase 3)._
 | Home Assistant: outgoing webhooks documented with YAML | Implemented | inbound (HA → Focus) needs the Phase 4 local API |
 | Capture from pasted email / notes / .txt .md .eml .html; suggestions confirmed before creation | Tested | PDF/Word not supported |
 | Android share-sheet target (installed PWA) | Implemented | not tested on hardware |
+| Tap-to-add links `focus://add` / `focus://capture` (pre-fill only, confirm to create); Settings instructions for Claude | Tested (browser flow, parser) | native link delivery built into the APK and desktop app, not yet tried on hardware |
+| Android "Share → Focus" for text (Claude, Gmail, Outlook, Teams…) opens Capture | Implemented | in APK manifest; not tried on hardware |
 | Native HTTP and keychain commands (Tauri) | Tested (Rust unit tests, compiled) | keychain not exercised on Windows/macOS hardware |
 
 ## Not yet started (later phases)

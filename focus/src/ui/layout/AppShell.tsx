@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useUi } from '@/state/ui-store';
-import { useIsDesktop, useSettings } from '../hooks';
+import { useApp, useIsDesktop, useSettings } from '../hooks';
+import { parseIncomingLink } from '@/core/links';
 import { closeTask, navigate, useLocation } from '../router';
 import { cx } from '../primitives';
 import { QuickAdd } from '../components/QuickAdd';
@@ -141,6 +142,31 @@ export function AppShell() {
     if (shared.includes('\n') || shared.length > 200) useUi.getState().openCapture(shared);
     else openQuickAdd({}, shared);
   }, [settings.onboarded, openQuickAdd]);
+
+  // Tap-to-add links (focus://add?text=…): pre-fill Quick Add or Capture; the user confirms.
+  const app = useApp();
+  const pendingLinks = useRef<string[]>([]);
+  useEffect(() => {
+    const open = (urls: string[]) => {
+      const links = urls.map(parseIncomingLink).filter((l) => l !== null);
+      if (!links.length) return;
+      const ui = useUi.getState();
+      if (links.length === 1 && links[0]!.kind === 'add') openQuickAdd({}, links[0]!.text);
+      else {
+        ui.closeQuickAdd();
+        ui.openCapture(links.map((l) => l.text).join('\n'));
+      }
+    };
+    const handle = (urls: string[]) => (settings.onboarded ? open(urls) : pendingLinks.current.push(...urls));
+    if (settings.onboarded && pendingLinks.current.length) open(pendingLinks.current.splice(0));
+    let alive = true;
+    app.platform.links.initial().then((urls) => alive && urls.length && handle(urls));
+    const stop = app.platform.links.listen(handle);
+    return () => {
+      alive = false;
+      stop();
+    };
+  }, [app, settings.onboarded, openQuickAdd]);
 
   if (!settings.onboarded) return <Onboarding />;
 

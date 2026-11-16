@@ -2,6 +2,26 @@
 
 Everything here is optional and off by default. Focus works fully offline without any of it.
 
+## Add tasks from Claude (tap-to-add links)
+
+Settings → **Add tasks from Claude** has instructions to paste into Claude once (personal preferences or a project's
+instructions). Claude then replies with links such as
+
+```
+[Phone dentist Friday 10am #Home p2](focus://add?text=Phone%20dentist%20Friday%2010am%20%23Home%20p2)
+[Add all](focus://capture?text=Buy%20milk%0ARing%20the%20garage)
+```
+
+- `focus://add?text=…` opens **Quick Add** filled in; `focus://capture?text=…` (or several lines) opens **Capture**
+  so you can tick which tasks to create. **Nothing is created until you confirm**, so a link from anyone is harmless.
+- Text is capped (500 characters for one task, 20,000 for capture); control characters are removed; other actions
+  are ignored.
+- **Share instead:** on Android, Share any Claude reply (or a Gmail, Outlook or Teams message) → **Focus** to open it
+  in Capture.
+- Links open the installed app (Android, Windows, macOS, Linux). In the browser version they can be passed as
+  `?link=focus%3A%2F%2Fadd%3Ftext%3D…`.
+- Not yet confirmed: whether the Claude Android app makes `focus://` links tappable. If it doesn't, use Share.
+
 ## Webhooks (Home Assistant, Zapier, IFTTT, anything that accepts JSON)
 
 Settings → **Webhooks and Home Assistant** → *Add webhook*. Then use the action **Call a webhook** in an automation.

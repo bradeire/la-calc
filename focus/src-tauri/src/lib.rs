@@ -119,8 +119,16 @@ pub fn run() {
         }));
     }
     builder
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_notification::init())
         .setup(|app| {
+            // Installers register focus:// on Windows/Linux; registering again at start-up also covers
+            // portable and development runs. Failure only means links won't open the app.
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
+            }
             let dir = app.path().app_data_dir()?;
             let storage = Storage::new(dir).map_err(|e| -> Box<dyn std::error::Error> { e.into() })?;
             app.manage(AppStorage(Mutex::new(storage)));

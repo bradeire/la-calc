@@ -67,6 +67,7 @@ export function createMemoryPlatform(): Platform & { persistence: MemoryPersiste
     },
     secrets: new MemorySecretStore(),
     http: new FakeHttp(),
+    links: { initial: async () => [], listen: () => () => {} },
     acquireLock: async () => true,
   };
 }

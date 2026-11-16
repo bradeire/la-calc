@@ -70,6 +70,14 @@ export interface HttpAdapter {
   request(r: HttpRequest): Promise<HttpResponse>;
 }
 
+/** Incoming tap-to-add links (focus://add?text=…); see src/core/links.ts. */
+export interface LinkAdapter {
+  /** Links that launched the app (cold start). Each is returned once. */
+  initial(): Promise<string[]>;
+  /** Links opened while the app is running. */
+  listen(cb: (urls: string[]) => void): () => void;
+}
+
 export interface Platform {
   kind: 'web' | 'tauri' | 'memory';
   persistence: PersistenceAdapter;
@@ -78,6 +86,7 @@ export interface Platform {
   notifications: NotificationAdapter;
   secrets: SecretStore;
   http: HttpAdapter;
+  links: LinkAdapter;
   /** Acquire exclusive ownership of the database; false if another window has it. */
   acquireLock(): Promise<boolean>;
 }

@@ -1,8 +1,9 @@
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import { getCurrent as getCurrentLinks, onOpenUrl } from '@tauri-apps/plugin-deep-link';
 import { MemorySecretStore } from './web';
-import type { FileStore, HttpAdapter, LifecycleAdapter, NotificationAdapter, PersistenceAdapter, Platform, SecretStore } from './types';
+import type { FileStore, HttpAdapter, LifecycleAdapter, LinkAdapter, NotificationAdapter, PersistenceAdapter, Platform, SecretStore } from './types';
 
 /**
  * Native platform (Tauri 2). The SQLite image is a real file in the app-data
@@ -106,6 +107,34 @@ const tauriHttp: HttpAdapter = {
     }),
 };
 
+/**
+ * focus:// links via tauri-plugin-deep-link. Android/macOS deliver them to the running app;
+ * on Windows/Linux the single-instance plugin (deep-link feature) forwards a second launch's URL.
+ */
+let initialConsumed = false;
+const tauriLinks: LinkAdapter = {
+  initial: async () => {
+    if (initialConsumed) return [];
+    initialConsumed = true;
+    try {
+      return (await getCurrentLinks()) ?? [];
+    } catch {
+      return [];
+    }
+  },
+  listen: (cb) => {
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    onOpenUrl(cb)
+      .then((un) => (cancelled ? un() : (stop = un)))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  },
+};
+
 export function createTauriPlatform(): Platform {
   return {
     kind: 'tauri',
@@ -116,6 +145,7 @@ export function createTauriPlatform(): Platform {
     // No Android Keystore / iOS Keychain integration yet: keep secrets for the session only there.
     secrets: /Android|iPhone|iPad/i.test(navigator.userAgent) ? new MemorySecretStore() : tauriSecrets,
     http: tauriHttp,
+    links: tauriLinks,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,
   };

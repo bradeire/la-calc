@@ -9,7 +9,7 @@ import { errorMessage, useAction, useApp, useQuery, useSettings } from '../hooks
 import { Button, ConfirmDialog, Select, Switch, cx } from '../primitives';
 import { ViewBody } from '../components/common';
 import { ViewHeader } from '../layout/Chrome';
-import { AiSettings, WebhookSettings } from './IntegrationSettings';
+import { AddFromAssistantSettings, AiSettings, WebhookSettings } from './IntegrationSettings';
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -207,6 +207,7 @@ export function SettingsView() {
         </Group>
 
         <NotificationSettings />
+        <AddFromAssistantSettings />
         <AiSettings />
         <WebhookSettings />
 
