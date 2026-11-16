@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, Workflow, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X } from 'lucide-react';
+import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, Workflow, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X, BarChart3 } from 'lucide-react';
 import { useUi } from '@/state/ui-store';
 import { useAction, useApp, useIsDesktop, useToday } from '../hooks';
 import { go, parseHash, quickAddDefaultsFor, useLocation } from '../router';
@@ -9,13 +9,13 @@ import { DatePopover, PriorityPopover, ProjectPopover, usePopover } from '../com
 import { SaveIndicator } from './Sidebar';
 
 /** Per-view header. On phones it is sticky with large touch targets. */
-export function ViewHeader({ title, subtitle, icon, actions }: { title: ReactNode; subtitle?: ReactNode; icon?: ReactNode; actions?: ReactNode }) {
+export function ViewHeader({ title, subtitle, icon, actions, wide }: { title: ReactNode; subtitle?: ReactNode; icon?: ReactNode; actions?: ReactNode; wide?: boolean }) {
   const collapsed = useUi((s) => s.sidebarCollapsed);
   const toggleSidebar = useUi((s) => s.toggleSidebar);
   const isDesktop = useIsDesktop();
   return (
     <header className="pt-safe sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
-      <div className="mx-auto flex min-h-14 max-w-3xl items-center gap-2 px-4 lg:min-h-16 lg:px-8 lg:pt-4">
+      <div className={cx('mx-auto flex min-h-14 items-center gap-2 px-4 lg:min-h-16 lg:px-8 lg:pt-4', wide ? 'max-w-5xl' : 'max-w-3xl')}>
         {isDesktop && collapsed && (
           <IconButton label="Open sidebar" onClick={toggleSidebar}>
             <PanelLeftOpen size={18} />
@@ -51,7 +51,7 @@ export function BottomNav() {
     { name: 'upcoming', label: 'Upcoming', icon: CalendarDays },
     { name: 'projects', label: 'Browse', icon: Menu },
   ] as const;
-  const isBrowse = ['projects', 'project', 'labels', 'label', 'settings', 'trash', 'calendar', 'focus', 'search', 'filters', 'filter', 'filterEdit', 'automations', 'automationEdit'].includes(r);
+  const isBrowse = ['projects', 'project', 'labels', 'label', 'settings', 'trash', 'calendar', 'focus', 'search', 'filters', 'filter', 'filterEdit', 'automations', 'automationEdit', 'insights', 'timeLog'].includes(r);
   return (
     <nav aria-label="Main" className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-xl items-stretch">
@@ -84,6 +84,7 @@ export function BottomNav() {
         <div role="menu" className="py-1">
           <MenuItem icon={<CalendarDays size={17} />} onClick={() => (more.hide(), go({ name: 'calendar' }))}>Calendar</MenuItem>
           <MenuItem icon={<Target size={17} />} onClick={() => (more.hide(), go({ name: 'focus' }))}>Focus mode</MenuItem>
+          <MenuItem icon={<BarChart3 size={17} />} onClick={() => (more.hide(), go({ name: 'insights' }))}>Insights</MenuItem>
           <MenuItem icon={<Filter size={17} />} onClick={() => (more.hide(), go({ name: 'filters' }))}>Filters</MenuItem>
           <MenuItem icon={<Tag size={17} />} onClick={() => (more.hide(), go({ name: 'labels' }))}>Labels</MenuItem>
           <MenuItem icon={<Workflow size={17} />} onClick={() => (more.hide(), go({ name: 'automations' }))}>Automations</MenuItem>
@@ -217,6 +218,7 @@ const SHORTCUTS: [string, string][] = [
   ['G then F', 'Focus mode'],
   ['G then V', 'Filters'],
   ['G then A', 'Automations'],
+  ['G then N', 'Insights'],
   ['G then S', 'Settings'],
   ['↑ ↓ or J K', 'Move between tasks'],
   ['Enter', 'Open task'],
@@ -264,7 +266,7 @@ export function useGlobalShortcuts() {
         setPending(false);
         const map: Record<string, Parameters<typeof go>[0]> = {
           i: { name: 'inbox' }, t: { name: 'today' }, u: { name: 'upcoming' }, c: { name: 'calendar' }, p: { name: 'projects' },
-          l: { name: 'labels' }, f: { name: 'focus' }, s: { name: 'settings' }, v: { name: 'filters' }, a: { name: 'automations' },
+          l: { name: 'labels' }, f: { name: 'focus' }, s: { name: 'settings' }, v: { name: 'filters' }, a: { name: 'automations' }, n: { name: 'insights' },
         };
         if (map[k]) {
           e.preventDefault();

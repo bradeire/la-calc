@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import {
   CalendarDays, CalendarRange, ChevronRight, CircleAlert, CloudCheck, Filter, Inbox, LoaderCircle, PanelLeftClose, Plus, Search, Settings, Star,
-  Sun, Tag, Target, Trash2, Workflow,
+  Sun, Tag, Target, Trash2, Workflow, BarChart3,
 } from 'lucide-react';
 import type { Project } from '@/core/domain/types';
 import { useUi } from '@/state/ui-store';
@@ -148,6 +148,7 @@ export function Sidebar() {
           <NavItem icon={<CalendarRange size={16} className="text-violet-500" />} label="Upcoming" route={{ name: 'upcoming' }} active={r.name === 'upcoming'} />
           <NavItem icon={<CalendarDays size={16} className="text-warn" />} label="Calendar" route={{ name: 'calendar' }} active={r.name === 'calendar'} />
           <NavItem icon={<Target size={16} className="text-danger" />} label="Focus" route={{ name: 'focus' }} active={r.name === 'focus'} />
+          <NavItem icon={<BarChart3 size={16} className="text-accent" />} label="Insights" route={{ name: 'insights' }} active={r.name === 'insights' || r.name === 'timeLog'} />
           <NavItem icon={<Filter size={16} className="text-p3" />} label="Filters" route={{ name: 'filters' }} active={r.name === 'filters' || r.name === 'filterEdit'} />
           <NavItem icon={<Workflow size={16} className="text-violet-500" />} label="Automations" route={{ name: 'automations' }} active={r.name === 'automations' || r.name === 'automationEdit'} />
           <NavItem icon={<Tag size={16} className="text-muted" />} label="Labels" route={{ name: 'labels' }} active={r.name === 'labels' || r.name === 'label'} />

@@ -633,6 +633,38 @@ export class TaskService {
     });
   }
 
+  /**
+   * Stop the running timer at an earlier moment, e.g. when it was left running
+   * (an active timer does not mean the user was working).
+   */
+  stopTimerAt(endIso: string): number {
+    return this.r.db.transaction(() => {
+      const running = this.r.time.running();
+      if (!running) return 0;
+      const end = Date.parse(endIso);
+      if (!Number.isFinite(end) || end < Date.parse(running.startedAt)) throw new ValidationError('The end must be after the timer started');
+      if (end > Date.now() + 60_000) throw new ValidationError('The end can’t be in the future');
+      const minutes = this.r.time.stop(running.id, new Date(end).toISOString());
+      this.r.tasks.update(running.taskId, { actualMinutes: this.r.time.totalMinutes(running.taskId) });
+      this.r.activity.log('task', running.taskId, 'timer.stopped', { minutes, trimmed: true });
+      return minutes;
+    });
+  }
+
+  /** Correct a time log entry (spec 6.2). */
+  correctTimeEntry(entryId: string, patch: { startedAt: string; minutes: number; note?: string }): void {
+    if (!Number.isInteger(patch.minutes) || patch.minutes <= 0 || patch.minutes > 24 * 60) throw new ValidationError('Enter between 1 and 1440 minutes');
+    if (!Number.isFinite(Date.parse(patch.startedAt))) throw new ValidationError('Enter a valid start time');
+    this.r.db.transaction(() => {
+      const e = this.r.time.get(entryId);
+      if (!e || e.deletedAt) throw new ValidationError('Time entry not found');
+      if (e.endedAt === null) throw new ValidationError('Stop the timer before correcting it');
+      this.r.time.correct(entryId, { startedAt: new Date(patch.startedAt).toISOString(), minutes: patch.minutes, note: patch.note ?? e.note });
+      this.r.tasks.update(e.taskId, { actualMinutes: this.r.time.totalMinutes(e.taskId) });
+      this.r.activity.log('task', e.taskId, 'time.corrected', { entryId, minutes: patch.minutes });
+    });
+  }
+
   deleteTimeEntry(entryId: string): void {
     this.r.db.transaction(() => {
       const e = this.r.time.get(entryId);

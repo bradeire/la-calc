@@ -6,7 +6,27 @@ import { nowIso } from './base';
 /** Accent options, chosen so white text on them meets WCAG AA (≥ 4.5:1). */
 export const ACCENTS = ['#2563eb', '#4f46e5', '#7c3aed', '#0f766e', '#15803d', '#c2410c', '#be185d', '#dc2626', '#475569'] as const;
 
-const dashboardWidget = z.enum(['today', 'overdue', 'deadlines', 'waiting', 'workload', 'projects', 'capture', 'recent', 'stats']);
+export const INSIGHT_WIDGETS = [
+  'stats', 'goals', 'completion', 'today', 'overdue', 'deadlines', 'waiting', 'recent', 'capture', 'workload',
+  'byProject', 'byLabel', 'priority', 'dueTrend', 'recurring', 'projects', 'time',
+] as const;
+export type InsightWidget = (typeof INSIGHT_WIDGETS)[number];
+const widgetLayout = z.object({ id: z.enum(INSIGHT_WIDGETS), size: z.enum(['half', 'full']), hidden: z.boolean().default(false) });
+export type WidgetLayout = z.infer<typeof widgetLayout>;
+export const DEFAULT_INSIGHTS_LAYOUT: WidgetLayout[] = INSIGHT_WIDGETS.map((id) => ({
+  id,
+  size: ['stats', 'completion', 'dueTrend', 'workload', 'time'].includes(id) ? 'full' : 'half',
+  hidden: ['capture', 'waiting', 'byLabel'].includes(id),
+}));
+
+const target = z.number().int().min(1).max(10_000).nullable();
+export const goalsSchema = z.object({
+  dailyTasks: target.default(null),
+  weeklyTasks: target.default(null),
+  dailyMinutes: target.default(null),
+  weeklyMinutes: target.default(null),
+  skipNonWorkingDays: z.boolean().default(true),
+});
 
 export const settingsSchema = z.object({
   onboarded: z.boolean().default(false),
@@ -31,7 +51,9 @@ export const settingsSchema = z.object({
   reduceMotion: z.enum(['system', 'on', 'off']).default('system'),
   fontScale: z.number().min(0.85).max(1.4).default(1),
   defaultProjectColor: z.string().default(PALETTE[0]!.value),
-  dashboardWidgets: z.array(dashboardWidget).default(['today', 'overdue', 'deadlines', 'waiting', 'projects', 'recent']),
+  /** Insights dashboard: widget order, size and visibility. Unknown or missing widgets are repaired on read. */
+  insightsLayout: z.array(widgetLayout).default(DEFAULT_INSIGHTS_LAYOUT),
+  goals: goalsSchema.default({ dailyTasks: null, weeklyTasks: null, dailyMinutes: null, weeklyMinutes: null, skipNonWorkingDays: true }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

@@ -23,6 +23,8 @@ import { CalendarView } from '../views/CalendarView';
 import { SettingsView } from '../views/SettingsView';
 import { FilterEditorView, FilterResultsView, FiltersView } from '../views/FiltersView';
 import { AutomationEditorView, AutomationsView } from '../views/AutomationsView';
+import { InsightsView } from '../views/InsightsView';
+import { LongTimerPrompt, TimeLogView } from '../views/TimeLogView';
 import { useAutomationRunner } from '../components/ReminderPanel';
 import { Onboarding } from '../views/Onboarding';
 
@@ -91,6 +93,8 @@ function CurrentView() {
     case 'filter': return <FilterResultsView id={route.id} />;
     case 'filterEdit': return <FilterEditorView key={route.id ?? 'new'} id={route.id} />;
     case 'automations': return <AutomationsView />;
+    case 'insights': return <InsightsView />;
+    case 'timeLog': return <TimeLogView />;
     case 'automationEdit': return <AutomationEditorView key={route.id ?? 'new'} id={route.id} />;
     case 'settings': return <SettingsView />;
     case 'focus': return <FocusView />;
@@ -204,6 +208,7 @@ export function AppShell() {
       <ShortcutsDialog />
       <GlobalConfirm />
       <ReminderPanel />
+      <LongTimerPrompt />
       <Toasts />
     </div>
   );

@@ -236,6 +236,27 @@ export class TimeEntryRepository {
     track(this.db, 'time_entries', id, 'insert');
     return id;
   }
+  /** Correct a finished entry: start time, length and note (spec 6.2). */
+  correct(id: string, patch: { startedAt: string; minutes: number; note: string }) {
+    const ended = new Date(Date.parse(patch.startedAt) + patch.minutes * 60000).toISOString();
+    this.db.run('UPDATE time_entries SET started_at = ?, ended_at = ?, minutes = ?, note = ?, updated_at = ? WHERE id = ?', [
+      patch.startedAt,
+      ended,
+      patch.minutes,
+      patch.note,
+      nowIso(),
+      id,
+    ]);
+    track(this.db, 'time_entries', id, 'update');
+  }
+  listBetween(fromIso: string, toIso: string): TimeEntry[] {
+    return this.db
+      .all('SELECT * FROM time_entries WHERE deleted_at IS NULL AND started_at >= ? AND started_at < ? ORDER BY started_at DESC', [fromIso, toIso])
+      .map(mapTimeEntry);
+  }
+  listAll(): TimeEntry[] {
+    return this.db.all('SELECT * FROM time_entries WHERE deleted_at IS NULL').map(mapTimeEntry);
+  }
   softDelete(id: string) {
     this.db.run('UPDATE time_entries SET deleted_at = ?, updated_at = ? WHERE id = ?', [nowIso(), nowIso(), id]);
     track(this.db, 'time_entries', id, 'update');

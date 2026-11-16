@@ -17,6 +17,8 @@ export type Route =
   | { name: 'filterEdit'; id: string | null }
   | { name: 'automations' }
   | { name: 'automationEdit'; id: string | null }
+  | { name: 'insights' }
+  | { name: 'timeLog' }
   | { name: 'settings' }
   | { name: 'trash' }
   | { name: 'notfound' };
@@ -54,6 +56,8 @@ export function parseHash(hash: string): Location {
       break;
     case 'automations': route = { name: 'automations' }; break;
     case 'automation': route = { name: 'automationEdit', id: parts[1] && parts[1] !== 'new' ? parts[1] : null }; break;
+    case 'insights': route = { name: 'insights' }; break;
+    case 'time': route = { name: 'timeLog' }; break;
     case 'settings': route = { name: 'settings' }; break;
     case 'trash': route = { name: 'trash' }; break;
     default: route = { name: 'notfound' };
@@ -69,6 +73,7 @@ export function routePath(r: Route): string {
     case 'filterEdit': return r.id ? `/filter/${r.id}/edit` : '/filter/new';
     case 'automationEdit': return `/automation/${r.id ?? 'new'}`;
     case 'search': return r.q ? `/search?q=${encodeURIComponent(r.q)}` : '/search';
+    case 'timeLog': return '/time';
     case 'notfound': return '/today';
     default: return `/${r.name}`;
   }
