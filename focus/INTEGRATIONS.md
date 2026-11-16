@@ -1,6 +1,54 @@
-# Focus — Integrations (Phase 3)
+# Focus — Integrations
 
 Everything here is optional and off by default. Focus works fully offline without any of it.
+
+## Claude on your computer (local API + connector)
+
+Desktop app only. Settings → **Local API and Claude connector** → switch on, then **Save focus-mcp.mjs** and add it
+to Claude:
+
+```json
+{ "mcpServers": { "focus": { "command": "node", "args": ["C:\\Users\\you\\focus-mcp.mjs"],
+  "env": { "FOCUS_API_URL": "http://127.0.0.1:47615", "FOCUS_API_TOKEN": "<token from Settings>" } } } }
+```
+
+Claude Code: `claude mcp add focus --env FOCUS_API_TOKEN=<token> -- node <path>/focus-mcp.mjs`. Needs Node.js 18+
+and Focus open. Claude can then add tasks (natural language, like Quick Add), list/filter, edit, complete and
+reopen tasks, list/create projects, list labels, and run automations you tick in Settings. It cannot delete.
+
+### Local API reference
+
+All requests need `Authorization: Bearer <token>`; JSON in and out; `http://127.0.0.1:47615` by default.
+
+| Method | Path | Notes |
+|---|---|---|
+| GET | `/v1/health` | |
+| GET | `/v1/tasks?status=open\|completed\|all&filter=<query>&projectId=&limit=` | filter uses the Filters query language |
+| POST | `/v1/tasks` | `{"text": "Pay rent every month on the 1st #Home"}` or `{"title", "project", "scheduledDate", …}` |
+| GET / PATCH | `/v1/tasks/{id}` | PATCH any of title, description, projectId, priority, status, dates, durationMinutes, labels |
+| POST | `/v1/tasks/{id}/complete`, `/reopen` | 409 if it waits on another task; repeat with `?force=true` |
+| GET / POST | `/v1/projects` | POST `{"name", "parentId"?}` |
+| GET | `/v1/labels` | |
+| GET | `/v1/automations`; POST `/v1/automations/{id}/run` | only automations approved in Settings |
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" -d '{"text":"Renew car insurance by 30 Nov p1"}' http://127.0.0.1:47615/v1/tasks
+```
+
+## External calendars
+
+Settings → **Calendars**: add a calendar's private .ics address (Google: Settings → your calendar → "Secret address
+in iCal format"; Outlook: Settings → Calendar → Shared calendars → Publish; iCloud: share as Public Calendar) or
+import an .ics file. Events appear read-only in the calendar; "Count as busy time" makes workload and suggested
+rescheduling avoid them and flags tasks scheduled on top of them. Refreshes every 30 minutes. Export your scheduled
+tasks as .ics from the same section or a project's menu.
+
+## Import and export
+
+Settings → Data: **Export CSV** (all fields; opens in Excel/Sheets) and **Import tasks** from a Focus CSV, any
+spreadsheet with a Title column, a **Todoist project CSV** (Todoist → project → ⋯ → Export as a template), or a
+Focus project/task file (project menu → Export project; task ⋯ → Export task). You see a preview first; existing
+tasks are never changed, duplicates are skipped and the import can be undone.
 
 ## Add tasks from Claude (tap-to-add links)
 
@@ -64,9 +112,9 @@ actions:
       message: "Done: {{ trigger.json.task.title }}"
 ```
 
-**Not yet possible:** creating Focus tasks *from* Home Assistant (e.g. when a leak sensor fires) and showing
-Focus tasks on a Home Assistant dashboard. Both need Focus to accept incoming requests, which is the local API
-planned for Phase 4. Scheduled maintenance tasks can already be modelled as recurring tasks in Focus.
+**From Home Assistant to Focus:** with the desktop app's local API on and "Allow other devices on my network"
+ticked, a Home Assistant `rest_command` can POST to `http://<pc>:47615/v1/tasks` with the bearer token (e.g.
+when a leak sensor fires). Showing Focus tasks on a Home Assistant dashboard is not built. Scheduled maintenance tasks can already be modelled as recurring tasks in Focus.
 
 ## AI assistant
 

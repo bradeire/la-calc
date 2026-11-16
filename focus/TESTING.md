@@ -10,29 +10,44 @@ npm run check       # typecheck + lint + test + build
 
 ## What is covered
 
-| Suite | Files | Count (2026-11-14) |
+| Suite | Files | Count (2026-11-16) |
 |---|---|---|
 | Recurrence engine | `src/core/recurrence/engine.test.ts` | 21 |
 | NLP parser | `src/core/nlp/parser.test.ts` | 73 |
+| Filters engine + query language | `src/core/filters/filters.test.ts` | 18 |
+| Scheduling engine | `src/core/scheduling.test.ts` | 12 |
+| Calendar layout | `src/core/calendar-layout.test.ts` | 3 |
+| Capture extraction | `src/core/capture.test.ts` | 7 |
+| Tap-to-add links | `src/core/links.test.ts` | 6 |
+| Reports (completion, due dates, recurring, time) | `src/core/insights.test.ts` | 8 |
+| Goals and streaks | `src/core/goals.test.ts` | 3 |
+| iCalendar import/export, busy time | `src/core/ics.test.ts` | 7 |
 | Database, migrations, boot, recovery | `tests/database.test.ts` | 12 |
 | Task service (lifecycle, subtasks, recurrence, views, time) | `tests/task-service.test.ts` | 22 |
 | Projects, labels, sample data, backup/restore | `tests/data-service.test.ts` | 12 |
 | Performance (20,000 tasks; blocked lookup at 5,000) | `tests/performance.test.ts` | 2 |
-| Filters engine + query language | `src/core/filters/filters.test.ts` | 18 |
-| Scheduling engine | `src/core/scheduling.test.ts` | 12 |
-| Calendar layout | `src/core/calendar-layout.test.ts` | 3 |
 | Dependencies, reminders, templates, saved filters, scheduler, planning | `tests/phase2.test.ts` | 14 |
 | Automation engine and webhooks | `tests/automation.test.ts` | 13 |
 | AI service (fake provider) and capture service | `tests/ai-capture.test.ts` | 12 |
-| Capture extraction | `src/core/capture.test.ts` | 7 |
-| **Total Vitest** | | **221 passing** |
-| Rust: storage, secret names, HTTP validation | `src-tauri/src/*.rs` | 5 |
+| Insights service, time corrections, long-timer check | `tests/insights.test.ts` | 3 |
+| External calendars (subscribe, busy time, clashes, export) | `tests/calendars.test.ts` | 4 |
+| CSV / Todoist / project-file import and export | `tests/transfer.test.ts` | 7 |
+| Local API request handling | `tests/api.test.ts` | 5 |
+| Claude connector (MCP) as a real subprocess | `tests/mcp.test.ts` | 2 |
+| **Total Vitest** | | **266 passing** |
+| Rust: storage, secret names, HTTP validation, export names/base64, local API server (real TCP) | `src-tauri/src/*.rs` | 10 |
 | End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | 26 (13 × 2) |
-| Offline reload, accessibility audit | `e2e/quality.spec.ts` | 3 |
+| Offline reload, accessibility audit (incl. Insights, Time log) | `e2e/quality.spec.ts` | 3 |
 | 5,000-task rendering | `e2e/performance.spec.ts` | 1 |
-| Phase 2: filters, dependencies, templates, calendar drag/resize, reminders, planning | `e2e/phase2.spec.ts` | 11 (calendar drag desktop-only) |
-| Phase 3: automations, capture, AI (intercepted provider), signed webhook, voice (simulated) | `e2e/phase3.spec.ts` | 12 |
-| **Total Playwright** | | **55 passing**, 3 skipped (desktop-only tests on Pixel) |
+| Phase 2 | `e2e/phase2.spec.ts` | 11 |
+| Phase 3 | `e2e/phase3.spec.ts` | 16 |
+| Phase 4: insights, goals, customise, time log, long timer, calendars, CSV/Todoist import | `e2e/phase4.spec.ts` | 14 (7 × 2) |
+| **Total Playwright** | | **69 passing**, 3 skipped (desktop-only tests on Pixel) |
+
+**Native check (Linux desktop app under Xvfb, with a Secret Service keyring):** local API refuses requests
+without the token or from a web page; creates and filters tasks; the Claude connector adds a task through it;
+the task is in the SQLite file after the app exits. Script: run the debug build in `dbus-run-session` with
+`gnome-keyring-daemon`, then curl `http://127.0.0.1:47615/v1/…`.
 
 Integration tests run on sql.js in Node, i.e. the same SQLite engine the app ships, not a mock.
 The in-memory platform (`src/platform/memory.ts`) is used only in tests.
@@ -60,6 +75,10 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 - Chromium's experimental `SpeechRecognition.available()` crashed the page; the on-device probe is now opt-in and
   data is saved before it runs (ADR-012).
 - Settings form would have wiped AI consent on save; automations test clock mismatch.
+- Exports did nothing in the native apps (Android WebView ignores browser downloads): exports now go through the
+  platform (Downloads folder on desktop, share sheet on Android).
+- The Claude connector exited before finishing a call when its input closed (found in the native run).
+- Workload counted weekend capacity as "Available" bars that hid planned work (chart redesigned after review).
 
 ## Manual checks per release
 

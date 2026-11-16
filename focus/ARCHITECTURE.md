@@ -68,7 +68,16 @@ interface PersistenceAdapter { load(): Promise<Uint8Array | null>; save(bytes): 
 interface FileStore           { put(id, blob); get(id); delete(id); }   // attachments
 interface NotificationAdapter { schedule(reminder); cancel(id); requestPermission(); } // Phase 2
 interface LifecycleAdapter    { onPause(cb); onResume(cb); }
+interface SecretStore         { persistent; get(key); set(key, value); delete(key); } // keychain / Android Keystore
+interface HttpAdapter         { request({ method, url, headers, body }); }           // integrations only
+interface LinkAdapter         { initial(); listen(cb); }                             // focus:// links, shares
+exportFile(name, data, mime)                                                         // download / Downloads / share sheet
+localApi?: { start(port, token, allowLan); stop(); onRequest(cb); respond(id, status, body) } // desktop only
 ```
+
+Phase 4 services: `InsightsService` (reports and goals over stored data), `CalendarService` (external .ics
+calendars, busy time, .ics export), `TransferService` (CSV/Todoist/project-file import and export) and
+`ApiService` (local API routes; the Rust server in `src-tauri/src/api.rs` only authenticates and forwards).
 
 `src/platform/index.ts` selects implementations at start-up (`isTauri()` → Tauri
 adapters, otherwise web). Business logic only imports the interfaces.

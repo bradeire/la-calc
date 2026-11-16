@@ -39,6 +39,16 @@ All SQL lives in `src/data/repositories`. Conventions are in DECISIONS.md (ADR-0
 Indexes cover project/section, parent, status, scheduled date, deadline, completion time, deletion, series,
 label membership, activity by entity/time, and time entries.
 
+## Phase 4 tables (migration 004)
+
+| Table | Purpose |
+|---|---|
+| `calendar_sources` | External calendars: name, colour, kind (`url`/`file`), shown, counts as busy, last sync/error. The subscription address is in the SecretStore. |
+| `external_events` | Expanded occurrences cached per source (replaced on each sync): uid, title, location, all-day flag, start/end (UTC instant or date). |
+
+Migration 004 also drops `calendar_connections`, an unused placeholder from migration 001 (always empty).
+Settings gained `insightsLayout`, `goals` and `localApi` (validated per key).
+
 ## Migrations
 
 - `migrate(db)` applies pending migrations, **each in its own transaction**; a failure rolls back that migration.

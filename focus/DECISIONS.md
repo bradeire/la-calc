@@ -307,3 +307,43 @@ Focus has no server for a cloud assistant to call. Instead it registers the `foc
 `focus://capture` link in `MainActivity`. A link only pre-fills Quick Add or Capture: links can come from anyone, so
 creation always needs a tap, text is sanitised and capped, and unknown actions are ignored. A direct connector for
 Claude on the same computer comes with the Phase 4 local API.
+
+## ADR-015 — External calendars through iCalendar (.ics), not provider sign-in
+
+**Status:** Accepted (2026-11-16)
+
+Google, Outlook and Apple all publish a private .ics address and export .ics files, so one read-only path covers
+all three without OAuth apps, client secrets or cloud accounts, in keeping with local-first. Parsing uses ical.js
+(MPL-2.0) for time zones (including Outlook's Windows zone definitions), repeat rules and exceptions. Occurrences
+are expanded into `external_events` (two months back, a year ahead) and refreshed every 30 minutes; the address
+is a secret and lives in the SecretStore. Export is a .ics file (floating local times) rather than writing into
+external calendars. Live two-way sync would need each provider's API and sign-in; it is not planned.
+
+## ADR-016 — Local API: the webview does the work, Rust only guards the door
+
+**Status:** Accepted (2026-11-16)
+
+The database lives in the webview (sql.js), so the desktop app's Rust side runs a small HTTP server (tiny_http)
+that authenticates and forwards each request to the webview as an event and waits for the answer. The API thus
+has exactly the same validation, events and undo-free safety as the UI. Off by default; 127.0.0.1 unless the user
+opts into their network; bearer token (keychain, constant-time comparison); Host header checked against DNS
+rebinding; any request with a browser Origin refused; 1 MB bodies; no delete endpoints; dependency warnings
+return 409 and need `?force=true`. Not available on Android (the OS suspends background apps; the webview can't
+serve requests reliably). The Claude connector is a dependency-free MCP stdio script calling this API.
+
+## ADR-017 — Exports go through the platform
+
+**Status:** Accepted (2026-11-16)
+
+Browser-style downloads don't work in Android WebView and are unreliable in desktop webviews. `Platform.exportFile`
+downloads in the browser, writes to the Downloads folder on desktop (safe, non-overwriting names) and opens the
+Android share sheet (FileProvider) on Android.
+
+## ADR-018 — Android secrets: Keystore-encrypted preferences via an in-app plugin
+
+**Status:** Accepted (2026-11-16)
+
+A small Tauri plugin in the app (`SecureStorePlugin.kt`) encrypts secrets with an AES-256-GCM key generated in the
+Android Keystore; only IV and ciphertext are stored in private SharedPreferences. If the key is lost (restore to a
+new phone), values read as missing and the user re-enters them. Avoids the deprecated androidx security-crypto
+library and a third-party plugin.

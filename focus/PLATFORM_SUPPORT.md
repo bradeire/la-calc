@@ -34,7 +34,7 @@ npm install
 npm run desktop:dev     # runs the native app with live reload
 npm run desktop:build   # creates the installer
 ```
-The installer appears in `src-tauri\target\release\bundle\nsis\Focus_0.4.0_x64-setup.exe`. It installs for the
+The installer appears in `src-tauri\target\release\bundle\nsis\Focus_0.5.0_x64-setup.exe`. It installs for the
 current user only, so no administrator rights are needed. The first build takes several minutes. Because the
 installer isn't code-signed, Windows SmartScreen will warn ("More info → Run anyway").
 
@@ -80,7 +80,12 @@ Native notification scheduling and voice on Android are still to be assessed on 
 - **Browser storage eviction**: the PWA requests persistent storage. Back up until you move to the native app.
 - **Integrations in the browser:** webhook and AI targets must allow cross-origin requests (e.g. Ollama's
   `OLLAMA_ORIGINS`); secrets last for the session only. The desktop app has neither limitation.
-- **Android:** API keys and webhook secrets are kept for the session only (no Android keystore integration yet).
+- **Android secrets** (AI keys, webhook secrets, calendar addresses) are encrypted with the Android Keystore; iOS keeps them for the session only.
+- **Local API / Claude connector:** desktop app only. On Linux the keychain needs a Secret Service (GNOME
+  Keyring or KWallet); without one the API can't store its token and shows an error.
+- **Exports on Android** open the share sheet (choose Files / Drive / email); on desktop they go to Downloads.
+- **Calendar subscriptions in the browser** are usually blocked by the calendar servers (CORS); import a .ics file
+  instead, or use the desktop/Android app.
 - **Voice:** Chrome's recogniser is online by default; on-device recognition is experimental (ADR-012).
 - **App identifier** `uk.periopdigital.focus` is based on the domain your other apps use. It becomes the Android
   package name and is hard to change after a store release, so confirm it before publishing.

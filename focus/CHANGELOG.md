@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.5.0 — 2026-11-16 (Phase 4: productivity and integrations)
+
+### Added
+- Insights: completion, project/label, priority, due-date, recurring, workload and project reports with date
+  ranges, charts and tables; customisable widgets.
+- Time log with corrections; estimate vs actual; a prompt when a timer has run for hours.
+- Goals and streaks (daily/weekly tasks or time).
+- External calendars (Google, Outlook, Apple via .ics address or file): shown read-only, counted as busy time,
+  clashes flagged; export tasks as .ics.
+- CSV export/import, Todoist CSV import, project and task files; previews, duplicate skipping and undo.
+- Local API and a Claude connector for Claude Desktop / Claude Code (desktop app, off by default).
+- Android: secrets encrypted with the Android Keystore; exports through the share sheet.
+
+### Fixed
+- Exports and backups did nothing inside the native apps.
+
 ## 0.4.0 — 2026-11-16 (Phase 3: intelligence and automation)
 
 ### Added

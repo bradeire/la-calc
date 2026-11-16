@@ -7,7 +7,7 @@ Status levels (spec §11.7): **Not started** · **In progress** · **Implemented
 **No feature has been verified on a physical device yet.** A native Tauri build exists and has been verified on Linux
 (WebKitGTK); Windows and Android builds must be produced on those platforms (see PLATFORM_SUPPORT.md).
 
-_Last updated: 2026-11-16 (session 4 — Phase 3)._
+_Last updated: 2026-11-16 (session 5 — Phase 4)._
 
 ## Phase 1 — Core application
 
@@ -96,10 +96,30 @@ _Last updated: 2026-11-16 (session 4 — Phase 3)._
 | Android "Share → Focus" for text (Claude, Gmail, Outlook, Teams…) opens Capture | Implemented | in APK manifest; not tried on hardware |
 | Native HTTP and keychain commands (Tauri) | Tested (Rust unit tests, compiled) | keychain not exercised on Windows/macOS hardware |
 
+## Phase 4 — Productivity and integrations
+
+| Feature | Status | Evidence / notes |
+|---|---|---|
+| Insights: created vs completed (day/week/month), by project, by label, priority distribution, due dates met/missed, workload, recurring completion vs pattern, project progress | Tested | from stored timestamps only; definitions shown on each card |
+| Date ranges (presets and custom); charts with table view; configurable widgets (show/hide, order, width) | Tested | E2E; axe audit |
+| Dashboard widgets: today, overdue, deadlines, waiting, recent, quick capture, stats | Tested | |
+| Time: totals by day/week/project/task, estimate vs actual, time log with correction/deletion | Tested | |
+| Running timer not counted as worked time; prompt after 4 h with "stop at" an earlier time | Tested | E2E with controlled clock |
+| Goals: daily/weekly task and time targets, streaks (non-working days optional), 12-week history | Tested | no points or badges |
+| External calendars: Google/Outlook/Apple by private .ics address, or .ics file; read-only display in all calendar views | Tested | time zones, repeats, moved/cancelled occurrences |
+| Calendar events reduce available time; tasks scheduled over an event flagged; shown/hidden per calendar | Tested | |
+| Export scheduled tasks (all or a project) as .ics | Tested | re-import round trip |
+| Calendar addresses, API token, AI keys, webhook secrets in secure storage (desktop keychain; Android Keystore) | Tested (desktop, Linux keyring) / Implemented (Android) | Android plugin compiled, not run on hardware |
+| CSV export (all fields) and import (Focus, spreadsheets, Todoist project CSV) with preview, duplicate skip, undo | Tested | imports don't trigger automations |
+| Project export/import and single-task export (JSON) | Tested | |
+| Full backup with attachments, SQLite copy, verification, restore | Tested | Phase 1–2; now saved via platform export |
+| Native exports: Downloads folder (desktop), share sheet (Android) | Tested (Rust) / Implemented (Android) | |
+| Local API (desktop): tasks, projects, labels, approved automations; token, localhost by default, no deletion | Tested | real Linux app under Xvfb |
+| Claude connector (MCP) for Claude Desktop / Claude Code | Tested | against a stand-in API and against the real app; not yet with Claude Desktop itself |
+
 ## Not yet started (later phases)
 
-Insights/dashboard, reports, goals, external calendars, integration framework, CSV, local API (Phase 4) ·
-Android APK builds (signed, arm64) but has not been run on hardware yet; Windows installer build on hardware (Phase 5).
+Android/Windows release builds verified on hardware, background reminders on Android, touch drag-and-drop,
+iOS secure storage (Phase 5).
 
-**Navigation note:** Insights (Phase 4) is deliberately *absent* from navigation until it works, rather than shown
-as a placeholder screen.
+**Navigation note:** Insights is in the sidebar (desktop) and the More menu (phone).
