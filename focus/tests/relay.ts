@@ -33,9 +33,9 @@ export async function fakeD1() {
   return { prepare: (sql: string) => prepared(sql), raw: db };
 }
 
-export async function fakeRelay() {
+export async function fakeRelay(vars: Record<string, string> = {}) {
   const DB = await fakeD1();
-  const env = { DB };
+  const env = { DB, ...vars };
   const requests: HttpRequest[] = [];
   let offline = false;
   const http = async (r: HttpRequest): Promise<HttpResponse> => {
