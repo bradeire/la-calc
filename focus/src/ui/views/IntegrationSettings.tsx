@@ -1,5 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import { Bot, Copy, Link2, Pencil, Plus, ShieldCheck, Trash2, Webhook } from 'lucide-react';
+import { Bot, CalendarPlus, Copy, Download, FileUp, Link2, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, Webhook } from 'lucide-react';
+import { PALETTE } from '@/core/domain/types';
+import { download } from '../download';
 import { ASSISTANT_INSTRUCTIONS, buildAddLink } from '@/core/links';
 import { isLocalUrl, type AiConfig } from '@/services/ai-service';
 import { useUi } from '@/state/ui-store';
@@ -270,6 +272,225 @@ export function AddFromAssistantSettings() {
           )}
         </div>
       </div>
+    </Group>
+  );
+}
+
+const CALENDAR_HELP = [
+  ['Google Calendar', 'calendar.google.com → Settings → (your calendar) → Integrate calendar → “Secret address in iCal format”.'],
+  ['Outlook / Microsoft 365', 'outlook.com → Settings → Calendar → Shared calendars → Publish a calendar → copy the ICS link.'],
+  ['Apple iCloud', 'Calendar app → share a calendar → Public Calendar → copy the webcal:// link.'],
+] as const;
+
+function AddCalendarDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const app = useApp();
+  const pushToast = useUi((s) => s.pushToast);
+  const [name, setName] = useState('');
+  const [url, setUrl] = useState('');
+  const [color, setColor] = useState(PALETTE[5]!.value);
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try {
+      await app.calendars.addUrl({ name, url, color });
+      pushToast({ message: 'Calendar added', tone: 'success' });
+      setName('');
+      setUrl('');
+      onClose();
+    } catch (err) {
+      pushToast({ message: errorMessage(err), tone: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Add a calendar"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" disabled={!url.trim() || busy} onClick={save}>
+            {busy ? 'Checking…' : 'Add'}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3 p-4">
+        <Field label="Name" htmlFor="cal-name">
+          <Input id="cal-name" value={name} placeholder="e.g. Family" onChange={(e) => setName(e.target.value)} />
+        </Field>
+        <Field label="Private calendar address (.ics)" htmlFor="cal-url" hint="Anyone with this address can read the calendar, so Focus keeps it in secure storage, not in its database.">
+          <Input id="cal-url" value={url} placeholder="https://… or webcal://…" onChange={(e) => setUrl(e.target.value)} autoComplete="off" spellCheck={false} />
+        </Field>
+        <Field label="Colour" htmlFor="cal-color">
+          <Select id="cal-color" value={color} onChange={(e) => setColor(e.target.value)}>
+            {PALETTE.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <details className="text-[0.82rem] text-muted">
+          <summary className="cursor-pointer">Where do I find the address?</summary>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {CALENDAR_HELP.map(([k, v]) => (
+              <li key={k}>
+                <strong className="text-fg">{k}:</strong> {v}
+              </li>
+            ))}
+          </ul>
+        </details>
+      </div>
+    </Dialog>
+  );
+}
+
+/** External calendars (spec 6.4): read-only display, availability, and task export. */
+export function CalendarSettings() {
+  const app = useApp();
+  const pushToast = useUi((s) => s.pushToast);
+  const askConfirm = useUi((s) => s.askConfirm);
+  const sources = useQuery(() => app.calendars.sources(), []);
+  const projects = useQuery(() => app.repos.projects.list(), []);
+  const [adding, setAdding] = useState(false);
+  const [exportProject, setExportProject] = useState('');
+  const [refreshing, setRefreshing] = useState<string | null>(null);
+  const refresh = async (id: string) => {
+    setRefreshing(id);
+    try {
+      const n = await app.calendars.refresh(id);
+      pushToast({ message: `Updated: ${n} event${n === 1 ? '' : 's'}`, tone: 'success' });
+    } catch (err) {
+      pushToast({ message: errorMessage(err), tone: 'error' });
+    } finally {
+      setRefreshing(null);
+    }
+  };
+  const reenter = async (id: string) => {
+    const url = window.prompt('Paste the calendar’s private address again');
+    if (!url) return;
+    try {
+      await app.calendars.setAddress(id, url);
+      pushToast({ message: 'Calendar updated', tone: 'success' });
+    } catch (err) {
+      pushToast({ message: errorMessage(err), tone: 'error' });
+    }
+  };
+  const importFile = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      app.calendars.addFile({ name: file.name.replace(/\.ics$/i, ''), text, color: PALETTE[9]!.value });
+      pushToast({ message: `Imported “${file.name}”`, tone: 'success' });
+    } catch (err) {
+      pushToast({ message: errorMessage(err), tone: 'error' });
+    }
+  };
+  const exportIcs = () => {
+    try {
+      const r = app.calendars.exportIcs({ projectId: exportProject || null });
+      if (!r.count) {
+        pushToast({ message: 'No scheduled tasks to export', tone: 'error' });
+        return;
+      }
+      download(r.filename, r.text, 'text/calendar');
+      pushToast({ message: `Exported ${r.count} task${r.count === 1 ? '' : 's'}`, tone: 'success' });
+    } catch (err) {
+      pushToast({ message: errorMessage(err), tone: 'error' });
+    }
+  };
+  return (
+    <Group title="Calendars" icon={<CalendarPlus size={16} />}>
+      <div className="flex flex-col gap-3 px-4 py-3 text-[0.9rem]">
+        <p className="text-[0.85rem] text-muted">
+          Show events from Google, Outlook or Apple calendars next to your tasks (read-only). Events can count as busy time, so workload and
+          suggested rescheduling avoid them. Focus’s own calendar works without any of this.
+        </p>
+        {sources.length > 0 && (
+          <ul className="divide-y divide-line rounded-lg border border-line" aria-label="Calendars">
+            {sources.map((s) => (
+              <li key={s.id} className="flex flex-col gap-2 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <span aria-hidden className="h-3 w-3 shrink-0 rounded-full" style={{ background: s.color }} />
+                  <span className="min-w-0 flex-1 truncate font-medium">{s.name}</span>
+                  {s.kind === 'url' && (
+                    <IconButton size="sm" label={`Refresh ${s.name}`} disabled={refreshing === s.id} onClick={() => refresh(s.id)}>
+                      <RefreshCw size={14} className={refreshing === s.id ? 'animate-spin' : ''} />
+                    </IconButton>
+                  )}
+                  <IconButton
+                    size="sm"
+                    label={`Remove ${s.name}`}
+                    onClick={() => askConfirm({ message: `Remove “${s.name}”? Its events disappear from Focus; the calendar itself is not changed.`, confirmLabel: 'Remove', onConfirm: () => void app.calendars.remove(s.id) })}
+                  >
+                    <Trash2 size={14} />
+                  </IconButton>
+                </div>
+                <p className="text-[0.8rem] text-muted">
+                  {s.kind === 'file' ? 'Imported file' : 'Subscribed'} · {s.eventCount} event{s.eventCount === 1 ? '' : 's'}
+                  {s.lastSyncedAt && ` · updated ${new Date(s.lastSyncedAt).toLocaleString()}`}
+                </p>
+                {s.lastError && (
+                  <p role="status" className="flex flex-wrap items-center gap-2 text-[0.8rem] text-danger">
+                    {s.lastError}
+                    {/again|needed/i.test(s.lastError) && (
+                      <Button size="sm" onClick={() => reenter(s.id)}>
+                        Enter address
+                      </Button>
+                    )}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-x-5 gap-y-2">
+                  <label className="flex items-center gap-2 text-[0.85rem]">
+                    <Switch checked={s.visible} onChange={(v) => app.calendars.update(s.id, { visible: v })} label={`Show ${s.name} in the calendar`} />
+                    Show in calendar
+                  </label>
+                  <label className="flex items-center gap-2 text-[0.85rem]">
+                    <Switch checked={s.blocksTime} onChange={(v) => app.calendars.update(s.id, { blocksTime: v })} label={`Count ${s.name} as busy time`} />
+                    Count as busy time
+                  </label>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <Plus size={14} /> Add calendar by address
+          </Button>
+          <label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-surface-2 px-2.5 text-[0.86rem] font-medium hover:bg-surface-3 focus-within:ring-2 focus-within:ring-accent">
+            <FileUp size={14} /> Import .ics file
+            <input type="file" accept=".ics,text/calendar" className="sr-only" onChange={(e) => (void importFile(e.target.files?.[0]), (e.target.value = ''))} />
+          </label>
+        </div>
+        {app.platform.kind === 'web' && (
+          <p className="text-[0.8rem] text-muted">
+            In the browser, most calendar servers block direct access and addresses are only remembered until you close the tab. The desktop and
+            Android apps don’t have these limits; importing an .ics file works everywhere.
+          </p>
+        )}
+        <div className="flex flex-wrap items-end gap-2 border-t border-line pt-3">
+          <Field label="Export scheduled tasks as a calendar file" htmlFor="ics-export">
+            <Select id="ics-export" value={exportProject} onChange={(e) => setExportProject(e.target.value)}>
+              <option value="">All projects</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Button size="sm" onClick={exportIcs}>
+            <Download size={14} /> Export .ics
+          </Button>
+        </div>
+      </div>
+      <AddCalendarDialog open={adding} onClose={() => setAdding(false)} />
     </Group>
   );
 }

@@ -66,6 +66,7 @@ export function PlanDialog({ open, onClose }: { open: boolean; onClose: () => vo
       case 'afterDeadline': return { text: `“${name(c.taskId)}” is scheduled after its deadline`, taskId: c.taskId };
       case 'beforeStart': return { text: `“${name(c.taskId)}” is scheduled before its start date`, taskId: c.taskId };
       case 'dependencyOrder': return { text: `“${name(c.taskId)}” is planned before “${name(c.prerequisiteId)}”, which it depends on`, taskId: c.taskId };
+      case 'eventClash': return { text: `“${name(c.taskId)}” is scheduled during “${c.eventTitle}” in your calendar`, taskId: c.taskId };
       case 'deadlineAtRisk': return { text: `“${name(c.taskId)}” may miss its deadline: ${formatDuration(c.needed)} of work, ${formatDuration(c.available)} available`, taskId: c.taskId };
     }
   };

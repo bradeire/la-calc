@@ -14,6 +14,7 @@ import { ReminderService } from '@/services/reminder-service';
 import { TemplateService } from '@/services/template-service';
 import { PlanningService } from '@/services/planning-service';
 import { InsightsService } from '@/services/insights-service';
+import { CalendarService } from '@/services/calendar-service';
 import { WebhookService } from '@/services/webhook-service';
 import { AutomationService } from '@/services/automation-service';
 import { AiService } from '@/services/ai-service';
@@ -98,6 +99,7 @@ export interface AppContainer {
   templates: TemplateService;
   planning: PlanningService;
   insights: InsightsService;
+  calendars: CalendarService;
   webhooks: WebhookService;
   automations: AutomationService;
   ai: AiService;
@@ -132,6 +134,7 @@ export function createContainer(
     const reminders = new ReminderService(repos);
     const templates = new TemplateService(repos, tasks, projects, labels);
     const planning = new PlanningService(repos, tasks, () => clock.now());
+    const calendars = new CalendarService(repos, platform.http, platform.secrets, () => clock.now());
     const insights = new InsightsService(repos, () => clock.now());
     const webhooks = new WebhookService(repos, platform.http, platform.secrets);
     const ai = new AiService(repos, platform.http, platform.secrets);
@@ -141,7 +144,7 @@ export function createContainer(
     teardown.push(db.subscribe(() => saver.schedule()));
     teardown.push(() => automations.dispose());
     teardown.push(platform.lifecycle.onPause(() => saver.flush()));
-    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, insights, webhooks, automations, ai, capture, saver };
+    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, insights, calendars, webhooks, automations, ai, capture, saver };
   };
 
   const container: AppContainer = {

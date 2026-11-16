@@ -85,18 +85,36 @@ fn data_dir(state: State<'_, AppStorage>) -> Result<String, String> {
 }
 
 #[tauri::command]
-fn secret_set(key: String, value: String) -> Result<(), String> {
-    secrets::set(&key, &value)
+async fn secret_set(app: tauri::AppHandle, key: String, value: String) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    return secrets::android::set(&app, &key, &value);
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = &app;
+        secrets::set(&key, &value)
+    }
 }
 
 #[tauri::command]
-fn secret_get(key: String) -> Result<Option<String>, String> {
-    secrets::get(&key)
+async fn secret_get(app: tauri::AppHandle, key: String) -> Result<Option<String>, String> {
+    #[cfg(target_os = "android")]
+    return secrets::android::get(&app, &key);
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = &app;
+        secrets::get(&key)
+    }
 }
 
 #[tauri::command]
-fn secret_delete(key: String) -> Result<(), String> {
-    secrets::delete(&key)
+async fn secret_delete(app: tauri::AppHandle, key: String) -> Result<(), String> {
+    #[cfg(target_os = "android")]
+    return secrets::android::delete(&app, &key);
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = &app;
+        secrets::delete(&key)
+    }
 }
 
 #[tauri::command]
@@ -117,6 +135,10 @@ pub fn run() {
                 let _ = w.set_focus();
             }
         }));
+    }
+    #[cfg(target_os = "android")]
+    {
+        builder = builder.plugin(secrets::android::init());
     }
     builder
         .plugin(tauri_plugin_deep_link::init())

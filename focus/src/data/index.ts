@@ -3,6 +3,7 @@ import { ActivityRepository, AttachmentRepository, CommentRepository, ReminderRe
 import { DependencyRepository } from './repositories/dependencies';
 import { SavedFilterRepository } from './repositories/filters';
 import { AutomationRepository } from './repositories/automations';
+import { CalendarRepository } from './repositories/calendars';
 import { IntegrationRepository } from './repositories/integrations';
 import { LabelRepository } from './repositories/labels';
 import { ProjectRepository } from './repositories/projects';
@@ -26,6 +27,7 @@ export interface Repositories {
   filters: SavedFilterRepository;
   automations: AutomationRepository;
   integrations: IntegrationRepository;
+  calendars: CalendarRepository;
 }
 
 export function createRepositories(db: DatabaseDriver): Repositories {
@@ -45,5 +47,6 @@ export function createRepositories(db: DatabaseDriver): Repositories {
     filters: new SavedFilterRepository(db),
     automations: new AutomationRepository(db),
     integrations: new IntegrationRepository(db),
+    calendars: new CalendarRepository(db),
   };
 }

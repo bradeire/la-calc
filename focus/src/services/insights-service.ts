@@ -20,6 +20,7 @@ import {
   type Granularity,
 } from '@/core/insights';
 import { workload } from '@/core/scheduling';
+import { busyMinutesByDay } from '@/core/ics';
 import type { Repositories } from '@/data';
 import { goalsSchema } from '@/data/repositories/settings';
 
@@ -64,7 +65,11 @@ export class InsightsService {
       recurring: recurringCompletion(tasks, range, today),
       projects: projectProgress(tasks),
       time: timeReport(entries, tasks, range, this.now(), wk),
-      workload: workload(open, today, addDays(today, 13), { hours: s.workingHours, defaultEstimate: s.defaultEstimate }),
+      workload: workload(open, today, addDays(today, 13), {
+        hours: s.workingHours,
+        defaultEstimate: s.defaultEstimate,
+        busy: busyMinutesByDay(this.r.calendars.eventsBetween(today, addDays(today, 13), { only: 'blocking' }), s.workingHours, today, addDays(today, 13)),
+      }),
       lists: this.lists(open, tasks, today),
       goals: this.goalStatus(tasks),
     };

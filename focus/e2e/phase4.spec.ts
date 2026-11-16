@@ -81,3 +81,52 @@ test('a timer left running for hours asks whether you are still working', async 
   await page.getByRole('button', { name: 'Stop at this time' }).click();
   await expect(page.getByText('1h 30m in this period')).toBeVisible();
 });
+
+const ics = (title: string, start: Date, end: Date) => {
+  const z = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Test//EN', 'BEGIN:VEVENT', 'UID:e1', `DTSTART:${z(start)}`, `DTEND:${z(end)}`, `SUMMARY:${title}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+};
+
+test('external calendar: subscribe, see events, import a file, export tasks', async ({ page }) => {
+  await page.clock.install({ time: new Date(2026, 10, 16, 8, 0) });
+  await page.route('https://cal.example.com/**', (route) =>
+    route.fulfill({ status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'text/calendar' }, body: ics('Parents evening', new Date(2026, 10, 17, 18), new Date(2026, 10, 17, 19, 30)) }),
+  );
+  await startFresh(page);
+  await page.goto('/#/settings');
+  await page.getByRole('button', { name: 'Add calendar by address' }).click();
+  await page.getByLabel('Name', { exact: true }).fill('School');
+  await page.getByLabel('Private calendar address (.ics)').fill('webcal://cal.example.com/secret/basic.ics');
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  const list = page.getByRole('list', { name: 'Calendars' });
+  await expect(list.getByText('School')).toBeVisible();
+  await expect(list.getByText(/1 event/)).toBeVisible();
+
+  await page.getByLabel('Import .ics file').setInputFiles({ name: 'Holidays.ics', mimeType: 'text/calendar', buffer: Buffer.from(ics('Bank holiday trip', new Date(2026, 10, 19, 10), new Date(2026, 10, 19, 12))) });
+  await expect(list.getByText('Holidays')).toBeVisible();
+
+  await page.goto('/#/calendar');
+  await page.getByRole('radio', { name: 'Week' }).click();
+  await expect(page.getByText('Parents evening').first()).toBeAttached();
+  await expect(page.getByText('Bank holiday trip').first()).toBeAttached();
+
+  // Hidden calendars disappear from the calendar.
+  await page.goto('/#/settings');
+  await page.getByRole('switch', { name: 'Show Holidays in the calendar' }).click();
+  await page.goto('/#/calendar');
+  await expect(page.getByText('Parents evening').first()).toBeAttached();
+  await expect(page.getByText('Bank holiday trip')).toHaveCount(0);
+
+  // Export scheduled tasks as .ics.
+  await page.goto('/#/inbox');
+  const input = await quickAdd(page, 'Bins out tomorrow');
+  await input.press('Enter');
+  await page.keyboard.press('Escape');
+  await page.goto('/#/settings');
+  const dl = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export .ics' }).click();
+  const file = await dl;
+  expect(file.suggestedFilename()).toBe('focus-tasks.ics');
+  const text = await (await file.createReadStream()).toArray().then((c) => Buffer.concat(c).toString());
+  expect(text).toContain('SUMMARY:Bins out');
+});

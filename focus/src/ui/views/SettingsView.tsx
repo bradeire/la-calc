@@ -9,7 +9,8 @@ import { errorMessage, useAction, useApp, useQuery, useSettings } from '../hooks
 import { Button, ConfirmDialog, Select, Switch, cx } from '../primitives';
 import { ViewBody } from '../components/common';
 import { ViewHeader } from '../layout/Chrome';
-import { AddFromAssistantSettings, AiSettings, WebhookSettings } from './IntegrationSettings';
+import { download } from '../download';
+import { AddFromAssistantSettings, AiSettings, CalendarSettings, WebhookSettings } from './IntegrationSettings';
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -35,15 +36,6 @@ function Item({ label, hint, children, htmlFor }: { label: string; hint?: ReactN
       <div className="flex items-center gap-2">{children}</div>
     </div>
   );
-}
-
-function download(name: string, data: BlobPart, type: string) {
-  const url = URL.createObjectURL(new Blob([data], { type }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 export function useSetting() {
@@ -207,6 +199,7 @@ export function SettingsView() {
         </Group>
 
         <NotificationSettings />
+        <CalendarSettings />
         <AddFromAssistantSettings />
         <AiSettings />
         <WebhookSettings />
@@ -321,7 +314,7 @@ function NotificationSettings() {
       </Item>
       <Item
         label="When are reminders delivered?"
-        hint="While Focus is open, or running in the background on desktop. If Focus was closed, missed reminders are shown together when you next open it. Delivery while the app is fully closed needs the Android app (not built yet)."
+        hint="While Focus is open, or running in the background on desktop. If Focus was closed, missed reminders are shown together when you next open it. Delivery while the app is fully closed needs scheduled system notifications, which are not built yet (including on Android)."
       >
         <span />
       </Item>

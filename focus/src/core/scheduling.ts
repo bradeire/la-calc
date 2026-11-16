@@ -19,6 +19,10 @@ export interface SchedulingOptions {
   /** Minutes assumed for tasks without an estimate, for load purposes only. */
   defaultEstimate: number;
   horizonDays: number;
+  /** Minutes per day taken by external calendar events inside working hours (Phase 4). */
+  busy?: ReadonlyMap<ISODate, number>;
+  /** Timed external events, to flag tasks scheduled on top of them. */
+  events?: readonly { title: string; allDay: boolean; start: string; end: string }[];
 }
 
 const toMin = (hhmm: string) => {
@@ -29,6 +33,11 @@ const toMin = (hhmm: string) => {
 export function capacityFor(date: ISODate, hours: WorkingHours): number {
   if (!hours.days.includes(weekdayIndex(date))) return 0;
   return Math.max(0, toMin(hours.end) - toMin(hours.start));
+}
+
+/** Working-hours capacity minus time already taken by calendar events. */
+export function capacityOn(date: ISODate, o: Pick<SchedulingOptions, 'hours' | 'busy'>): number {
+  return Math.max(0, capacityFor(date, o.hours) - (o.busy?.get(date) ?? 0));
 }
 
 export interface DayLoad {
@@ -43,11 +52,11 @@ export interface DayLoad {
   overloaded: boolean;
 }
 
-export function workload(tasks: readonly Task[], from: ISODate, to: ISODate, o: Pick<SchedulingOptions, 'hours' | 'defaultEstimate'>): DayLoad[] {
+export function workload(tasks: readonly Task[], from: ISODate, to: ISODate, o: Pick<SchedulingOptions, 'hours' | 'defaultEstimate' | 'busy'>): DayLoad[] {
   const days: DayLoad[] = [];
   const byDate = new Map<ISODate, DayLoad>();
   for (let d = from; d <= to; d = addDays(d, 1)) {
-    const load: DayLoad = { date: d, capacity: capacityFor(d, o.hours), estimated: 0, unestimated: 0, planned: 0, taskIds: [], overloaded: false };
+    const load: DayLoad = { date: d, capacity: capacityOn(d, o), estimated: 0, unestimated: 0, planned: 0, taskIds: [], overloaded: false };
     days.push(load);
     byDate.set(d, load);
   }
@@ -61,7 +70,7 @@ export function workload(tasks: readonly Task[], from: ISODate, to: ISODate, o: 
   for (const d of days) {
     d.planned = d.estimated + d.unestimated * o.defaultEstimate;
     // Days without working hours (e.g. weekends) hold deliberately planned personal tasks; they are not "overloaded".
-    d.overloaded = d.capacity > 0 && d.planned > d.capacity;
+    d.overloaded = capacityFor(d.date, o.hours) > 0 && d.planned > d.capacity;
   }
   return days;
 }
@@ -73,7 +82,8 @@ export type Conflict =
   | { kind: 'beforeStart'; taskId: string }
   | { kind: 'dependencyOrder'; taskId: string; prerequisiteId: string }
   | { kind: 'deadlineAtRisk'; taskId: string; needed: number; available: number }
-  | { kind: 'overdue'; taskIds: string[]; minutes: number };
+  | { kind: 'overdue'; taskIds: string[]; minutes: number }
+  | { kind: 'eventClash'; taskId: string; eventTitle: string };
 
 export interface Suggestion {
   /** Stable key so a rejected suggestion stays hidden. */
@@ -124,6 +134,17 @@ export function findConflicts(openTasks: readonly Task[], edges: readonly Depend
     }
   }
 
+  // Timed tasks on top of a calendar event.
+  if (o.events?.length) {
+    for (const t of timed) {
+      const [y, m, d] = t.scheduledDate!.split('-').map(Number) as [number, number, number];
+      const s = new Date(y, m - 1, d, 0, toMin(t.scheduledTime!)).getTime();
+      const e = s + est(t, o) * 60000;
+      const ev = o.events.find((x) => !x.allDay && Date.parse(x.start) < e && Date.parse(x.end) > s);
+      if (ev) out.push({ kind: 'eventClash', taskId: t.id, eventTitle: ev.title });
+    }
+  }
+
   for (const t of openTasks) {
     if (t.scheduledDate && t.deadline && t.scheduledDate > t.deadline) out.push({ kind: 'afterDeadline', taskId: t.id });
     if (t.scheduledDate && t.startDate && t.scheduledDate < t.startDate) out.push({ kind: 'beforeStart', taskId: t.id });
@@ -144,7 +165,7 @@ export function findConflicts(openTasks: readonly Task[], edges: readonly Depend
   const withDeadline = openTasks.filter((t) => t.deadline && t.deadline >= o.today && t.deadline <= horizonEnd).sort((a, b) => compareISO(a.deadline, b.deadline));
   for (const t of withDeadline) {
     let available = 0;
-    for (let d = o.today; d <= t.deadline!; d = addDays(d, 1)) available += capacityFor(d, o.hours);
+    for (let d = o.today; d <= t.deadline!; d = addDays(d, 1)) available += capacityOn(d, o);
     const needed = openTasks
       .filter((x) => (x.deadline && x.deadline <= t.deadline!) || (x.scheduledDate && x.scheduledDate >= o.today && x.scheduledDate <= t.deadline!))
       .reduce((s, x) => s + est(x, o), 0);

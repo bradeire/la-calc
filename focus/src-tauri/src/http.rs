@@ -5,7 +5,8 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-const MAX_RESPONSE_BYTES: usize = 2 * 1024 * 1024;
+// Calendar feeds with years of history can be several megabytes.
+const MAX_RESPONSE_BYTES: usize = 16 * 1024 * 1024;
 
 #[derive(Deserialize)]
 pub struct HttpRequest {

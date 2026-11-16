@@ -4,6 +4,7 @@ import { fromHHMM, layoutDay, snap, toHHMM } from '@/core/calendar-layout';
 import {
   addDays, addMonths, endOfMonth, formatDuration, formatLongDate, formatTime, fromISODate, MONTH_NAMES, MONTH_SHORT, startOfMonth,
   startOfWeek, weekdayIndex, WEEKDAY_SHORT, type ISODate,
+  toISODate,
 } from '@/core/dates';
 import { isOpenStatus, type Task } from '@/core/domain/types';
 import { previewOccurrences } from '@/core/recurrence/engine';
@@ -25,6 +26,57 @@ interface Entry {
   task: Task;
   date: ISODate;
   kind: 'scheduled' | 'deadline' | 'repeat';
+}
+
+/** Read-only events from external calendars (Settings → Calendars). */
+interface ExtEvent {
+  id: string;
+  title: string;
+  location: string;
+  calendar: string;
+  color: string;
+  allDay: boolean;
+  start: string;
+  end: string;
+}
+interface ExtDay {
+  allDay: ExtEvent[];
+  /** Minutes from local midnight, clipped to the day. */
+  timed: { ev: ExtEvent; start: number; end: number }[];
+}
+function bucketEvents(events: readonly ExtEvent[], from: ISODate, to: ISODate): Map<ISODate, ExtDay> {
+  const m = new Map<ISODate, ExtDay>();
+  const get = (d: ISODate) => m.get(d) ?? (m.set(d, { allDay: [], timed: [] }), m.get(d)!);
+  for (const ev of events) {
+    if (ev.allDay) {
+      for (let d = ev.start < from ? from : ev.start; d < ev.end && d <= to; d = addDays(d, 1)) get(d).allDay.push(ev);
+      continue;
+    }
+    const s = new Date(ev.start);
+    const e = new Date(ev.end);
+    for (let d = toISODate(s) < from ? from : toISODate(s); d <= to; d = addDays(d, 1)) {
+      const [y, mo, da] = d.split('-').map(Number) as [number, number, number];
+      const dayStart = new Date(y, mo - 1, da).getTime();
+      if (dayStart >= e.getTime()) break;
+      const a = Math.max(0, (s.getTime() - dayStart) / 60000);
+      const b = Math.min(24 * 60, (e.getTime() - dayStart) / 60000);
+      if (b > a) get(d).timed.push({ ev, start: a, end: b });
+    }
+  }
+  return m;
+}
+
+function EventChip({ ev, time }: { ev: ExtEvent; time?: string }) {
+  return (
+    <div
+      title={`${ev.title}${ev.location ? ` · ${ev.location}` : ''} (${ev.calendar})`}
+      className="flex items-center gap-1 truncate rounded px-1 py-px text-left leading-tight"
+      style={{ background: `color-mix(in srgb, ${ev.color} 16%, var(--surface))`, borderLeft: `3px solid ${ev.color}` }}
+    >
+      {time && <span className="shrink-0 text-muted">{time}</span>}
+      <span className="truncate">{ev.title}</span>
+    </div>
+  );
 }
 
 function readView(isDesktop: boolean): CalView {
@@ -107,6 +159,8 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
     return m;
   }, [tasks, recurring, from, to]);
 
+  const external = useQuery(() => bucketEvents(app.calendars.events(from, to), from, to), [from, to]);
+
   const step = (dir: 1 | -1) => {
     if (view === 'month') setAnchor(addMonths(startOfMonth(anchor), dir));
     else setAnchor(addDays(anchor, dir * (view === 'day' ? 1 : view === '3day' ? 3 : view === 'week' ? 7 : 30)));
@@ -158,11 +212,11 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
           {embedded && <h2 className="text-[1.05rem] font-semibold">{title}</h2>}
           {controls}
         </div>
-        {view === 'month' && <MonthGrid anchor={anchor} from={from} to={to} entries={entries} today={today} projectId={projectId} onPickDay={(d) => (setAnchor(d), setView('day'))} />}
-        {view === 'agenda' && <Agenda from={from} entries={entries} today={today} />}
-        {(view === 'day' || view === '3day' || view === 'week') && <TimeGrid from={from} to={to} entries={entries} today={today} projectId={projectId} />}
+        {view === 'month' && <MonthGrid anchor={anchor} from={from} to={to} entries={entries} external={external} today={today} projectId={projectId} onPickDay={(d) => (setAnchor(d), setView('day'))} />}
+        {view === 'agenda' && <Agenda from={from} entries={entries} external={external} today={today} />}
+        {(view === 'day' || view === '3day' || view === 'week') && <TimeGrid from={from} to={to} entries={entries} external={external} today={today} projectId={projectId} />}
         <p className="mt-2 text-[0.75rem] text-subtle">
-          Dashed items are deadlines; dotted italic items are future repeats. Drag a block to move it, drag its lower edge to change the duration
+          Dashed items are deadlines; dotted italic items are future repeats; tinted items come from your other calendars (read-only). Drag a block to move it, drag its lower edge to change the duration
           {isDesktop ? '' : ' (touch: press and hold first)'}. Click an empty slot to add a task.
         </p>
       </ViewBody>
@@ -189,7 +243,7 @@ interface DragState {
   armed: boolean;
 }
 
-function TimeGrid({ from, to, entries, today, projectId }: { from: ISODate; to: ISODate; entries: Map<ISODate, Entry[]>; today: ISODate; projectId?: string }) {
+function TimeGrid({ from, to, entries, external, today, projectId }: { from: ISODate; to: ISODate; entries: Map<ISODate, Entry[]>; external: Map<ISODate, ExtDay>; today: ISODate; projectId?: string }) {
   const app = useApp();
   const act = useAction();
   const prefs = useDatePrefs();
@@ -320,6 +374,11 @@ function TimeGrid({ from, to, entries, today, projectId }: { from: ISODate; to: 
                   if (id) act((force) => app.tasks.update(id, { scheduledDate: d, scheduledTime: null }, { force }));
                 }}
               >
+                {external.get(d)?.allDay.map((ev) => (
+                  <div key={ev.id} className="text-[0.75rem]">
+                    <EventChip ev={ev} />
+                  </div>
+                ))}
                 {allDay(d).map((e, i) => (
                   <button
                     key={`${e.task.id}-${e.kind}-${i}`}
@@ -398,6 +457,32 @@ function TimeGrid({ from, to, entries, today, projectId }: { from: ISODate; to: 
                     <span className="absolute -top-[5px] -left-1 h-2 w-2 rounded-full bg-danger" />
                   </div>
                 )}
+                {/* External calendar events: background blocks (read-only); tasks sit on top. */}
+                {layoutDay((external.get(d)?.timed ?? []).map((x) => ({ id: x.ev.id, start: x.start, end: Math.max(x.end, x.start + 15) }))).map((p) => {
+                  const x = external.get(d)!.timed.find((t) => t.ev.id === p.id)!;
+                  return (
+                    <div
+                      key={`ext-${p.id}`}
+                      className="pointer-events-none absolute z-10 overflow-hidden rounded-md px-1.5 py-0.5 text-[0.72rem] leading-tight text-fg"
+                      style={{
+                        top: (p.start / 60) * HOUR_PX,
+                        height: Math.max(((p.end - p.start) / 60) * HOUR_PX, 16),
+                        left: `calc(${(p.column / p.columns) * 100}% + 1px)`,
+                        width: `calc(${100 / p.columns}% - 2px)`,
+                        background: `color-mix(in srgb, ${x.ev.color} 14%, var(--surface))`,
+                        borderLeft: `3px solid ${x.ev.color}`,
+                      }}
+                    >
+                      <span className="block truncate">
+                        {x.ev.title}
+                        <span className="sr-only">
+                          {' '}
+                          ({x.ev.calendar}, {formatTime(toHHMM(Math.round(x.start)), prefs)}–{formatTime(toHHMM(Math.round(x.end) % 1440), prefs)})
+                        </span>
+                      </span>
+                    </div>
+                  );
+                })}
                 {layoutDay(
                   timed(d).map((e) => {
                     const live = drag && drag.taskId === e.task.id && e.kind === 'scheduled' ? drag : null;
@@ -466,7 +551,7 @@ function TimeGrid({ from, to, entries, today, projectId }: { from: ISODate; to: 
 // Month grid
 // ---------------------------------------------------------------------------
 
-function MonthGrid({ anchor, from, to, entries, today, projectId, onPickDay }: { anchor: ISODate; from: ISODate; to: ISODate; entries: Map<ISODate, Entry[]>; today: ISODate; projectId?: string; onPickDay: (d: ISODate) => void }) {
+function MonthGrid({ anchor, from, to, entries, external, today, projectId, onPickDay }: { anchor: ISODate; from: ISODate; to: ISODate; entries: Map<ISODate, Entry[]>; external: Map<ISODate, ExtDay>; today: ISODate; projectId?: string; onPickDay: (d: ISODate) => void }) {
   const app = useApp();
   const act = useAction();
   const prefs = useDatePrefs();
@@ -488,8 +573,11 @@ function MonthGrid({ anchor, from, to, entries, today, projectId, onPickDay }: {
       ))}
       {days.map((d) => {
         const list = entries.get(d) ?? [];
+        const ext = external.get(d);
+        const evs = [...(ext?.allDay ?? []).map((ev) => ({ ev, time: undefined as string | undefined })), ...(ext?.timed ?? []).map((x) => ({ ev: x.ev, time: formatTime(toHHMM(Math.round(x.start)), prefs) }))];
         const inMonth = d.slice(0, 7) === anchor.slice(0, 7);
-        const limit = isDesktop ? 4 : 3;
+        const evLimit = Math.min(evs.length, isDesktop ? 2 : 1);
+        const limit = (isDesktop ? 4 : 3) - evLimit;
         return (
           <div
             key={d}
@@ -517,6 +605,9 @@ function MonthGrid({ anchor, from, to, entries, today, projectId, onPickDay }: {
             >
               {Number(d.slice(8))}
             </button>
+            {evs.slice(0, evLimit).map(({ ev, time }) => (
+              <EventChip key={ev.id} ev={ev} time={time} />
+            ))}
             {list.slice(0, limit).map((e, i) => (
               <button
                 key={`${e.task.id}-${e.kind}-${i}`}
@@ -539,9 +630,9 @@ function MonthGrid({ anchor, from, to, entries, today, projectId, onPickDay }: {
                 <span className="truncate max-sm:hidden">{e.task.title}</span>
               </button>
             ))}
-            {list.length > limit && (
+            {list.length + evs.length > limit + evLimit && (
               <button type="button" onClick={() => onPickDay(d)} className="px-1 text-left text-subtle hover:text-fg">
-                +{list.length - limit} more
+                +{list.length + evs.length - Math.min(list.length, limit) - evLimit} more
               </button>
             )}
           </div>
@@ -555,9 +646,9 @@ function MonthGrid({ anchor, from, to, entries, today, projectId, onPickDay }: {
 // Agenda
 // ---------------------------------------------------------------------------
 
-function Agenda({ from, entries, today }: { from: ISODate; entries: Map<ISODate, Entry[]>; today: ISODate }) {
+function Agenda({ from, entries, external, today }: { from: ISODate; entries: Map<ISODate, Entry[]>; external: Map<ISODate, ExtDay>; today: ISODate }) {
   const prefs = useDatePrefs();
-  const days = Array.from({ length: 30 }, (_, i) => addDays(from, i)).filter((d) => (entries.get(d) ?? []).some((e) => e.kind !== 'repeat'));
+  const days = Array.from({ length: 30 }, (_, i) => addDays(from, i)).filter((d) => (entries.get(d) ?? []).some((e) => e.kind !== 'repeat') || !!external.get(d));
   if (!days.length) return <p className="py-8 text-center text-muted">Nothing scheduled in the next 30 days.</p>;
   return (
     <div>
@@ -566,6 +657,15 @@ function Agenda({ from, entries, today }: { from: ISODate; entries: Map<ISODate,
         const tasks = [...new Map(list.map((e) => [e.task.id, e.task])).values()].sort((a, b) => (a.scheduledTime ?? '99').localeCompare(b.scheduledTime ?? '99'));
         return (
           <GroupHeading key={d} title={<>{d === today ? 'Today · ' : ''}{formatLongDate(d, prefs)}</>} count={tasks.length}>
+            {external.get(d) && (
+              <ul className="mb-1 flex flex-col gap-1 text-[0.85rem]" aria-label="From your calendars">
+                {[...external.get(d)!.allDay.map((ev) => ({ ev, time: 'All day' })), ...external.get(d)!.timed.map((x) => ({ ev: x.ev, time: formatTime(toHHMM(Math.round(x.start)), prefs) }))].map(({ ev, time }) => (
+                  <li key={ev.id}>
+                    <EventChip ev={ev} time={time} />
+                  </li>
+                ))}
+              </ul>
+            )}
             <TaskList tasks={tasks} tree={false} showProject hideDate draggable ariaLabel={`Agenda for ${formatLongDate(d, prefs)}`} />
           </GroupHeading>
         );

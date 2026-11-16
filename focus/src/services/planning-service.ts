@@ -1,5 +1,6 @@
 import { addDays, todayISO, type ISODate } from '@/core/dates';
 import { isOpenStatus, type Task } from '@/core/domain/types';
+import { busyMinutesByDay } from '@/core/ics';
 import { findConflicts, suggestSchedule, workload, type Conflict, type DayLoad, type SchedulingOptions, type Suggestion } from '@/core/scheduling';
 import type { Repositories } from '@/data';
 import type { UndoAction } from './events';
@@ -15,7 +16,12 @@ export class PlanningService {
 
   options(horizonDays = 21): SchedulingOptions {
     const s = this.r.settings.getAll();
-    return { today: todayISO(this.now()), hours: s.workingHours, defaultEstimate: s.defaultEstimate, horizonDays };
+    const today = todayISO(this.now());
+    const end = addDays(today, Math.max(horizonDays, 60));
+    // External calendar events (from calendars set to block time) reduce available time.
+    const events = this.r.calendars.eventsBetween(today, end, { only: 'blocking' });
+    const busy = busyMinutesByDay(events, s.workingHours, today, end);
+    return { today, hours: s.workingHours, defaultEstimate: s.defaultEstimate, horizonDays, busy, events };
   }
 
   private openTasks(): Task[] {

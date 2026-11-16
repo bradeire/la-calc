@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { makeApp } from './helpers';
+import { LATEST_SCHEMA_VERSION } from '@/data/migrations';
 
 describe('projects and sections', () => {
   it('nested projects, cycle prevention, archive and restore', async () => {
@@ -126,7 +127,7 @@ describe('backup and restore', () => {
     app.tasks.create({ title: 'x' });
     const { bytes, sha256 } = await app.data.exportSqlite();
     expect(sha256).toMatch(/^[0-9a-f]{64}$/);
-    expect(app.data.verifySqlite(bytes)).toMatchObject({ schemaVersion: 3, tasks: 1 });
+    expect(app.data.verifySqlite(bytes)).toMatchObject({ schemaVersion: LATEST_SCHEMA_VERSION, tasks: 1 });
     expect(() => app.data.verifySqlite(new Uint8Array([1, 2, 3, 4]))).toThrow();
   });
 

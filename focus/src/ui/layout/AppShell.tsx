@@ -28,6 +28,21 @@ import { LongTimerPrompt, TimeLogView } from '../views/TimeLogView';
 import { useAutomationRunner } from '../components/ReminderPanel';
 import { Onboarding } from '../views/Onboarding';
 
+/** Refresh subscribed calendars shortly after start-up and every 30 minutes (errors are shown in Settings). */
+function useCalendarRefresh(enabled: boolean) {
+  const app = useApp();
+  useEffect(() => {
+    if (!enabled || app.platform.kind === 'memory') return;
+    const run = () => void app.calendars.refreshAll();
+    const first = setTimeout(run, 3000);
+    const every = setInterval(run, 30 * 60 * 1000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(every);
+    };
+  }, [app, enabled]);
+}
+
 function useApplyAppearance() {
   const s = useSettings();
   useEffect(() => {
@@ -112,6 +127,7 @@ export function AppShell() {
   useGlobalShortcuts();
   useReminderDelivery();
   useAutomationRunner();
+  useCalendarRefresh(settings.onboarded);
 
   // Esc closes the detail panel (dialogs handle their own Esc).
   useEffect(() => {

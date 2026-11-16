@@ -142,8 +142,8 @@ export function createTauriPlatform(): Platform {
     files: new TauriFileStore(),
     lifecycle: tauriLifecycle,
     notifications: tauriNotifications,
-    // No Android Keystore / iOS Keychain integration yet: keep secrets for the session only there.
-    secrets: /Android|iPhone|iPad/i.test(navigator.userAgent) ? new MemorySecretStore() : tauriSecrets,
+    // Desktop: OS keychain. Android: Keystore-encrypted (SecureStorePlugin.kt). iOS: not built yet, session only.
+    secrets: /iPhone|iPad/i.test(navigator.userAgent) ? new MemorySecretStore() : tauriSecrets,
     http: tauriHttp,
     links: tauriLinks,
     // The single-instance plugin guarantees one process owns the database.
