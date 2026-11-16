@@ -19,8 +19,8 @@ test('quick add parses natural language and shows it before saving', async ({ pa
   await expect(page.getByText(/Added “Replace kitchen tap” to home/)).toBeVisible();
   // New project was created and the task lives there
   await page.goto('/#/projects');
-  await page.getByRole('button', { name: /^home/ }).first().click();
-  await expect(page.getByText('Replace kitchen tap')).toBeVisible();
+  await page.getByRole('main').getByRole('button', { name: /^home/ }).click();
+  await expect(page.getByRole('listitem', { name: 'Replace kitchen tap' })).toBeVisible();
 });
 
 test('tapping a recognised token keeps it as title text', async ({ page }) => {
@@ -124,4 +124,39 @@ test('quick add on Today schedules for today from every entry point', async ({ p
   const input = await quickAdd(page, 'Stretch');
   await input.press('Enter');
   await expect(page.getByRole('listitem', { name: 'Stretch' })).toBeVisible();
+});
+
+test('quick add option menus open above the dialog and are usable', async ({ page }) => {
+  await startFresh(page);
+  await page.goto('/#/inbox');
+  const input = await quickAdd(page, 'Buy milk');
+  const qa = page.getByRole('dialog', { name: 'Quick Add' });
+  // Date menu: pick Tomorrow (Playwright's click fails if the item is covered).
+  await qa.getByRole('button', { name: 'Schedule' }).click();
+  await page.getByRole('menuitem', { name: /Tomorrow/ }).click();
+  await expect(qa.getByRole('button', { name: 'Schedule' })).toContainText('Tomorrow');
+  // Priority menu
+  await qa.getByRole('button', { name: 'Priority', exact: true }).click();
+  await page.getByRole('menuitem', { name: /Priority 1/ }).click();
+  await expect(qa.getByRole('button', { name: 'Priority', exact: true })).toContainText('P1');
+  // Deadline menu via typed date
+  await qa.getByRole('button', { name: 'Deadline' }).click();
+  await page.getByRole('textbox', { name: 'Type a date' }).fill('25/12');
+  await page.getByRole('textbox', { name: 'Type a date' }).press('Enter');
+  await expect(qa.getByRole('button', { name: 'Deadline' })).toContainText('25 Dec');
+  // Labels menu: create a label
+  await qa.getByRole('button', { name: 'Labels' }).click();
+  await page.getByRole('textbox', { name: 'Search or create label' }).fill('shopping');
+  await page.getByRole('menuitem', { name: /Create “shopping”/ }).click();
+  // Escape closes only the menu, not Quick Add
+  await page.keyboard.press('Escape');
+  await expect(input).toBeVisible();
+  // Project menu
+  await qa.getByRole('button', { name: 'Project' }).click();
+  await page.getByRole('menuitem', { name: 'Inbox' }).click();
+  await qa.getByRole('button', { name: 'Add task', exact: true }).click();
+  await page.goto('/#/upcoming');
+  const row = page.getByRole('listitem', { name: 'Buy milk' });
+  await expect(row).toBeVisible();
+  await expect(row).toContainText('shopping');
 });

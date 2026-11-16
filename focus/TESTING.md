@@ -18,7 +18,7 @@ npm run check       # typecheck + lint + test + build
 | Task service (lifecycle, subtasks, recurrence, views, time) | `tests/task-service.test.ts` | 22 |
 | Projects, labels, sample data, backup/restore | `tests/data-service.test.ts` | 12 |
 | **Total Vitest** | | **138 passing** |
-| End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | **22 passing** (11 × 2) |
+| End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | **24 passing** (12 × 2) |
 
 Integration tests run on sql.js in Node, i.e. the same SQLite engine the app ships, not a mock.
 The in-memory platform (`src/platform/memory.ts`) is used only in tests.
@@ -30,6 +30,7 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 - Undoing a move did not move subtasks back (`??` treated `null` as "unchanged").
 - `DROP TABLE` with foreign keys enabled fires delete triggers; the down-migration now drops triggers first.
 - Quick Add measured its textarea before the native dialog opened (height 0).
+- Menus opened from Quick Add rendered behind the modal dialog (browser top layer); popovers now render inside an open dialog.
 
 ## Manual checks per release
 

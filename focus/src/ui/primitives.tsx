@@ -276,6 +276,8 @@ export function Popover({
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // preventDefault stops a surrounding native <dialog> from also closing.
+        e.preventDefault();
         e.stopPropagation();
         onClose();
         anchor.current?.focus();
@@ -292,6 +294,9 @@ export function Popover({
   }, [open, onClose, anchor]);
 
   if (!open) return null;
+  // A modal <dialog> renders in the browser's top layer, above any z-index on the page.
+  // Popovers opened from inside one must live inside it, or they appear behind it.
+  const host: Element = anchor.current?.closest('dialog[open]') ?? document.body;
   if (isPhone) {
     return createPortal(
       <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-black/35 anim-fade">
@@ -300,7 +305,7 @@ export function Popover({
           {children}
         </div>
       </div>,
-      document.body,
+      host,
     );
   }
   return createPortal(
@@ -313,7 +318,7 @@ export function Popover({
     >
       {children}
     </div>,
-    document.body,
+    host,
   );
 }
 
