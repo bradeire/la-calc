@@ -23,6 +23,8 @@ tauri-plugin-deep-link = "=2.6.3"
 [target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = { version = "2.5", features = ["deep-link"] }
 keyring = "4.2"
+# Local API (Phase 4): desktop only, off by default.
+tiny_http = "0.12"
 
 [dev-dependencies]
 tempfile = "3"

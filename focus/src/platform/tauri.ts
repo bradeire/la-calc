@@ -1,9 +1,10 @@
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { listen } from '@tauri-apps/api/event';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
 import { getCurrent as getCurrentLinks, onOpenUrl } from '@tauri-apps/plugin-deep-link';
 import { MemorySecretStore } from './web';
-import type { FileStore, HttpAdapter, LifecycleAdapter, LinkAdapter, NotificationAdapter, PersistenceAdapter, Platform, SecretStore } from './types';
+import type { FileStore, HttpAdapter, LifecycleAdapter, LinkAdapter, LocalApiAdapter, NotificationAdapter, PersistenceAdapter, Platform, SecretStore } from './types';
 
 /**
  * Native platform (Tauri 2). The SQLite image is a real file in the app-data
@@ -145,6 +146,24 @@ function toBase64(data: Uint8Array | string): string {
 /** Exports via Rust (src-tauri/src/lib.rs export_file): Downloads folder on desktop, share sheet on Android. */
 const tauriExport = (name: string, data: Uint8Array | string, mime: string) => invoke<string | null>('export_file', { name, base64: toBase64(data), mime });
 
+const tauriLocalApi: LocalApiAdapter = {
+  start: (port, token, allowLan) => invoke<string>('api_start', { port, token, allowLan }),
+  stop: () => invoke('api_stop'),
+  onRequest: (cb) => {
+    let stop: (() => void) | null = null;
+    let cancelled = false;
+    listen<{ id: number; method: string; path: string; query: string; body: string }>('focus-api-request', (e) => cb(e.payload))
+      .then((un) => (cancelled ? un() : (stop = un)))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+      stop?.();
+    };
+  },
+  respond: (id, status, body) => invoke('api_respond', { id, status, body }),
+};
+const isMobile = () => /Android|iPhone|iPad/i.test(navigator.userAgent);
+
 export function createTauriPlatform(): Platform {
   return {
     kind: 'tauri',
@@ -157,6 +176,7 @@ export function createTauriPlatform(): Platform {
     http: tauriHttp,
     links: tauriLinks,
     exportFile: tauriExport,
+    localApi: isMobile() ? undefined : tauriLocalApi,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,
   };

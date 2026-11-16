@@ -53,6 +53,16 @@ export const settingsSchema = z.object({
   defaultProjectColor: z.string().default(PALETTE[0]!.value),
   /** Insights dashboard: widget order, size and visibility. Unknown or missing widgets are repaired on read. */
   insightsLayout: z.array(widgetLayout).default(DEFAULT_INSIGHTS_LAYOUT),
+  /** Local API (desktop): off by default, localhost only unless allowLan. The token lives in the SecretStore. */
+  localApi: z
+    .object({
+      enabled: z.boolean().default(false),
+      port: z.number().int().min(1024).max(65535).default(47615),
+      allowLan: z.boolean().default(false),
+      /** Automations the API may run on request. */
+      approvedAutomations: z.array(z.string()).default([]),
+    })
+    .default({ enabled: false, port: 47615, allowLan: false, approvedAutomations: [] }),
   goals: goalsSchema.default({ dailyTasks: null, weeklyTasks: null, dailyMinutes: null, weeklyMinutes: null, skipNonWorkingDays: true }),
 });
 

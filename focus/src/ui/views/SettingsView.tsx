@@ -11,7 +11,7 @@ import { ViewBody } from '../components/common';
 import { ViewHeader } from '../layout/Chrome';
 import { saveFile } from '../download';
 import { TransferControls } from '../components/TransferControls';
-import { AddFromAssistantSettings, AiSettings, CalendarSettings, WebhookSettings } from './IntegrationSettings';
+import { AddFromAssistantSettings, AiSettings, CalendarSettings, LocalApiSettings, WebhookSettings } from './IntegrationSettings';
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -202,6 +202,7 @@ export function SettingsView() {
         <NotificationSettings />
         <CalendarSettings />
         <AddFromAssistantSettings />
+        <LocalApiSettings />
         <AiSettings />
         <WebhookSettings />
 

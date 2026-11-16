@@ -1,12 +1,14 @@
 import { useState, type ReactNode } from 'react';
-import { Bot, CalendarPlus, Copy, Download, FileUp, Link2, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, Webhook } from 'lucide-react';
+import { Bot, Plug, CalendarPlus, Copy, Download, FileUp, Link2, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, Webhook } from 'lucide-react';
 import { PALETTE } from '@/core/domain/types';
 import { saveFile } from '../download';
+import { getApiToken, regenerateApiToken, useLocalApiStatus } from '../localApi';
+import connectorScript from '../../../tools/focus-mcp/focus-mcp.mjs?raw';
 import { ASSISTANT_INSTRUCTIONS, buildAddLink } from '@/core/links';
 import { isLocalUrl, type AiConfig } from '@/services/ai-service';
 import { useUi } from '@/state/ui-store';
 import { errorMessage, useAction, useApp, useQuery } from '../hooks';
-import { Button, Dialog, Field, IconButton, Input, Select, Switch } from '../primitives';
+import { Button, Dialog, Field, IconButton, Input, Select, Switch, cx } from '../primitives';
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -491,6 +493,163 @@ export function CalendarSettings() {
         </div>
       </div>
       <AddCalendarDialog open={adding} onClose={() => setAdding(false)} />
+    </Group>
+  );
+}
+
+/** Local API and the Claude connector (spec 6.7). Desktop app only; off by default. */
+export function LocalApiSettings() {
+  const app = useApp();
+  const pushToast = useUi((s) => s.pushToast);
+  const askConfirm = useUi((s) => s.askConfirm);
+  const settings = useQuery(() => app.repos.settings.getAll(), []);
+  const cfg = settings.localApi;
+  const automations = useQuery(() => app.automations.list(), []);
+  const status = useLocalApiStatus();
+  const [token, setToken] = useState<string | null>(null);
+  const [port, setPort] = useState(String(cfg.port));
+  const save = (patch: Partial<typeof cfg>) => {
+    try {
+      app.repos.settings.set('localApi', { ...cfg, ...patch });
+    } catch (err) {
+      pushToast({ message: errorMessage(err), tone: 'error' });
+    }
+  };
+  if (!app.platform.localApi) {
+    return (
+      <Group title="Local API and Claude connector" icon={<Plug size={16} />}>
+        <p className="px-4 py-3 text-[0.85rem] text-muted">
+          Available in the desktop app (Windows, macOS, Linux): it lets Claude Desktop or Claude Code on the same computer add and update tasks. On this
+          device, use “Add tasks from Claude” links instead.
+        </p>
+      </Group>
+    );
+  }
+  const url = `http://127.0.0.1:${cfg.port}`;
+  const config = JSON.stringify(
+    { mcpServers: { focus: { command: 'node', args: ['<path to>/focus-mcp.mjs'], env: { FOCUS_API_URL: url, FOCUS_API_TOKEN: '<your token>' } } } },
+    null,
+    2,
+  );
+  const copy = async (text: string, what: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      pushToast({ message: `${what} copied`, tone: 'success' });
+    } catch {
+      pushToast({ message: 'Could not copy', tone: 'error' });
+    }
+  };
+  return (
+    <Group title="Local API and Claude connector" icon={<Plug size={16} />}>
+      <div className="flex flex-col gap-3 px-4 py-3 text-[0.9rem]">
+        <label className="flex items-center justify-between gap-3">
+          <span>
+            Allow apps on this computer to use Focus
+            <span className="block text-[0.8rem] text-muted">
+              Off by default. Lets Claude Desktop / Claude Code (via the connector below) list, add, edit and complete tasks. Every request needs your token; tasks can’t be
+              deleted through it.
+            </span>
+          </span>
+          <Switch checked={cfg.enabled} onChange={(v) => save({ enabled: v })} label="Allow apps on this computer to use Focus" />
+        </label>
+        {cfg.enabled && (
+          <>
+            <p role="status" className={cx('text-[0.85rem]', status.state === 'error' ? 'text-danger' : 'text-muted')}>
+              {status.state === 'running' ? `Listening on ${status.address}` : status.state === 'error' ? status.error : 'Starting…'}
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label="Port" htmlFor="api-port">
+                <Input id="api-port" type="number" min={1024} max={65535} value={port} className="w-28" onChange={(e) => setPort(e.target.value)} onBlur={() => {
+                  const n = Number(port);
+                  if (Number.isInteger(n) && n >= 1024 && n <= 65535) save({ port: n });
+                  else setPort(String(cfg.port));
+                }} />
+              </Field>
+              <label className="flex h-9 items-center gap-2 text-[0.85rem]">
+                <Switch
+                  checked={cfg.allowLan}
+                  onChange={(v) =>
+                    v
+                      ? askConfirm({ message: 'Allow other devices on your network to reach the API? They still need the token, but it travels unencrypted (http) on your network. Only do this on a network you trust.', confirmLabel: 'Allow', onConfirm: () => save({ allowLan: true }) })
+                      : save({ allowLan: false })
+                  }
+                  label="Allow other devices on my network"
+                />
+                Allow other devices on my network
+              </label>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[0.85rem]">Token:</span>
+              <code className="rounded bg-surface-2 px-1.5 py-0.5 text-[0.78rem] break-all">{token ?? '••••••••••••••••'}</code>
+              <Button size="sm" variant="ghost" onClick={() => void getApiToken(app).then(setToken)}>
+                Show
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => void getApiToken(app).then((t) => copy(t, 'Token'))}>
+                <Copy size={14} /> Copy
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => askConfirm({ message: 'Make a new token? Anything using the old one (e.g. the Claude connector) stops working until you give it the new one.', confirmLabel: 'New token', onConfirm: () => void regenerateApiToken(app).then(setToken) })}
+              >
+                New token
+              </Button>
+            </div>
+            <details className="text-[0.85rem]">
+              <summary className="cursor-pointer font-medium">Connect Claude Desktop or Claude Code</summary>
+              <ol className="mt-2 flex list-decimal flex-col gap-2 pl-5 text-muted">
+                <li>
+                  Install Node.js 18 or later, then save the connector:{' '}
+                  <Button size="sm" onClick={() => void saveFile(app.platform, 'focus-mcp.mjs', connectorScript, 'text/javascript').then((w) => w && pushToast({ message: w, tone: 'success' }))}>
+                    <Download size={14} /> Save focus-mcp.mjs
+                  </Button>
+                </li>
+                <li>
+                  Claude Desktop: Settings → Developer → Edit Config, and add this (with the real path and token). Claude Code: <code>claude mcp add focus --env FOCUS_API_TOKEN=&lt;token&gt; -- node &lt;path&gt;/focus-mcp.mjs</code>
+                  <pre className="mt-1 overflow-x-auto rounded bg-surface-2 p-2 text-[0.75rem] text-fg">{config}</pre>
+                  <Button size="sm" variant="ghost" onClick={() => void copy(config, 'Configuration')}>
+                    <Copy size={14} /> Copy configuration
+                  </Button>
+                </li>
+                <li>Restart Claude and ask, e.g. “Add ‘renew car insurance by 30 Nov’ to Focus”. Focus must be open.</li>
+              </ol>
+              <p className="mt-2 text-[0.8rem] text-muted">
+                The token is stored in the Claude configuration file on this computer; anyone who can read that file could use the API while Focus is running. Make a new token
+                if it is ever exposed.
+              </p>
+            </details>
+            {automations.length > 0 && (
+              <fieldset className="text-[0.85rem]">
+                <legend className="mb-1 font-medium">Automations the API may run</legend>
+                <div className="flex flex-col gap-1">
+                  {automations.map((a) => (
+                    <label key={a.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={cfg.approvedAutomations.includes(a.id)}
+                        onChange={(e) => save({ approvedAutomations: e.target.checked ? [...cfg.approvedAutomations, a.id] : cfg.approvedAutomations.filter((x) => x !== a.id) })}
+                      />
+                      {a.name}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
+            {status.recent.length > 0 && (
+              <details className="text-[0.8rem]">
+                <summary className="cursor-pointer text-muted">Recent requests ({status.recent.length})</summary>
+                <ul className="mt-1 font-mono">
+                  {status.recent.map((r, i) => (
+                    <li key={i}>
+                      {new Date(r.at).toLocaleTimeString()} {r.method} {r.path} → {r.status}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </>
+        )}
+      </div>
     </Group>
   );
 }

@@ -78,6 +78,15 @@ export interface LinkAdapter {
   listen(cb: (urls: string[]) => void): () => void;
 }
 
+/** Local API server (desktop app only; spec 6.7). */
+export interface LocalApiAdapter {
+  /** Returns the address it listens on. */
+  start(port: number, token: string, allowLan: boolean): Promise<string>;
+  stop(): Promise<void>;
+  onRequest(cb: (r: { id: number; method: string; path: string; query: string; body: string }) => void): () => void;
+  respond(id: number, status: number, body: string): Promise<void>;
+}
+
 export interface Platform {
   kind: 'web' | 'tauri' | 'memory';
   persistence: PersistenceAdapter;
@@ -92,6 +101,8 @@ export interface Platform {
    * Downloads folder (returns the path). Android: system share sheet (returns null).
    */
   exportFile(name: string, data: Uint8Array | string, mime: string): Promise<string | null>;
+  /** Present only where Focus can run a local API (the desktop app). */
+  localApi?: LocalApiAdapter;
   /** Acquire exclusive ownership of the database; false if another window has it. */
   acquireLock(): Promise<boolean>;
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useUi } from '@/state/ui-store';
 import { useApp, useIsDesktop, useSettings } from '../hooks';
 import { parseIncomingLink } from '@/core/links';
+import { useLocalApiRunner } from '../localApi';
 import { closeTask, navigate, useLocation } from '../router';
 import { cx } from '../primitives';
 import { QuickAdd } from '../components/QuickAdd';
@@ -128,6 +129,7 @@ export function AppShell() {
   useReminderDelivery();
   useAutomationRunner();
   useCalendarRefresh(settings.onboarded);
+  useLocalApiRunner();
 
   // Esc closes the detail panel (dialogs handle their own Esc).
   useEffect(() => {

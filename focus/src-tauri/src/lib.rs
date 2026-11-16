@@ -1,5 +1,7 @@
 mod http;
 mod exports;
+#[cfg(desktop)]
+mod api;
 mod secrets;
 mod storage;
 
@@ -139,6 +141,90 @@ async fn export_file(app: tauri::AppHandle, name: String, base64: String, mime: 
     }
 }
 
+// ---------- Local API bridge (desktop) ----------
+
+#[derive(Default)]
+struct ApiState {
+    #[cfg(desktop)]
+    handle: Mutex<Option<api::ApiHandle>>,
+    #[cfg(desktop)]
+    pending: std::sync::Arc<Mutex<std::collections::HashMap<u64, std::sync::mpsc::Sender<api::ApiResponse>>>>,
+    #[cfg(desktop)]
+    next: std::sync::Arc<std::sync::atomic::AtomicU64>,
+}
+
+/// Start (or restart) the local API. Returns the address it listens on.
+#[tauri::command]
+fn api_start(app: tauri::AppHandle, state: State<'_, ApiState>, port: u16, token: String, allow_lan: bool) -> Result<String, String> {
+    #[cfg(desktop)]
+    {
+        use std::sync::atomic::Ordering;
+        use tauri::Emitter;
+        if token.len() < 32 {
+            return Err("API token too short".into());
+        }
+        if let Some(h) = state.handle.lock().unwrap().take() {
+            h.stop();
+        }
+        let ip = if allow_lan { "0.0.0.0" } else { "127.0.0.1" };
+        let addr: std::net::SocketAddr = format!("{ip}:{port}").parse().map_err(|e| format!("{e}"))?;
+        let pending = state.pending.clone();
+        let next = state.next.clone();
+        let dispatch: api::Dispatch = std::sync::Arc::new(move |req: api::ApiRequest| {
+            let id = next.fetch_add(1, Ordering::SeqCst);
+            let (tx, rx) = std::sync::mpsc::channel();
+            pending.lock().unwrap().insert(id, tx);
+            #[derive(serde::Serialize, Clone)]
+            struct Event {
+                id: u64,
+                #[serde(flatten)]
+                req: api::ApiRequest,
+            }
+            if app.emit_to("main", "focus-api-request", Event { id, req }).is_err() {
+                pending.lock().unwrap().remove(&id);
+                return api::ApiResponse::error(503, "Focus is not ready");
+            }
+            match rx.recv_timeout(std::time::Duration::from_secs(15)) {
+                Ok(r) => r,
+                Err(_) => {
+                    pending.lock().unwrap().remove(&id);
+                    api::ApiResponse::error(504, "Focus didn't answer in time (is the window open?)")
+                }
+            }
+        });
+        let handle = api::start(addr, token, allow_lan, dispatch)?;
+        let bound = handle.addr.to_string();
+        *state.handle.lock().unwrap() = Some(handle);
+        Ok(bound)
+    }
+    #[cfg(mobile)]
+    {
+        let _ = (app, state, port, token, allow_lan);
+        Err("The local API is available in the desktop app only".into())
+    }
+}
+
+#[tauri::command]
+fn api_stop(state: State<'_, ApiState>) {
+    #[cfg(desktop)]
+    if let Some(h) = state.handle.lock().unwrap().take() {
+        h.stop();
+    }
+    #[cfg(mobile)]
+    let _ = state;
+}
+
+/// The webview's answer to a forwarded request.
+#[tauri::command]
+fn api_respond(state: State<'_, ApiState>, id: u64, status: u16, body: String) {
+    #[cfg(desktop)]
+    if let Some(tx) = state.pending.lock().unwrap().remove(&id) {
+        let _ = tx.send(api::ApiResponse { status, body });
+    }
+    #[cfg(mobile)]
+    let _ = (state, id, status, body);
+}
+
 #[tauri::command]
 async fn http_request(request: http::HttpRequest) -> Result<http::HttpResponse, String> {
     http::send(request).await
@@ -176,11 +262,12 @@ pub fn run() {
             let dir = app.path().app_data_dir()?;
             let storage = Storage::new(dir).map_err(|e| -> Box<dyn std::error::Error> { e.into() })?;
             app.manage(AppStorage(Mutex::new(storage)));
+            app.manage(ApiState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             db_load, db_load_previous, db_save, db_snapshot, file_put, file_get, file_exists, file_delete, file_keys, data_dir,
-            secret_set, secret_get, secret_delete, http_request, export_file
+            secret_set, secret_get, secret_delete, http_request, export_file, api_start, api_stop, api_respond
         ])
         .run(tauri::generate_context!())
         .expect("error while running Focus");

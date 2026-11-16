@@ -244,6 +244,25 @@ export class AutomationService {
   // --- Execution ---------------------------------------------------------------
 
   /** Returns true if the automation ran (false if skipped, duplicate or failed). */
+  /**
+   * Run an automation on request (local API, spec 6.7). Its conditions, limits, duplicate and
+   * loop protection all still apply. Task triggers need a task; project triggers a project.
+   */
+  runOnRequest(id: string, target: { taskId?: string; projectId?: string } = {}): { ran: boolean; reason: string } {
+    const a = this.r.automations.get(id);
+    if (!a || !a.enabled) throw new NotFoundError('Automation');
+    const isProject = PROJECT_TRIGGERS.includes(a.trigger.type);
+    const task = target.taskId ? this.r.tasks.get(target.taskId) : undefined;
+    const project = target.projectId ? this.r.projects.get(target.projectId) : undefined;
+    if (isProject && !project) throw new ValidationError('This automation needs a projectId');
+    if (!isProject && !task) throw new ValidationError('This automation needs a taskId');
+    const f: FireContext = { trigger: a.trigger.type, task, project, eventKey: `request:${this.clock.now().toISOString()}:${Math.random().toString(36).slice(2, 8)}` };
+    const m = this.matches(a, f);
+    if (!m.ok) return { ran: false, reason: m.reason };
+    const ran = this.fire(a, f);
+    return { ran, reason: ran ? 'Ran' : 'Skipped (see run history)' };
+  }
+
   private fire(a: Automation, f: FireContext): boolean {
     if (this.chain.includes(a.id)) return this.skip(a, f, 'Skipped to prevent a loop: this automation triggered itself');
     if (this.chain.length >= MAX_CHAIN_DEPTH) return this.skip(a, f, `Skipped: automations chained more than ${MAX_CHAIN_DEPTH} deep`);
