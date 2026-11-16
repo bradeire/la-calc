@@ -64,8 +64,14 @@ function ValueButton({ children, onClick, innerRef, muted, label }: { children: 
   );
 }
 
-function Section({ icon, title, children, count, defaultOpen = true, action }: { icon: ReactNode; title: string; children: ReactNode; count?: number; defaultOpen?: boolean; action?: ReactNode }) {
+export function Section({ icon, title, children, count, defaultOpen = true, action }: { icon: ReactNode; title: string; children: ReactNode; count?: number; defaultOpen?: boolean; action?: ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
+  // Expand when something is added (e.g. a file uploaded while collapsed) so the user sees it.
+  const prevCount = useRef(count ?? 0);
+  useEffect(() => {
+    if ((count ?? 0) > prevCount.current) setOpen(true);
+    prevCount.current = count ?? 0;
+  }, [count]);
   return (
     <section className="border-t border-line py-3">
       <div className="flex items-center justify-between">
@@ -149,7 +155,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
         </IconButton>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-10 scrollbar-thin">
+      <div data-scroll-root className="min-h-0 flex-1 overflow-y-auto px-4 pb-10 scrollbar-thin">
         <div className="flex items-start gap-3 pt-4">
           <button
             type="button"
@@ -273,7 +279,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
         <TimeSection task={task} />
         <RemindersSection task={task} />
         <CommentsSection task={task} />
-        <AttachmentsSection task={task} />
+        <AttachmentsSection target={{ taskId: task.id }} />
         <ActivitySection task={task} />
 
         <p className="mt-4 text-[0.75rem] text-subtle">
@@ -660,11 +666,16 @@ function CommentsSection({ task }: { task: Task }) {
   );
 }
 
-function AttachmentsSection({ task }: { task: Task }) {
+/** Attachments for a task or a project. Files are stored on this device only. */
+export function AttachmentsSection({ target }: { target: { taskId: string } | { projectId: string } }) {
   const app = useApp();
   const act = useAction();
   const pushToast = useUi((s) => s.pushToast);
-  const items = useQuery(() => app.repos.attachments.listForTask(task.id), [task.id]);
+  const key = 'taskId' in target ? target.taskId : target.projectId;
+  const items = useQuery(
+    () => ('taskId' in target ? app.repos.attachments.listForTask(target.taskId) : app.repos.attachments.listForProject(target.projectId)),
+    [key],
+  );
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const upload = async (files: FileList | null) => {
@@ -672,7 +683,7 @@ function AttachmentsSection({ task }: { task: Task }) {
     setBusy(true);
     for (const f of Array.from(files)) {
       try {
-        await app.content.addAttachment({ taskId: task.id }, f, f.name);
+        await app.content.addAttachment(target, f, f.name);
       } catch (err) {
         pushToast({ message: errorMessage(err), tone: 'error' });
       }
@@ -700,12 +711,15 @@ function AttachmentsSection({ task }: { task: Task }) {
       count={items.length}
       defaultOpen={items.length > 0}
       action={
-        <Button size="sm" variant="ghost" disabled={busy} onClick={() => input.current?.click()}>
-          <Plus size={14} /> {busy ? 'Adding…' : 'Add file'}
-        </Button>
+        <>
+          {/* Kept outside the collapsible body so "Add file" works while the section is collapsed. */}
+          <input ref={input} type="file" multiple hidden onChange={(e) => void upload(e.target.files)} aria-label="Choose files to attach" />
+          <Button size="sm" variant="ghost" disabled={busy} onClick={() => input.current?.click()}>
+            <Plus size={14} /> {busy ? 'Adding…' : 'Add file'}
+          </Button>
+        </>
       }
     >
-      <input ref={input} type="file" multiple hidden onChange={(e) => void upload(e.target.files)} aria-label="Choose files to attach" />
       {items.length === 0 && <p className="text-[0.85rem] text-subtle">Files are stored on this device only.</p>}
       <ul className="flex flex-col">
         {items.map((a) => (

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { boot } from '@/app/bootstrap';
 import { SqlJsDriver } from '@/data/db/sqljs-driver';
-import { currentSchemaVersion, integrityCheck, LATEST_SCHEMA_VERSION, migrate, rollback } from '@/data/migrations';
+import { currentSchemaVersion, integrityCheck, LATEST_SCHEMA_VERSION, migrate, MIGRATIONS, rollback } from '@/data/migrations';
 import { createMemoryPlatform } from '@/platform/memory';
 import { getSql, makeApp } from './helpers';
 
@@ -57,7 +57,7 @@ describe('migrations', () => {
   it('migrates a new database to the latest version and passes integrity checks', async () => {
     const sql = await getSql();
     const db = new SqlJsDriver(sql);
-    expect(migrate(db)).toEqual([1]);
+    expect(migrate(db)).toEqual([1, 2]);
     expect(currentSchemaVersion(db)).toBe(LATEST_SCHEMA_VERSION);
     expect(integrityCheck(db).ok).toBe(true);
     expect(migrate(db)).toEqual([]); // idempotent
@@ -71,7 +71,21 @@ describe('migrations', () => {
     expect(currentSchemaVersion(db)).toBe(0);
     expect(db.all("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'tasks'")).toHaveLength(0);
     migrate(db);
-    expect(currentSchemaVersion(db)).toBe(1);
+    expect(currentSchemaVersion(db)).toBe(LATEST_SCHEMA_VERSION);
+  });
+
+  it('upgrades a v1 database in place, keeping data and a pre-migration snapshot', async () => {
+    const sql = await getSql();
+    const db = new SqlJsDriver(sql);
+    migrate(db, [MIGRATIONS[0]!]);
+    db.run("INSERT INTO tasks (id, title, created_at, updated_at) VALUES ('t1', 'Old task', 'x', 'x')");
+    const platform = createMemoryPlatform();
+    platform.persistence.current = db.export();
+    const r = await boot(sql, platform);
+    if (r.status !== 'ready') throw new Error(r.status);
+    expect(currentSchemaVersion(r.app.repos.db)).toBe(LATEST_SCHEMA_VERSION);
+    expect(r.app.repos.tasks.get('t1')?.title).toBe('Old task');
+    expect(platform.persistence.snapshots.has('pre-migration-v1')).toBe(true);
   });
 
   it('refuses to open a database from a newer version without modifying it', async () => {

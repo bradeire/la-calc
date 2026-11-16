@@ -160,3 +160,18 @@ test('quick add option menus open above the dialog and are usable', async ({ pag
   await expect(row).toBeVisible();
   await expect(row).toContainText('shopping');
 });
+
+test('project notes and attachments', async ({ page }) => {
+  await startFresh(page, true);
+  await page.goto('/#/projects');
+  await page.getByRole('main').getByRole('button', { name: /Lake District trip/ }).click();
+  await page.getByRole('button', { name: 'Project actions' }).click();
+  await page.getByRole('menuitem', { name: 'Notes and files' }).click();
+  await page.getByRole('textbox', { name: 'Project notes' }).fill('Ferry from Bowness at 10:00');
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Add file' }).click()]);
+  await chooser.setFiles({ name: 'itinerary.txt', mimeType: 'text/plain', buffer: Buffer.from('Day 1: Windermere') });
+  await expect(page.getByText('itinerary.txt')).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('textbox', { name: 'Project notes' })).toHaveValue('Ferry from Bowness at 10:00');
+  await expect(page.getByText('itinerary.txt')).toBeVisible();
+});

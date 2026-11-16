@@ -69,7 +69,7 @@ export function DurationChip({ minutes }: { minutes: number | null }) {
 
 export function LabelChip({ label, onRemove }: { label: Label; onRemove?: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-px text-[0.78rem]" style={{ color: label.color }}>
+    <span className="inline-flex items-center gap-1 rounded-md bg-surface-2 px-1.5 py-px text-[0.78rem]" style={{ color: readableColor(label.color) }}>
       <Tag size={11} aria-hidden />
       {label.name}
       {onRemove && (
@@ -101,4 +101,12 @@ export function ProgressRing({ done, total, size = 14 }: { done: number; total: 
       />
     </svg>
   );
+}
+
+/**
+ * User-chosen colours used as text: blend toward the foreground colour so the
+ * result meets contrast requirements on both light and dark surfaces.
+ */
+export function readableColor(color: string): string {
+  return `color-mix(in srgb, ${color} 62%, var(--fg))`;
 }

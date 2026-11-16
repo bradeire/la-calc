@@ -3,7 +3,7 @@ import { RotateCcw, Trash2, X } from 'lucide-react';
 import { useAction, useApp, useQuery } from '../hooks';
 import { Button, ConfirmDialog, EmptyState, IconButton } from '../primitives';
 import { GroupHeading, ViewBody } from '../components/common';
-import { ProjectIcon } from '../components/meta';
+import { ProjectIcon, readableColor } from '../components/meta';
 import { ViewHeader } from '../layout/Chrome';
 import { useUi } from '@/state/ui-store';
 
@@ -62,7 +62,7 @@ export function TrashView() {
             <ul>
               {labels.map((l) => (
                 <li key={l.id} className="flex items-center gap-3 border-b border-line py-2">
-                  <span className="flex-1 truncate" style={{ color: l.color }}>@{l.name}</span>
+                  <span className="flex-1 truncate" style={{ color: readableColor(l.color) }}>@{l.name}</span>
                   <IconButton label={`Restore ${l.name}`} onClick={() => act(() => app.labels.restore(l.id), { success: 'Label restored' })}><RotateCcw size={16} /></IconButton>
                   <IconButton label={`Delete ${l.name} permanently`} onClick={() => setPurge({ kind: 'label', id: l.id, name: l.name })}><X size={16} /></IconButton>
                 </li>

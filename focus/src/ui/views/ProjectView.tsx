@@ -15,6 +15,7 @@ import { ProjectDialog } from '../components/ProjectDialog';
 import { usePopover } from '../components/pickers';
 import { PRIORITY_COLOR, ProgressRing, ProjectIcon } from '../components/meta';
 import { ViewHeader } from '../layout/Chrome';
+import { AttachmentsSection } from '../components/TaskDetail';
 import { CalendarView } from './CalendarView';
 
 const LAYOUTS: { id: ProjectLayout; label: string; icon: typeof LayoutList }[] = [
@@ -40,6 +41,7 @@ export function ProjectView({ id }: { id: string }) {
   const [notesOpen, setNotesOpen] = useState(false);
   const menu = usePopover();
   const prompt = usePrompt();
+  const hasFiles = useQuery(() => app.repos.attachments.listForProject(id).length > 0, [id]);
 
   if (!project || project.deletedAt) {
     return (
@@ -105,7 +107,7 @@ export function ProjectView({ id }: { id: string }) {
             Add section
           </MenuItem>
           <MenuItem icon={<FolderPlus size={15} />} onClick={() => (menu.hide(), setCreatingChild(true))}>Add sub-project</MenuItem>
-          <MenuItem icon={<StickyNote size={15} />} onClick={() => (menu.hide(), setNotesOpen(true))}>Notes</MenuItem>
+          <MenuItem icon={<StickyNote size={15} />} onClick={() => (menu.hide(), setNotesOpen(true))}>Notes and files</MenuItem>
           <MenuItem icon={showCompleted ? <EyeOff size={15} /> : <Eye size={15} />} onClick={() => (menu.hide(), setShowCompleted(!showCompleted))}>
             {showCompleted ? 'Hide completed' : 'Show completed'}
           </MenuItem>
@@ -123,7 +125,7 @@ export function ProjectView({ id }: { id: string }) {
         <CalendarView embedded projectId={id} />
       ) : (
         <ViewBody wide={project.layout !== 'list'}>
-          {(notesOpen || project.notes) && <ProjectNotes project={project} startOpen={notesOpen} />}
+          {(notesOpen || project.notes || hasFiles) && <ProjectNotes project={project} startOpen={notesOpen} />}
           {children.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-2">
               {children.map((c) => {
@@ -168,7 +170,7 @@ function ProjectNotes({ project, startOpen }: { project: Project; startOpen: boo
   const act = useAction();
   const [text, setText] = useState(project.notes);
   return (
-    <GroupHeading title="Notes" collapsible defaultOpen={startOpen || !!project.notes}>
+    <GroupHeading title="Notes and files" collapsible defaultOpen={startOpen || !!project.notes}>
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -178,6 +180,7 @@ function ProjectNotes({ project, startOpen }: { project: Project; startOpen: boo
         rows={Math.min(12, Math.max(3, text.split('\n').length))}
         className="mt-2"
       />
+      <AttachmentsSection target={{ projectId: project.id }} />
     </GroupHeading>
   );
 }

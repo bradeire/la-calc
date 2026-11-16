@@ -6,7 +6,7 @@ import { go, navigate } from '../router';
 import { EmptyState, Input, Switch } from '../primitives';
 import { GroupHeading, ViewBody } from '../components/common';
 import { TaskList } from '../components/TaskList';
-import { ProjectIcon } from '../components/meta';
+import { ProjectIcon, readableColor } from '../components/meta';
 import { ViewHeader } from '../layout/Chrome';
 
 export function SearchView({ q }: { q: string }) {
@@ -55,7 +55,7 @@ export function SearchView({ q }: { q: string }) {
               </button>
             ))}
             {labels.map((l) => (
-              <button key={l.id} type="button" onClick={() => go({ name: 'label', id: l.id })} className="rounded-lg border border-line px-2.5 py-1 text-[0.85rem] hover:bg-surface-2" style={{ color: l.color }}>
+              <button key={l.id} type="button" onClick={() => go({ name: 'label', id: l.id })} className="rounded-lg border border-line px-2.5 py-1 text-[0.85rem] hover:bg-surface-2" style={{ color: readableColor(l.color) }}>
                 @{l.name}
               </button>
             ))}

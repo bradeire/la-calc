@@ -1,4 +1,5 @@
-import { memo, useCallback, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent as RPointerEvent } from 'react';
+import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as RPointerEvent } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   ArrowUpLeft, CalendarDays, Check, Clock, ChevronRight, CircleDot, Copy, Ellipsis, FolderInput, Hourglass, ListPlus, MessageSquare,
   Paperclip, PencilLine, Trash2,
@@ -65,13 +66,33 @@ export function TaskList({ tasks, tree = true, showProject = false, reorderable 
     return flattenTree(buildTree(tasks), (t) => localCollapsed[t.id] ?? t.collapsed);
   }, [tasks, tree, localCollapsed]);
 
-  const ctx: Ctx = { labels, projects, progress, comments, attachments, today, prefs, showProject, reorderable, draggable: draggable || reorderable, selection };
+  const ctx: Ctx = useMemo(
+    () => ({ labels, projects, progress, comments, attachments, today, prefs, showProject, reorderable, draggable: draggable || reorderable, selection }),
+    [labels, projects, progress, comments, attachments, today, prefs, showProject, reorderable, draggable, selection],
+  );
   const listRef = useRef<HTMLUListElement>(null);
+  const virtual = rows.length > VIRTUALIZE_AFTER;
+  const scrollToIndexRef = useRef<((i: number) => void) | null>(null);
 
-  const focusRow = (index: number) => {
-    const items = listRef.current?.querySelectorAll<HTMLElement>('[data-task-row]');
-    items?.[Math.max(0, Math.min(index, items.length - 1))]?.focus();
-  };
+  const onArrow = useCallback(
+    (index: number, delta: number) => {
+      const target = Math.max(0, Math.min(index + delta, rows.length - 1));
+      const find = () => listRef.current?.querySelector<HTMLElement>(`[data-row-index="${target}"]`);
+      if (find()) return find()!.focus();
+      // Virtualised: bring the row into the window first, then focus it.
+      scrollToIndexRef.current?.(target);
+      requestAnimationFrame(() => find()?.focus());
+    },
+    [rows.length],
+  );
+
+  const onToggleCollapse = useCallback(
+    (id: string, current: boolean) => {
+      setLocalCollapsed((c) => ({ ...c, [id]: !current }));
+      app.repos.tasks.update(id, { collapsed: !current });
+    },
+    [app],
+  );
 
   const rangeSelect = useCallback(
     (id: string) => {
@@ -87,42 +108,102 @@ export function TaskList({ tasks, tree = true, showProject = false, reorderable 
   );
 
   if (rows.length === 0) return null;
+  const renderRow = (n: TaskNode, i: number, extra?: { style: CSSProperties; measureRef: (el: HTMLLIElement | null) => void }) => (
+    <TaskRow
+      key={n.task.id}
+      node={n}
+      index={i}
+      ctx={ctx}
+      hideDate={hideDate}
+      siblings={tasks}
+      collapsed={localCollapsed[n.task.id] ?? n.task.collapsed}
+      onToggleCollapse={onToggleCollapse}
+      onArrow={onArrow}
+      onRangeSelect={rangeSelect}
+      style={extra?.style}
+      measureRef={extra?.measureRef}
+    />
+  );
+  if (virtual) {
+    return <VirtualRows listRef={listRef} rows={rows} ariaLabel={ariaLabel} renderRow={renderRow} scrollToIndexRef={scrollToIndexRef} />;
+  }
   return (
     <ul ref={listRef} aria-label={ariaLabel} className="flex flex-col">
-      {rows.map((n, i) => (
-        <TaskRow
-          key={n.task.id}
-          node={n}
-          ctx={ctx}
-          hideDate={hideDate}
-          siblings={tasks}
-          collapsed={localCollapsed[n.task.id] ?? n.task.collapsed}
-          onToggleCollapse={() => {
-            const next = !(localCollapsed[n.task.id] ?? n.task.collapsed);
-            setLocalCollapsed((c) => ({ ...c, [n.task.id]: next }));
-            app.repos.tasks.update(n.task.id, { collapsed: next });
-          }}
-          onArrow={(d) => focusRow(i + d)}
-          onRangeSelect={rangeSelect}
-        />
-      ))}
+      {rows.map((n, i) => renderRow(n, i))}
+    </ul>
+  );
+}
+
+/** Lists longer than this render only the rows near the viewport (spec 7.5). */
+const VIRTUALIZE_AFTER = 150;
+
+function VirtualRows({
+  listRef,
+  rows,
+  ariaLabel,
+  renderRow,
+  scrollToIndexRef,
+}: {
+  listRef: React.RefObject<HTMLUListElement | null>;
+  rows: TaskNode[];
+  ariaLabel: string;
+  renderRow: (n: TaskNode, i: number, extra: { style: CSSProperties; measureRef: (el: HTMLLIElement | null) => void }) => React.ReactNode;
+  scrollToIndexRef: React.RefObject<((i: number) => void) | null>;
+}) {
+  const [scrollEl, setScrollEl] = useState<HTMLElement | null>(null);
+  const [margin, setMargin] = useState(0);
+  // Runs after every render on purpose (content above the list can change height);
+  // the equality guards inside stop it from looping.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const root = list?.closest<HTMLElement>('[data-scroll-root]') ?? null;
+    if (root !== scrollEl) setScrollEl(root);
+    if (list && root) {
+      // Distance from the top of the scroll container to the list (content above it scrolls too).
+      const m = Math.round(list.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop);
+      if (Math.abs(m - margin) > 1) setMargin(m);
+    }
+  });
+  const v = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => scrollEl,
+    estimateSize: () => 62,
+    overscan: 10,
+    scrollMargin: margin,
+    getItemKey: (i) => rows[i]!.task.id,
+  });
+  scrollToIndexRef.current = (i) => v.scrollToIndex(i, { align: 'auto' });
+  return (
+    <ul ref={listRef} aria-label={ariaLabel} aria-rowcount={rows.length} className="relative" style={{ height: v.getTotalSize() }}>
+      {v.getVirtualItems().map((item) =>
+        renderRow(rows[item.index]!, item.index, {
+          style: { position: 'absolute', top: 0, left: 0, right: 0, transform: `translateY(${item.start - margin}px)` },
+          measureRef: v.measureElement,
+        }),
+      )}
     </ul>
   );
 }
 
 interface RowProps {
   node: TaskNode;
+  index: number;
   ctx: Ctx;
   hideDate: boolean;
   siblings: readonly Task[];
   collapsed: boolean;
-  onToggleCollapse: () => void;
-  onArrow: (delta: number) => void;
+  onToggleCollapse: (id: string, current: boolean) => void;
+  onArrow: (index: number, delta: number) => void;
   onRangeSelect: (id: string) => void;
+  style?: CSSProperties;
+  measureRef?: (el: HTMLLIElement | null) => void;
 }
 
-const TaskRow = memo(function TaskRow({ node, ctx, hideDate, siblings, collapsed, onToggleCollapse, onArrow, onRangeSelect }: RowProps) {
+const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, collapsed, onToggleCollapse: toggle, onArrow: arrow, onRangeSelect, style, measureRef }: RowProps) {
   const { task, depth, children } = node;
+  const onToggleCollapse = () => toggle(task.id, collapsed);
+  const onArrow = (d: number) => arrow(index, d);
   const app = useApp();
   const act = useAction();
   const toggleSelected = useUi((s) => s.toggleSelected);
@@ -238,6 +319,10 @@ const TaskRow = memo(function TaskRow({ node, ctx, hideDate, siblings, collapsed
 
   return (
     <li
+      ref={measureRef}
+      style={style}
+      data-index={index}
+      data-row-index={index}
       data-task-row
       tabIndex={0}
       aria-label={`${task.title}${open ? '' : ', completed'}`}

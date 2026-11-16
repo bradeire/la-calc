@@ -48,6 +48,9 @@ function ResizeHandle() {
       role="separator"
       aria-orientation="vertical"
       aria-label="Resize details panel"
+      aria-valuenow={useUi.getState().detailWidth}
+      aria-valuemin={340}
+      aria-valuemax={720}
       tabIndex={0}
       onKeyDown={(e) => {
         const w = useUi.getState().detailWidth;
@@ -120,7 +123,7 @@ export function AppShell() {
   return (
     <div className="flex h-[100dvh] overflow-hidden">
       {isDesktop && !collapsed && !isFocus && <Sidebar />}
-      <main id="main" className={cx('min-w-0 flex-1 overflow-y-auto scrollbar-thin', !isDesktop && !isFocus && 'pb-36')}>
+      <main id="main" data-scroll-root className={cx('min-w-0 flex-1 overflow-y-auto scrollbar-thin', !isDesktop && !isFocus && 'pb-36')}>
         <CurrentView />
       </main>
       {detail && isDesktop && (

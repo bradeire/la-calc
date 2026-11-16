@@ -13,8 +13,8 @@
   --line: #e4e4e0;
   --line-strong: #d4d4cf;
   --fg: #1c1c1a;
-  --fg-muted: #66665f;
-  --fg-subtle: #8f8f87;
+  --fg-muted: #5c5c55;
+  --fg-subtle: #6b6b64;
   --danger: #c2261d;
   --warn: #b45309;
   --ok: #15803d;
@@ -36,8 +36,8 @@
   --line: #2f2f2d;
   --line-strong: #3d3d3a;
   --fg: #ececea;
-  --fg-muted: #a3a39c;
-  --fg-subtle: #7a7a73;
+  --fg-muted: #b0b0a9;
+  --fg-subtle: #94948c;
   --danger: #f2665c;
   --warn: #f0a143;
   --ok: #4ade80;
@@ -101,6 +101,10 @@ body {
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* Accent-coloured text must stay readable on dark surfaces (WCAG 4.5:1): lighten it there. */
+.dark .text-accent,
+.dark .hover\:text-accent:hover { color: color-mix(in srgb, var(--accent) 55%, white); }
 
 /* Safe areas (Android gesture bar, iOS notch). */
 .pt-safe { padding-top: env(safe-area-inset-top); }

@@ -35,10 +35,11 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
   if (req.mode === 'navigate') {
     // Network first for the page so updates arrive; cached copy when offline.
-    e.respondWith(fetch(req).catch(() => caches.match('./index.html')));
+    e.respondWith(fetch(req).catch(() => caches.match('./index.html', { ignoreVary: true, ignoreSearch: true })));
     return;
   }
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req)));
+  // ignoreVary: module scripts are requested with an Origin header that the precache request lacked.
+  e.respondWith(caches.match(req, { ignoreVary: true }).then((hit) => hit || fetch(req)));
 });
 `;
       this.emitFile({ type: 'asset', fileName: 'sw.js', source });

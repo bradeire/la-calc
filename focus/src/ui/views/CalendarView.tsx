@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, CalendarClock } from 'lucide-react';
-import { addDays, addMonths, endOfMonth, formatTime, fromISODate, MONTH_NAMES, startOfMonth, startOfWeek, WEEKDAY_SHORT } from '@/core/dates';
+import { addDays, addMonths, endOfMonth, formatLongDate, formatTime, fromISODate, MONTH_NAMES, startOfMonth, startOfWeek, WEEKDAY_SHORT } from '@/core/dates';
 import { isOpenStatus, type Task } from '@/core/domain/types';
 import { previewOccurrences } from '@/core/recurrence/engine';
 import { useUi } from '@/state/ui-store';
@@ -108,9 +108,9 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
             {nav}
           </div>
         )}
-        <div className="grid grid-cols-7 border-t border-l border-line text-[0.75rem]" role="grid" aria-label={title}>
+        <div className="grid grid-cols-7 border-t border-l border-line text-[0.75rem]" role="group" aria-label={title}>
           {weekdays.map((w) => (
-            <div key={w} role="columnheader" className="border-r border-b border-line bg-surface-2 px-1.5 py-1 font-medium text-muted">
+            <div key={w} aria-hidden className="border-r border-b border-line bg-surface-2 px-1.5 py-1 font-medium text-muted">
               {w}
             </div>
           ))}
@@ -121,12 +121,8 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
             return (
               <div
                 key={d}
-                role="gridcell"
-                aria-label={d}
-                tabIndex={0}
                 onClick={() => setSelected(d)}
                 onDoubleClick={() => openQuickAdd({ scheduledDate: d, projectId: projectId ?? null })}
-                onKeyDown={(e) => e.key === 'Enter' && setSelected(d)}
                 onDragOver={(e) => {
                   if (e.dataTransfer.types.includes(DRAG_MIME)) {
                     e.preventDefault();
@@ -147,9 +143,18 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
                   dropDay === d && 'ring-2 ring-inset ring-accent',
                 )}
               >
-                <span className={cx('flex h-6 w-6 items-center justify-center self-start rounded-full text-[0.8rem]', d === today && 'bg-accent font-semibold text-accent-fg', d < today && d !== today && 'text-subtle')}>
+                <button
+                  type="button"
+                  aria-label={`${formatLongDate(d, prefs)}${entries.length ? `, ${entries.length} item${entries.length > 1 ? 's' : ''}` : ''}`}
+                  aria-pressed={selected === d}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    setSelected(d);
+                  }}
+                  className={cx('flex h-6 w-6 items-center justify-center self-start rounded-full text-[0.8rem]', d === today && 'bg-accent font-semibold text-accent-fg', d < today && d !== today && 'text-subtle')}
+                >
                   {Number(d.slice(8))}
-                </span>
+                </button>
                 {entries.slice(0, limit).map((e, i) => (
                   <button
                     key={`${e.task.id}-${e.kind}-${i}`}
@@ -167,7 +172,7 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
                     className={cx(
                       'flex items-center gap-1 truncate rounded px-1 py-px text-left leading-tight',
                       e.kind === 'deadline' ? 'border border-dashed border-warn text-warn' : 'bg-surface-2 hover:bg-surface-3',
-                      e.kind === 'repeat' && 'opacity-55',
+                      e.kind === 'repeat' && 'border border-dotted border-line-strong bg-transparent text-muted italic',
                       !isOpenStatus(e.task.status) && 'line-through opacity-60',
                       e.kind === 'scheduled' && e.task.scheduledDate! < today && 'text-danger',
                     )}
@@ -183,12 +188,12 @@ export function CalendarView({ embedded, projectId }: { embedded?: boolean; proj
           })}
         </div>
         <p className="mt-2 text-[0.75rem] text-subtle">
-          Dashed items are deadlines; faded items are upcoming repeats. Drag to reschedule; double-click a day to add a task.
+          Dashed items are deadlines; dotted, italic items are upcoming repeats. Drag to reschedule; double-click a day to add a task.
         </p>
         {selected && (
           <section className="mt-4">
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold">{selected}</h2>
+              <h2 className="font-semibold">{formatLongDate(selected, prefs)}</h2>
               <Button size="sm" variant="ghost" onClick={() => openQuickAdd({ scheduledDate: selected, projectId: projectId ?? null })}>
                 Add task on this day
               </Button>

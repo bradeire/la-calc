@@ -73,7 +73,7 @@ export function UpcomingView() {
                   d === today ? 'bg-accent text-accent-fg' : 'hover:bg-surface-2',
                 )}
               >
-                <span className="opacity-75">{WEEKDAY_SHORT[weekdayIndex(d)]}</span>
+                <span className={d === today ? '' : 'text-muted'}>{WEEKDAY_SHORT[weekdayIndex(d)]}</span>
                 <span className="text-[1rem] font-semibold">{Number(d.slice(8))}</span>
                 <span className={cx('h-1 w-1 rounded-full', count ? (d === today ? 'bg-accent-fg' : 'bg-accent') : 'bg-transparent')} />
               </button>

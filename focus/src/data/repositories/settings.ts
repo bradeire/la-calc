@@ -3,7 +3,8 @@ import { PALETTE } from '@/core/domain/types';
 import type { DatabaseDriver } from '../db/driver';
 import { nowIso } from './base';
 
-export const ACCENTS = ['#2563eb', '#4f46e5', '#7c3aed', '#0d9488', '#16a34a', '#ea580c', '#db2777', '#dc2626', '#475569'] as const;
+/** Accent options, chosen so white text on them meets WCAG AA (≥ 4.5:1). */
+export const ACCENTS = ['#2563eb', '#4f46e5', '#7c3aed', '#0f766e', '#15803d', '#c2410c', '#be185d', '#dc2626', '#475569'] as const;
 
 const dashboardWidget = z.enum(['today', 'overdue', 'deadlines', 'waiting', 'workload', 'projects', 'capture', 'recent', 'stats']);
 
