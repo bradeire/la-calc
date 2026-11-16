@@ -1,13 +1,22 @@
-import { keyExpr, SYNC_TABLES, SYNCED_SETTINGS } from '@/core/sync/tables';
+import { SYNCED_SETTINGS } from '@/core/sync/tables';
 import type { Migration } from './types';
+
+/** Frozen copy of the v5 synced tables (migrations must not change after release). */
+type V5Table = { name: string; key: string[] };
+export const V5_TABLES: V5Table[] = [
+  ['settings', ['key']], ['projects', ['id']], ['sections', ['id']], ['labels', ['id']], ['tasks', ['id']], ['recurrence_rules', ['id']],
+  ['task_labels', ['task_id', 'label_id']], ['task_dependencies', ['task_id', 'depends_on_id']], ['reminders', ['id']], ['comments', ['id']],
+  ['time_entries', ['id']], ['activity_log', ['id']], ['project_templates', ['id']], ['saved_filters', ['id']], ['automations', ['id']], ['automation_runs', ['id']],
+].map(([name, key]) => ({ name: name as string, key: key as string[] }));
+const keyExpr = (t: V5Table, p: 'NEW' | 'OLD') => t.key.map((k) => `${p}.${k}`).join(' || char(31) || ');
 
 const WHEN = '(SELECT enabled FROM sync_control WHERE id = 1) = 1 AND (SELECT applying FROM sync_control WHERE id = 1) = 0';
 const VERSION = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now') || '|' || (SELECT device_id FROM sync_control WHERE id = 1)";
 const settingsOnly = (p: 'NEW' | 'OLD') => ` AND ${p}.key IN (${SYNCED_SETTINGS.map((k) => `'${k}'`).join(', ')})`;
 
-function triggers(): string {
+export function v5Triggers(): string {
   const out: string[] = [];
-  for (const t of SYNC_TABLES) {
+  for (const t of V5_TABLES) {
     for (const [ev, p] of [['INSERT', 'NEW'], ['UPDATE', 'NEW'], ['DELETE', 'OLD']] as const) {
       const key = keyExpr(t, p);
       const extra = t.name === 'settings' ? settingsOnly(p) : '';
@@ -52,10 +61,10 @@ CREATE TABLE sync_meta (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
-${triggers()}
+${v5Triggers()}
 `,
   down: `
-${SYNC_TABLES.flatMap((t) => ['insert', 'update', 'delete'].map((e) => `DROP TRIGGER IF EXISTS sync_${t.name}_${e};`)).join('\n')}
+${V5_TABLES.flatMap((t) => ['insert', 'update', 'delete'].map((e) => `DROP TRIGGER IF EXISTS sync_${t.name}_${e};`)).join('\n')}
 DROP TABLE IF EXISTS sync_meta;
 DROP TABLE IF EXISTS sync_versions;
 DROP TABLE IF EXISTS sync_changes;

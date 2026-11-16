@@ -1,16 +1,22 @@
 import { deriveSyncKeys, generateSyncKey, openJson, parseSyncKey, sealJson, SyncDecryptError, SyncKeyError, type SyncKeys } from '@/core/sync/crypto';
-import { KEY_SEPARATOR, SYNC_TABLES, SYNCED_SETTINGS, tableByName, type SyncTable } from '@/core/sync/tables';
+import { fromLegacyVersion, hlc, KEY_SEPARATOR, parseHlc, SYNC_TABLES, SYNCED_SETTINGS, tableByName, type SyncTable } from '@/core/sync/tables';
 import type { Repositories } from '@/data';
 import type { Row, SqlValue } from '@/data/db/driver';
 import type { HttpAdapter, SecretStore } from '@/platform/types';
 import { ValidationError } from './events';
 
-/** One changed row: table, key, version ("time|device"), row values (null = deleted). */
+/**
+ * One row's state for sync (v2): every field with the version of its last change, and the
+ * version of its deletion (if it was ever deleted). A row exists if its newest field is newer
+ * than its deletion. `v`/`r` is the v1 format (whole-row version), still accepted on input.
+ */
 export interface SyncItem {
   t: string;
   k: string;
-  v: string;
-  r: Record<string, SqlValue> | null;
+  f?: Record<string, [SqlValue, string]>;
+  d?: string;
+  v?: string;
+  r?: Record<string, SqlValue> | null;
 }
 interface Batch {
   seq: number;
@@ -82,7 +88,7 @@ const MAX_BATCH_JSON = 700_000;
 const PAGE = 100;
 
 /**
- * End-to-end encrypted sync (ADR-019). Pull, apply (last writer wins per row), then push
+ * End-to-end encrypted sync (ADR-019, ADR-020). Pull, apply (last writer wins per field), then push
  * local changes. Remote changes are applied with change capture off, so they never echo
  * back, and without domain events, so automations don't run twice.
  */
@@ -189,17 +195,22 @@ export class SyncService {
     return { key };
   }
 
-  /** Queue every existing row once, versioned by its own timestamps so older rows don't win. */
+  /** Queue every existing row once; fields get versions from the row's own timestamps, so older rows don't win. */
   private bootstrap() {
     const device = this.control().device_id;
     for (const t of SYNC_TABLES) {
       const cols = new Set(this.r.db.all<{ name: string }>(`PRAGMA table_info(${t.name})`).map((c) => c.name));
       const ts = ['updated_at', 'created_at', 'started_at'].filter((c) => cols.has(c));
       const when = ts.length ? `COALESCE(${ts.join(', ')}, '1970-01-01T00:00:00.000Z')` : "'1970-01-01T00:00:00.000Z'";
+      const ms = `CAST(ROUND((julianday(${when}) - 2440587.5) * 86400000) AS INTEGER)`;
       const key = t.key.join(' || char(31) || ');
       const where = t.name === 'settings' ? `WHERE key IN (${SYNCED_SETTINGS.map((k) => `'${k}'`).join(', ')})` : '';
+      const values = `(VALUES ${t.columns.filter((c) => cols.has(c)).map((c) => `('${c}')`).join(', ')})`;
       this.r.db.run(`INSERT INTO sync_changes (tbl, row_key) SELECT '${t.name}', ${key} FROM ${t.name} ${where}`);
-      this.r.db.run(`INSERT OR IGNORE INTO sync_versions (tbl, row_key, version) SELECT '${t.name}', ${key}, ${when} || '|' || ? FROM ${t.name} ${where}`, [device]);
+      this.r.db.run(
+        `INSERT OR IGNORE INTO sync_fields (tbl, row_key, col, version) SELECT '${t.name}', ${key}, c.column1, printf('%013d-%05d-%s', ${ms}, 0, ?) FROM ${t.name}, ${values} c ${where}`,
+        [device],
+      );
     }
   }
 
@@ -207,7 +218,8 @@ export class SyncService {
     this.r.db.transaction(() => {
       this.r.db.run('UPDATE sync_control SET enabled = 0 WHERE id = 1');
       this.r.db.run('DELETE FROM sync_changes');
-      this.r.db.run('DELETE FROM sync_versions');
+      this.r.db.run('DELETE FROM sync_fields');
+      this.r.db.run('DELETE FROM sync_tombstones');
       this.r.db.run('DELETE FROM sync_meta');
     });
     this.keys = null;
@@ -329,10 +341,14 @@ export class SyncService {
     const t = tableByName.get(tbl);
     if (!t) return null;
     const w = this.where(t, key);
-    const row = this.r.db.get<Row>(`SELECT * FROM ${tbl} WHERE ${w.sql}`, w.params) ?? null;
-    const v = this.r.db.get<{ version: string }>('SELECT version FROM sync_versions WHERE tbl = ? AND row_key = ?', [tbl, key])?.version;
-    if (!v) return null;
-    return { t: tbl, k: key, v, r: row as Record<string, SqlValue> | null };
+    const row = this.r.db.get<Row>(`SELECT * FROM ${tbl} WHERE ${w.sql}`, w.params);
+    const d = this.r.db.get<{ version: string }>('SELECT version FROM sync_tombstones WHERE tbl = ? AND row_key = ?', [tbl, key])?.version;
+    if (!row) return d ? { t: tbl, k: key, d } : null;
+    const versions = new Map(this.r.db.all<{ col: string; version: string }>('SELECT col, version FROM sync_fields WHERE tbl = ? AND row_key = ?', [tbl, key]).map((x) => [x.col, x.version]));
+    const floor = hlc(0, 0, this.control().device_id);
+    const f: Record<string, [SqlValue, string]> = {};
+    for (const [col, value] of Object.entries(row)) f[col] = [value as SqlValue, versions.get(col) ?? floor];
+    return d ? { t: tbl, k: key, f, d } : { t: tbl, k: key, f };
   }
 
   // ---------- apply ----------
@@ -342,10 +358,21 @@ export class SyncService {
     return raw ? (JSON.parse(raw) as SyncItem[]) : [];
   }
 
-  /** Apply remote rows, newest version wins. Rows whose parent hasn't arrived wait for the next sync. */
+  /** v1 items (whole-row version) as v2 (every field carries that version). */
+  private normalise(it: SyncItem): SyncItem {
+    if (!it.v) return it;
+    const v = fromLegacyVersion(it.v);
+    if (!it.r) return { t: it.t, k: it.k, d: v };
+    return { t: it.t, k: it.k, f: Object.fromEntries(Object.entries(it.r).map(([c, x]) => [c, [x, v] as [SqlValue, string]])) };
+  }
+
+  /** Apply remote rows field by field (newest version wins). Rows whose parent hasn't arrived wait for the next sync. */
   apply(items: SyncItem[]) {
     const order = new Map(SYNC_TABLES.map((t, i) => [t.name, i]));
-    const sorted = items.filter((i) => tableByName.has(i.t)).sort((a, b) => order.get(a.t)! - order.get(b.t)!);
+    const sorted = items
+      .filter((i) => tableByName.has(i.t))
+      .map((i) => this.normalise(i))
+      .sort((a, b) => order.get(a.t)! - order.get(b.t)!);
     const waiting: SyncItem[] = [];
     this.r.db.run('UPDATE sync_control SET applying = 1 WHERE id = 1');
     try {
@@ -365,36 +392,79 @@ export class SyncService {
           }
         }
       }
+      this.observe(sorted);
     } finally {
       this.r.db.run('UPDATE sync_control SET applying = 0 WHERE id = 1');
     }
     this.setMeta('waiting', waiting.length ? JSON.stringify(waiting.slice(-2000)) : null);
   }
 
+  /** Hybrid logical clock: move this device's clock past every version it has seen. */
+  private observe(items: SyncItem[]) {
+    let best: { ms: number; counter: number } | null = null;
+    for (const it of items) {
+      for (const v of [it.d, ...Object.values(it.f ?? {}).map((x) => x[1])]) {
+        const h = v ? parseHlc(v) : null;
+        if (h && (!best || h.ms > best.ms || (h.ms === best.ms && h.counter > best.counter))) best = h;
+      }
+    }
+    if (!best) return;
+    const c = this.r.db.get<{ hlc_ms: number; hlc_counter: number }>('SELECT hlc_ms, hlc_counter FROM sync_control WHERE id = 1')!;
+    if (best.ms > c.hlc_ms || (best.ms === c.hlc_ms && best.counter > c.hlc_counter)) {
+      this.r.db.run('UPDATE sync_control SET hlc_ms = ?, hlc_counter = ? WHERE id = 1', [best.ms, best.counter]);
+    }
+  }
+
   private applyOne(it: SyncItem) {
     const t = tableByName.get(it.t)!;
     if (it.t === 'settings' && !(SYNCED_SETTINGS as readonly string[]).includes(it.k)) return;
-    const local = this.r.db.get<{ version: string }>('SELECT version FROM sync_versions WHERE tbl = ? AND row_key = ?', [it.t, it.k])?.version;
-    if (local && local >= it.v) return;
     const w = this.where(t, it.k);
-    if (it.r === null) {
-      this.r.db.run(`DELETE FROM ${it.t} WHERE ${w.sql}`, w.params);
-    } else {
-      const row = { ...it.r };
-      if (!this.resolveUnique(it.t, row)) return;
-      const cols = this.r.db.all<{ name: string }>(`PRAGMA table_info(${it.t})`).map((c) => c.name).filter((c) => c in row);
-      const updates = cols.filter((c) => !t.key.includes(c));
-      const conflict = updates.length ? `DO UPDATE SET ${updates.map((c) => `${c} = excluded.${c}`).join(', ')}` : 'DO NOTHING';
-      this.r.db.run(
-        `INSERT INTO ${it.t} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')}) ON CONFLICT (${t.key.join(', ')}) ${conflict}`,
-        cols.map((c) => row[c] ?? null),
-      );
+    const local = new Map(
+      this.r.db.all<{ col: string; version: string }>('SELECT col, version FROM sync_fields WHERE tbl = ? AND row_key = ?', [it.t, it.k]).map((x) => [x.col, x.version]),
+    );
+    const localTomb = this.r.db.get<{ version: string }>('SELECT version FROM sync_tombstones WHERE tbl = ? AND row_key = ?', [it.t, it.k])?.version ?? '';
+    const tomb = (it.d ?? '') > localTomb ? it.d! : localTomb;
+    const incoming = it.f ?? {};
+    const winners = Object.keys(incoming).filter((c) => incoming[c]![1] > (local.get(c) ?? ''));
+    let newest = '';
+    for (const c of new Set([...local.keys(), ...Object.keys(incoming)])) {
+      const v = [local.get(c) ?? '', incoming[c]?.[1] ?? ''].reduce((a, b) => (a > b ? a : b));
+      if (v > newest) newest = v;
     }
-    this.r.db.run('INSERT INTO sync_versions (tbl, row_key, version) VALUES (?, ?, ?) ON CONFLICT(tbl, row_key) DO UPDATE SET version = excluded.version', [
-      it.t,
-      it.k,
-      it.v,
-    ]);
+    const exists = newest !== '' && newest > tomb;
+    const rowExists = !!this.r.db.get(`SELECT 1 FROM ${it.t} WHERE ${w.sql}`, w.params);
+    const tableCols = new Set(this.r.db.all<{ name: string }>(`PRAGMA table_info(${it.t})`).map((c) => c.name));
+
+    if (!exists) {
+      if (rowExists) this.r.db.run(`DELETE FROM ${it.t} WHERE ${w.sql}`, w.params);
+    } else if (rowExists) {
+      const set = winners.filter((c) => tableCols.has(c) && !t.key.includes(c));
+      if (set.length) {
+        const current = this.r.db.get<Row>(`SELECT * FROM ${it.t} WHERE ${w.sql}`, w.params)!;
+        const row: Record<string, SqlValue> = { ...(current as Record<string, SqlValue>) };
+        for (const c of set) row[c] = incoming[c]![0];
+        if (!this.resolveUnique(it.t, row)) return;
+        this.r.db.run(`UPDATE ${it.t} SET ${set.map((c) => `${c} = ?`).join(', ')} WHERE ${w.sql}`, [...set.map((c) => row[c] ?? null), ...w.params]);
+      }
+    } else {
+      const row: Record<string, SqlValue> = {};
+      for (const [c, [value]] of Object.entries(incoming)) if (tableCols.has(c)) row[c] = value;
+      if (!this.resolveUnique(it.t, row)) return;
+      const cols = Object.keys(row);
+      if (!t.key.every((k) => k in row)) return;
+      this.r.db.run(`INSERT INTO ${it.t} (${cols.join(', ')}) VALUES (${cols.map(() => '?').join(', ')})`, cols.map((c) => row[c] ?? null));
+    }
+    for (const c of winners) {
+      this.r.db.run('INSERT INTO sync_fields (tbl, row_key, col, version) VALUES (?, ?, ?, ?) ON CONFLICT(tbl, row_key, col) DO UPDATE SET version = excluded.version', [
+        it.t,
+        it.k,
+        c,
+        incoming[c]![1],
+      ]);
+    }
+    if (tomb && tomb !== localTomb) {
+      this.r.db.run('INSERT INTO sync_tombstones (tbl, row_key, version) VALUES (?, ?, ?) ON CONFLICT(tbl, row_key) DO UPDATE SET version = excluded.version', [it.t, it.k, tomb]);
+    }
   }
 
   /**

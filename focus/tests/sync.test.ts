@@ -170,3 +170,100 @@ describe('sync between two devices', () => {
     expect(a.sync.status()).toMatchObject({ enabled: false, pending: 0 });
   });
 });
+
+describe('sync v2: field-level merge and clocks', () => {
+  it('keeps both devices’ edits to different fields of the same task', async () => {
+    const { a, b } = await pair();
+    const t = a.tasks.create({ title: 'Paint fence' });
+    const { key } = await a.sync.enable({ relayUrl: RELAY });
+    await b.sync.enable({ relayUrl: RELAY, key });
+    a.tasks.update(t.id, { title: 'Paint the garden fence' });
+    await tick();
+    b.tasks.update(t.id, { priority: 1, scheduledDate: '2026-11-21' });
+    await a.sync.syncNow();
+    await b.sync.syncNow();
+    await a.sync.syncNow();
+    for (const app of [a, b]) expect(app.repos.tasks.get(t.id)).toMatchObject({ title: 'Paint the garden fence', priority: 1, scheduledDate: '2026-11-21' });
+  });
+
+  it('an edit made after seeing another device’s change wins even if this device’s clock is behind', async () => {
+    const { a, b } = await pair();
+    const t = a.tasks.create({ title: 'Start' });
+    const { key } = await a.sync.enable({ relayUrl: RELAY });
+    await b.sync.enable({ relayUrl: RELAY, key });
+    // A's clock runs a day fast.
+    const realNow = Date.now;
+    Date.now = () => realNow() + 86_400_000;
+    try {
+      a.tasks.update(t.id, { title: 'From the fast clock' });
+    } finally {
+      Date.now = realNow;
+    }
+    // The database's clock really was a day ahead.
+    const v = a.repos.db.get<{ version: string }>("SELECT version FROM sync_fields WHERE tbl = 'tasks' AND col = 'title'")!.version;
+    expect(Number(v.slice(0, 13)) - realNow()).toBeGreaterThan(86_000_000);
+    await a.sync.syncNow();
+    await b.sync.syncNow();
+    expect(b.repos.tasks.get(t.id)!.title).toBe('From the fast clock');
+    // B (correct clock) edits afterwards: it has seen A's version, so its edit is later.
+    b.tasks.update(t.id, { title: 'Later on the slow clock' });
+    await b.sync.syncNow();
+    await a.sync.syncNow();
+    expect(a.repos.tasks.get(t.id)!.title).toBe('Later on the slow clock');
+  });
+
+  it('an edit made after a deletion brings the row back on every device', async () => {
+    const { a, b } = await pair();
+    const l = a.labels.create({ name: 'temp' });
+    const { key } = await a.sync.enable({ relayUrl: RELAY });
+    await b.sync.enable({ relayUrl: RELAY, key });
+    a.repos.db.run('DELETE FROM labels WHERE id = ?', [l.id]);
+    await tick();
+    b.labels.update(l.id, { color: '#2563eb' });
+    await a.sync.syncNow();
+    await b.sync.syncNow();
+    await a.sync.syncNow();
+    expect(a.repos.labels.get(l.id)?.color).toBe('#2563eb');
+    expect(b.repos.labels.get(l.id)?.color).toBe('#2563eb');
+  });
+
+  it('syncs attachment records', async () => {
+    const { a, b } = await pair();
+    const t = a.tasks.create({ title: 'Receipt' });
+    await a.content.addAttachment({ taskId: t.id }, new Blob(['%PDF-1.4 test'], { type: 'application/pdf' }), 'receipt.pdf');
+    const { key } = await a.sync.enable({ relayUrl: RELAY });
+    await b.sync.enable({ relayUrl: RELAY, key });
+    expect(b.repos.attachments.listForTask(t.id).map((x) => x.fileName)).toEqual(['receipt.pdf']);
+  });
+});
+
+describe('sync schema', () => {
+  it('the synced column lists match the database', async () => {
+    const { SYNC_TABLES } = await import('@/core/sync/tables');
+    const { db } = await makeApp();
+    for (const t of SYNC_TABLES) {
+      const cols = db.all<{ name: string }>(`PRAGMA table_info(${t.name})`).map((c) => c.name);
+      expect(cols, t.name).toEqual([...t.columns]);
+    }
+  });
+
+  it('migration 006 converts row versions from an existing sync set-up', async () => {
+    const { getSql } = await import('./helpers');
+    const { SqlJsDriver } = await import('@/data/db/sqljs-driver');
+    const { migrate, MIGRATIONS } = await import('@/data/migrations');
+    const db = new SqlJsDriver(await getSql());
+    migrate(db, MIGRATIONS.filter((m) => m.version <= 5));
+    db.run("UPDATE sync_control SET enabled = 1, device_id = 'dev1' WHERE id = 1");
+    db.run("INSERT INTO labels (id, name, color, created_at, updated_at) VALUES ('11111111-1111-4111-8111-111111111111', 'home', '#000000', '2026-11-01T00:00:00.000Z', '2026-11-01T00:00:00.000Z')");
+    db.run("UPDATE sync_versions SET version = '2026-11-16T10:00:00.000Z|dev1' WHERE row_key = '11111111-1111-4111-8111-111111111111'");
+    db.run("INSERT INTO sync_versions (tbl, row_key, version) VALUES ('tasks', 'gone', '2026-11-15T09:00:00.000Z|dev2')");
+    migrate(db);
+    const ms = Date.parse('2026-11-16T10:00:00.000Z');
+    expect(db.get<{ version: string }>("SELECT version FROM sync_fields WHERE tbl = 'labels' AND col = 'name'")!.version).toBe(`${ms}-00000-dev1`);
+    expect(db.get<{ version: string }>("SELECT version FROM sync_tombstones WHERE row_key = 'gone'")!.version).toBe(`${Date.parse('2026-11-15T09:00:00.000Z')}-00000-dev2`);
+    expect(db.get<{ hlc_ms: number }>('SELECT hlc_ms FROM sync_control')!.hlc_ms).toBe(ms);
+    // New changes get versions above the converted ones.
+    db.run("UPDATE labels SET color = '#ffffff'");
+    expect(db.get<{ version: string }>("SELECT version FROM sync_fields WHERE col = 'color'")!.version > `${ms}-00000-dev1`).toBe(true);
+  });
+});
