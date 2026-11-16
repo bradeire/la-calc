@@ -267,3 +267,74 @@ describe('sync schema', () => {
     expect(db.get<{ version: string }>("SELECT version FROM sync_fields WHERE col = 'color'")!.version > `${ms}-00000-dev1`).toBe(true);
   });
 });
+
+describe('sync v2: compaction, files, licences, usage', () => {
+  it('compacts history into a snapshot; a device joining later still gets everything', async () => {
+    const { relay, a, b } = await pair();
+    a.sync.setOptions({ compactAfterBatches: 3 });
+    const { key } = await a.sync.enable({ relayUrl: RELAY });
+    await b.sync.enable({ relayUrl: RELAY, key });
+    const purged = a.tasks.create({ title: 'Will be purged' });
+    for (let i = 0; i < 4; i++) {
+      a.tasks.create({ title: `Task ${i}` });
+      await a.sync.syncNow();
+    }
+    a.tasks.remove([purged.id]);
+    a.tasks.purge(purged.id);
+    await a.sync.syncNow();
+    await b.sync.syncNow();
+    await a.sync.syncNow(); // a's count passes the threshold: it compacts
+    const batches = Number(relay.db.exec('SELECT COUNT(*) FROM batches')[0]!.values[0]![0]);
+    expect(Number(relay.db.exec('SELECT COUNT(*) FROM snapshots WHERE complete = 1')[0]!.values[0]![0])).toBe(1);
+    expect(batches).toBeLessThan(3);
+    expect(a.sync.status().usage).toMatchObject({ quota: 100 * 1024 * 1024 });
+
+    // A third device joins after compaction: it loads the snapshot.
+    const c = (await makeApp()).app;
+    (c as unknown as { platform: { http: { handler: unknown } } }).platform.http.handler = relay.http;
+    await c.sync.enable({ relayUrl: RELAY, key });
+    const titles = c.repos.tasks.listForReports().map((t) => t.title).sort();
+    expect(titles).toEqual(['Task 0', 'Task 1', 'Task 2', 'Task 3']);
+    // The purge reached it as a deletion record, not as a task.
+    expect(c.repos.tasks.get(purged.id)).toBeUndefined();
+    // And it keeps syncing normally afterwards.
+    c.tasks.create({ title: 'From the third device' });
+    await c.sync.syncNow();
+    await b.sync.syncNow();
+    expect(b.repos.tasks.listForReports().map((t) => t.title)).toContain('From the third device');
+  });
+
+  it('attachment files travel encrypted and are removed from the relay when purged', async () => {
+    const { relay, a, b, pb } = await pair();
+    const t = a.tasks.create({ title: 'Boiler manual' });
+    const secret = 'PDF bytes: boiler model XJ-9 manual';
+    const attId = await a.content.addAttachment({ taskId: t.id }, new Blob([secret], { type: 'application/pdf' }), 'manual.pdf');
+    const { key } = await a.sync.enable({ relayUrl: RELAY });
+    await b.sync.enable({ relayUrl: RELAY, key });
+    await b.sync.syncNow();
+    const att = b.repos.attachments.listForTask(t.id)[0]!;
+    const blob = await pb.files.get(att.storageKey);
+    expect(await blob!.text()).toBe(secret);
+    expect(JSON.stringify(relay.db.exec('SELECT data FROM blob_parts'))).not.toContain('boiler');
+    expect(b.sync.status()).toMatchObject({ filesToSend: 0, filesToFetch: 0 });
+
+    // Purged on A: the file disappears from the relay.
+    a.repos.db.run('DELETE FROM attachments WHERE id = ?', [attId]);
+    await a.sync.syncNow();
+    expect(Number(relay.db.exec('SELECT COUNT(*) FROM blob_parts')[0]!.values[0]![0])).toBe(0);
+  });
+
+  it('asks for a licence when the relay requires one', async () => {
+    const { createHmac } = await import('node:crypto');
+    const relay = await fakeRelay({ LICENCE_SECRET: 's3cret' });
+    const a = (await makeApp()).app;
+    (a as unknown as { platform: { http: { handler: unknown } } }).platform.http.handler = relay.http;
+    expect(await a.sync.relayNeedsLicence(RELAY)).toBe(true);
+    await expect(a.sync.enable({ relayUrl: RELAY })).rejects.toThrow(/licence/i);
+    expect(a.sync.status().enabled).toBe(false);
+    const exp = Math.floor(Date.now() / 1000) + 86400;
+    const licence = `me.${exp}.${createHmac('sha256', 's3cret').update(`me.${exp}`).digest('hex')}`;
+    await a.sync.enable({ relayUrl: RELAY, licence });
+    expect(a.sync.status().enabled).toBe(true);
+  });
+});

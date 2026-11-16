@@ -1,8 +1,8 @@
-import { deriveSyncKeys, generateSyncKey, openJson, parseSyncKey, sealJson, SyncDecryptError, SyncKeyError, type SyncKeys } from '@/core/sync/crypto';
+import { deriveSyncKeys, generateSyncKey, openBytes, openJson, parseSyncKey, sealBytes, sealJson, SyncDecryptError, SyncKeyError, type SyncKeys } from '@/core/sync/crypto';
 import { fromLegacyVersion, hlc, KEY_SEPARATOR, parseHlc, SYNC_TABLES, SYNCED_SETTINGS, tableByName, type SyncTable } from '@/core/sync/tables';
 import type { Repositories } from '@/data';
 import type { Row, SqlValue } from '@/data/db/driver';
-import type { HttpAdapter, SecretStore } from '@/platform/types';
+import type { FileStore, HttpAdapter, SecretStore } from '@/platform/types';
 import { ValidationError } from './events';
 
 /**
@@ -23,26 +23,64 @@ interface Batch {
   device: string;
   data: string;
 }
-
-/** Where encrypted batches are stored. The relay never sees plaintext or the data key. */
-export interface SyncTransport {
-  push(url: string, vault: string, token: string, device: string, data: string): Promise<number>;
-  pull(url: string, vault: string, token: string, after: number, limit: number): Promise<{ batches: Batch[]; more: boolean }>;
-  erase(url: string, vault: string, token: string): Promise<void>;
+export interface SnapshotRef {
+  id: string;
+  upTo: number;
+  parts: number;
+}
+export interface RelayUsage {
+  bytes: number;
+  quota: number;
+  batches: number;
+  licenceExpires: number | null;
 }
 
-/** The relay (tools/focus-sync-relay): a small HTTP API on the user's own free Cloudflare account. */
+/** A relay refusal with a machine-readable reason (quota, licence…). */
+export class RelayError extends ValidationError {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+  ) {
+    super(message);
+  }
+}
+
+/** Where encrypted data is stored. The relay never sees plaintext or the data key. */
+export interface SyncTransport {
+  push(url: string, vault: string, token: string, device: string, data: string): Promise<number>;
+  pull(url: string, vault: string, token: string, after: number, limit: number): Promise<{ batches: Batch[]; more: boolean; snapshot?: SnapshotRef | null }>;
+  erase(url: string, vault: string, token: string): Promise<void>;
+  getSnapshotPart?(url: string, vault: string, token: string, id: string, part: number): Promise<string>;
+  putSnapshotPart?(url: string, vault: string, token: string, id: string, part: number, parts: number, upTo: number, data: string): Promise<boolean>;
+  blobInfo?(url: string, vault: string, token: string, id: string): Promise<{ parts: number; complete: boolean } | null>;
+  getBlobPart?(url: string, vault: string, token: string, id: string, part: number): Promise<string>;
+  putBlobPart?(url: string, vault: string, token: string, id: string, part: number, parts: number, data: string): Promise<void>;
+  deleteBlob?(url: string, vault: string, token: string, id: string): Promise<void>;
+  usage?(url: string, vault: string, token: string): Promise<RelayUsage>;
+  health?(url: string): Promise<{ ok: boolean; licenceRequired: boolean }>;
+}
+
+/** The relay (tools/focus-sync-relay): a small HTTP API, hosted by you or the app's publisher. */
 export class RelayTransport implements SyncTransport {
-  constructor(private http: HttpAdapter) {}
-  private async call(base: string, method: 'GET' | 'POST', path: string, token: string, body?: unknown) {
+  constructor(
+    private http: HttpAdapter,
+    private licence: () => Promise<string | null> = async () => null,
+  ) {}
+  private async call(base: string, method: 'GET' | 'POST', path: string, token: string | null, body?: unknown) {
     let res;
+    const licence = await this.licence();
     try {
       res = await this.http.request({
         method,
         url: base.replace(/\/+$/, '') + path,
-        headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(licence ? { 'X-Focus-Licence': licence } : {}),
+          ...(body ? { 'Content-Type': 'application/json' } : {}),
+        },
         body: body ? JSON.stringify(body) : undefined,
-        timeoutMs: 30_000,
+        timeoutMs: 60_000,
       });
     } catch (err) {
       throw new ValidationError(`Couldn’t reach the sync relay (${err instanceof Error ? err.message : 'network error'}). Changes are kept and will sync later.`);
@@ -53,8 +91,13 @@ export class RelayTransport implements SyncTransport {
     } catch {
       throw new ValidationError(`The sync relay sent an unexpected answer (${res.status}). Check the relay address.`);
     }
-    if (res.status === 401 || res.status === 403) throw new ValidationError('The sync relay refused this sync key.');
-    if (res.status < 200 || res.status >= 300) throw new ValidationError(`Sync relay error ${res.status}: ${String(data.error ?? '')}`);
+    const msg = typeof data.error === 'string' ? data.error : '';
+    const code = typeof data.code === 'string' ? data.code : undefined;
+    if (res.status === 403) throw new RelayError('The sync relay refused this sync key.', 403, code);
+    if (res.status === 402) throw new RelayError(msg || 'This sync relay needs a valid licence.', 402, code ?? 'licence_required');
+    if (res.status === 507) throw new RelayError('Sync storage is full. Older history is cleaned up automatically; if this persists, remove large attachments.', 507, 'quota');
+    if (res.status === 429) throw new RelayError('The sync relay is busy; it will try again shortly.', 429, 'rate');
+    if (res.status < 200 || res.status >= 300) throw new RelayError(`Sync relay error ${res.status}${msg ? `: ${msg}` : ''}`, res.status, code);
     return data;
   }
   async push(url: string, vault: string, token: string, device: string, data: string) {
@@ -66,7 +109,32 @@ export class RelayTransport implements SyncTransport {
   }
   async pull(url: string, vault: string, token: string, after: number, limit: number) {
     const r = await this.call(url, 'GET', `/v1/vaults/${vault}/batches?after=${after}&limit=${limit}`, token);
-    return { batches: (r.batches as Batch[]) ?? [], more: !!r.more };
+    return { batches: (r.batches as Batch[]) ?? [], more: !!r.more, snapshot: (r.snapshot as SnapshotRef | null) ?? null };
+  }
+  async getSnapshotPart(url: string, vault: string, token: string, id: string, part: number) {
+    return String((await this.call(url, 'GET', `/v1/vaults/${vault}/snapshots/${id}/parts/${part}`, token)).data);
+  }
+  async putSnapshotPart(url: string, vault: string, token: string, id: string, part: number, parts: number, upTo: number, data: string) {
+    return !!(await this.call(url, 'POST', `/v1/vaults/${vault}/snapshots/${id}/parts/${part}`, token, { parts, upTo, data })).complete;
+  }
+  async blobInfo(url: string, vault: string, token: string, id: string) {
+    return ((await this.call(url, 'GET', `/v1/vaults/${vault}/blobs/${id}`, token)).blob as { parts: number; complete: boolean } | null) ?? null;
+  }
+  async getBlobPart(url: string, vault: string, token: string, id: string, part: number) {
+    return String((await this.call(url, 'GET', `/v1/vaults/${vault}/blobs/${id}/parts/${part}`, token)).data);
+  }
+  async putBlobPart(url: string, vault: string, token: string, id: string, part: number, parts: number, data: string) {
+    await this.call(url, 'POST', `/v1/vaults/${vault}/blobs/${id}/parts/${part}`, token, { parts, data });
+  }
+  async deleteBlob(url: string, vault: string, token: string, id: string) {
+    await this.call(url, 'POST', `/v1/vaults/${vault}/blobs/${id}/delete`, token, {});
+  }
+  async usage(url: string, vault: string, token: string) {
+    return (await this.call(url, 'GET', `/v1/vaults/${vault}/usage`, token)) as unknown as RelayUsage;
+  }
+  async health(url: string) {
+    const r = await this.call(url, 'GET', '/v1/health', null);
+    return { ok: !!r.ok, licenceRequired: !!r.licenceRequired };
   }
 }
 
@@ -80,9 +148,23 @@ export interface SyncStatus {
   waiting: number;
   runsTimedAutomations: boolean;
   syncing: boolean;
+  usage: RelayUsage | null;
+  /** Attachment files on this device not yet uploaded, and synced ones not yet downloaded. */
+  filesToSend: number;
+  filesToFetch: number;
+}
+
+export interface SyncOptions {
+  /** Upload a snapshot (letting the relay delete older history) once this many batches build up. */
+  compactAfterBatches: number;
+  /** Bytes of attachment files moved per sync run, each way (the rest follows on later runs). */
+  fileBudgetBytes: number;
 }
 
 const SECRET = 'sync:key';
+const LICENCE = 'sync:licence';
+/** Characters of base64 per stored part (the relay accepts up to 1.5 million). */
+const PART_CHARS = 1_400_000;
 /** Keep each encrypted batch well under the relay's per-row limit. */
 const MAX_BATCH_JSON = 700_000;
 const PAGE = 100;
@@ -96,12 +178,19 @@ export class SyncService {
   private running: Promise<void> | null = null;
   private keys: { key: string; derived: SyncKeys } | null = null;
 
+  private opts: SyncOptions;
+  private filesToFetch = 0;
+
   constructor(
     private r: Repositories,
     private secrets: SecretStore,
     private transport: SyncTransport,
     private now: () => Date = () => new Date(),
-  ) {}
+    private files: FileStore | null = null,
+    opts: Partial<SyncOptions> = {},
+  ) {
+    this.opts = { compactAfterBatches: 300, fileBudgetBytes: 25 * 1024 * 1024, ...opts };
+  }
 
   // ---------- state ----------
 
@@ -133,6 +222,11 @@ export class SyncService {
       waiting: this.waitingItems().length,
       runsTimedAutomations: this.runsTimedAutomations(),
       syncing: this.running !== null,
+      usage: this.meta('usage') ? (JSON.parse(this.meta('usage')!) as RelayUsage) : null,
+      filesToSend: this.r.db.get<{ n: number }>(
+        "SELECT COUNT(*) AS n FROM attachments a WHERE a.deleted_at IS NULL AND NOT EXISTS (SELECT 1 FROM sync_meta m WHERE m.key = 'blob:' || a.storage_key)",
+      )!.n,
+      filesToFetch: this.filesToFetch,
     };
   }
 
@@ -142,6 +236,28 @@ export class SyncService {
   }
   setRunsTimedAutomations(on: boolean) {
     this.setMeta('timedAutomations', on ? '1' : '0');
+  }
+
+  /** Adjust compaction and file limits (tests, or a hosted relay's own policy). */
+  setOptions(opts: Partial<SyncOptions>) {
+    this.opts = { ...this.opts, ...opts };
+  }
+
+  async getLicence(): Promise<string | null> {
+    return this.secrets.get(LICENCE);
+  }
+  async setLicence(licence: string | null): Promise<void> {
+    if (licence && licence.trim()) await this.secrets.set(LICENCE, licence.trim());
+    else await this.secrets.delete(LICENCE);
+  }
+  /** Whether a relay needs a licence to set up sync (hosted relays may). */
+  async relayNeedsLicence(relayUrl: string): Promise<boolean> {
+    if (!this.transport.health) return false;
+    try {
+      return (await this.transport.health(relayUrl.trim().replace(/\/+$/, ''))).licenceRequired;
+    } catch {
+      return false;
+    }
   }
 
   async getKey(): Promise<string | null> {
@@ -161,7 +277,8 @@ export class SyncService {
    * Turn sync on. Without a key, a new vault is created (first device). With a key, this
    * device joins: its existing data is merged with what the other devices have.
    */
-  async enable(opts: { relayUrl: string; key?: string }): Promise<{ key: string }> {
+  async enable(opts: { relayUrl: string; key?: string; licence?: string }): Promise<{ key: string }> {
+    if (opts.licence !== undefined) await this.setLicence(opts.licence);
     const url = opts.relayUrl.trim().replace(/\/+$/, '');
     if (!/^https:\/\/|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(url)) throw new ValidationError('The relay address must start with https://');
     const joining = !!opts.key;
@@ -175,8 +292,10 @@ export class SyncService {
     // Check the relay and the key before changing anything.
     const derived = await deriveSyncKeys(key);
     const first = await this.transport.pull(url, derived.vaultId, derived.token, 0, 1);
-    if (joining && first.batches.length === 0) throw new ValidationError('Nothing has been synced with this key yet. Check the key, or set up sync on the other device first.');
-    if (joining && first.batches[0]) await openJson(derived, first.batches[0].data).catch(() => {
+    if (joining && first.batches.length === 0 && !first.snapshot) throw new ValidationError('Nothing has been synced with this key yet. Check the key, or set up sync on the other device first.');
+    // Check the key opens what's there (a batch, or the snapshot older history was compacted into).
+    const sample = first.batches[0]?.data ?? (first.snapshot && this.transport.getSnapshotPart ? await this.transport.getSnapshotPart(url, derived.vaultId, derived.token, first.snapshot.id, 0) : null);
+    if (joining && sample) await openJson(derived, sample).catch(() => {
       throw new ValidationError('This key doesn’t match the data on the relay.');
     });
     // A new vault always gets a first (empty) batch, so other devices can join even if this one has no data yet.
@@ -223,6 +342,7 @@ export class SyncService {
       this.r.db.run('DELETE FROM sync_meta');
     });
     this.keys = null;
+    this.filesToFetch = 0;
     await this.secrets.delete(SECRET);
   }
 
@@ -272,6 +392,10 @@ export class SyncService {
       const keys = await this.derived();
       await this.pull(keys);
       await this.push(keys);
+      // Advance past our own batches, so a snapshot can cover them.
+      await this.pull(keys);
+      await this.syncFiles(keys);
+      await this.housekeeping(keys);
       this.setMeta('lastSyncAt', this.now().toISOString());
       this.setMeta('lastError', null);
     } catch (err) {
@@ -285,6 +409,11 @@ export class SyncService {
     for (let guard = 0; guard < 10_000; guard++) {
       const after = Number(this.meta('cursor') ?? '0');
       const page = await this.transport.pull(this.relayUrl(), keys.vaultId, keys.token, after, PAGE);
+      if (page.snapshot && after < page.snapshot.upTo) {
+        // Older history was compacted into a snapshot: load it, then carry on after it.
+        await this.loadSnapshot(keys, page.snapshot);
+        continue;
+      }
       if (!page.batches.length) break;
       const items: SyncItem[] = [];
       for (const b of page.batches) {
@@ -329,6 +458,124 @@ export class SyncService {
       }
       await flush();
       this.r.db.run('DELETE FROM sync_changes WHERE seq <= ?', [maxSeq]);
+    }
+  }
+
+  // ---------- snapshots (compaction) ----------
+
+  private async loadSnapshot(keys: SyncKeys, snap: SnapshotRef) {
+    if (!this.transport.getSnapshotPart) throw new ValidationError('This relay needs a newer version of Focus');
+    const items: SyncItem[] = [];
+    for (let i = 0; i < snap.parts; i++) {
+      const data = await this.transport.getSnapshotPart(this.relayUrl(), keys.vaultId, keys.token, snap.id, i);
+      items.push(...(await openJson<SyncItem[]>(keys, data)));
+    }
+    this.apply([...this.waitingItems(), ...items]);
+    this.setMeta('cursor', String(snap.upTo));
+  }
+
+  /** Every synced row's current state (including deletions), for a snapshot. */
+  private allItems(): SyncItem[] {
+    const keys = this.r.db.all<{ tbl: string; row_key: string }>('SELECT DISTINCT tbl, row_key FROM sync_fields UNION SELECT tbl, row_key FROM sync_tombstones');
+    return keys.map((k) => this.readItem(k.tbl, k.row_key)).filter((x): x is SyncItem => !!x);
+  }
+
+  /**
+   * Upload a snapshot of everything up to the current cursor; once complete, the relay deletes
+   * the batches it covers. Only when nothing is waiting or unsent, so the snapshot is complete.
+   */
+  async compact(keys?: SyncKeys): Promise<boolean> {
+    if (!this.transport.putSnapshotPart) return false;
+    const k = keys ?? (await this.derived());
+    const st = this.status();
+    if (st.pending > 0 || st.waiting > 0) return false;
+    const upTo = Number(this.meta('cursor') ?? '0');
+    if (upTo <= 0) return false;
+    const chunks: SyncItem[][] = [[]];
+    let size = 0;
+    for (const it of this.allItems()) {
+      const n = JSON.stringify(it).length;
+      if (size + n > MAX_BATCH_JSON && chunks[chunks.length - 1]!.length) {
+        chunks.push([]);
+        size = 0;
+      }
+      chunks[chunks.length - 1]!.push(it);
+      size += n;
+    }
+    const id = `snap-${this.now().getTime().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    let complete = false;
+    for (let i = 0; i < chunks.length; i++) {
+      complete = await this.transport.putSnapshotPart(this.relayUrl(), k.vaultId, k.token, id, i, chunks.length, upTo, await sealJson(k, chunks[i]));
+    }
+    return complete;
+  }
+
+  private async housekeeping(keys: SyncKeys) {
+    if (!this.transport.usage) return;
+    let usage = await this.transport.usage(this.relayUrl(), keys.vaultId, keys.token);
+    if (usage.batches >= this.opts.compactAfterBatches && (await this.compact(keys))) {
+      usage = await this.transport.usage(this.relayUrl(), keys.vaultId, keys.token);
+    }
+    this.setMeta('usage', JSON.stringify(usage));
+  }
+
+  // ---------- attachment files ----------
+
+  private async blobId(keys: SyncKeys, storageKey: string): Promise<string> {
+    const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${keys.vaultId}:${storageKey}`));
+    return [...new Uint8Array(d)].slice(0, 20).map((b) => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  /** Upload this device's files, download missing ones, and remove files of purged attachments. */
+  private async syncFiles(keys: SyncKeys) {
+    const t = this.transport;
+    if (!this.files || !t.putBlobPart || !t.blobInfo || !t.getBlobPart || !t.deleteBlob) return;
+    const url = this.relayUrl();
+    const local = new Set(await this.files.keys());
+    const rows = this.r.db.all<{ storage_key: string; mime_type: string; size_bytes: number; deleted_at: string | null }>(
+      'SELECT storage_key, mime_type, size_bytes, deleted_at FROM attachments',
+    );
+    const uploaded = new Set(this.r.db.all<{ key: string }>("SELECT key FROM sync_meta WHERE key LIKE 'blob:%'").map((x) => x.key.slice(5)));
+
+    let budget = this.opts.fileBudgetBytes;
+    for (const a of rows) {
+      if (a.deleted_at || uploaded.has(a.storage_key) || !local.has(a.storage_key)) continue;
+      if (budget <= 0) break;
+      const blob = await this.files.get(a.storage_key);
+      if (!blob) continue;
+      const id = await this.blobId(keys, a.storage_key);
+      const sealed = await sealBytes(keys, id, new Uint8Array(await blob.arrayBuffer()));
+      const parts = Math.max(1, Math.ceil(sealed.length / PART_CHARS));
+      for (let i = 0; i < parts; i++) await t.putBlobPart(url, keys.vaultId, keys.token, id, i, parts, sealed.slice(i * PART_CHARS, (i + 1) * PART_CHARS));
+      this.setMeta(`blob:${a.storage_key}`, 'up');
+      budget -= a.size_bytes;
+    }
+
+    budget = this.opts.fileBudgetBytes;
+    let missing = 0;
+    for (const a of rows) {
+      if (a.deleted_at || local.has(a.storage_key)) continue;
+      missing++;
+      if (budget <= 0) continue;
+      const id = await this.blobId(keys, a.storage_key);
+      const info = await t.blobInfo(url, keys.vaultId, keys.token, id);
+      if (!info?.complete) continue;
+      let data = '';
+      for (let i = 0; i < info.parts; i++) data += await t.getBlobPart(url, keys.vaultId, keys.token, id, i);
+      const bytes = await openBytes(keys, id, data);
+      await this.files.put(a.storage_key, new Blob([bytes as BlobPart], { type: a.mime_type }));
+      this.setMeta(`blob:${a.storage_key}`, 'up');
+      budget -= a.size_bytes;
+      missing--;
+    }
+    this.filesToFetch = missing;
+
+    // Attachments removed for good (purged from Trash): remove their files from the relay too.
+    const keysInDb = new Set(rows.map((a) => a.storage_key));
+    for (const key of uploaded) {
+      if (keysInDb.has(key)) continue;
+      await t.deleteBlob(url, keys.vaultId, keys.token, await this.blobId(keys, key));
+      this.setMeta(`blob:${key}`, null);
     }
   }
 

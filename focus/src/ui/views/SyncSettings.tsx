@@ -1,11 +1,26 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Copy, KeyRound, RefreshCw, RefreshCcw, ShieldCheck } from 'lucide-react';
+import { Copy, Download, KeyRound, RefreshCw, RefreshCcw, ShieldCheck } from 'lucide-react';
 import qrcode from 'qrcode-generator';
 import { buildSyncLink } from '@/core/links';
-import type { SyncStatus } from '@/services/sync-service';
+import { recoverySheetHtml } from '@/core/sync/recovery';
+import { RelayError, type SyncStatus } from '@/services/sync-service';
 import { useUi } from '@/state/ui-store';
 import { errorMessage, useApp, useQuery } from '../hooks';
 import { Button, Dialog, Field, Input, Switch } from '../primitives';
+import relayCode from '../../../tools/focus-sync-relay/worker.js?raw';
+import { saveFile } from '../download';
+
+/** A relay provided with this build of the app (set VITE_SYNC_RELAY_URL when building a release). */
+const HOSTED_RELAY = (import.meta.env.VITE_SYNC_RELAY_URL as string | undefined)?.trim() || '';
+
+const mb = (n: number) => (n < 1024 * 1024 ? `${Math.max(0.1, n / 1024 / 1024).toFixed(1)} MB` : `${(n / 1024 / 1024).toFixed(1)} MB`);
+
+export function qrSvg(text: string): string {
+  const qr = qrcode(0, 'M');
+  qr.addData(text);
+  qr.make();
+  return qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
+}
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -18,9 +33,6 @@ function Group({ title, icon, children }: { title: string; icon: ReactNode; chil
     </section>
   );
 }
-
-import relayCode from '../../../tools/focus-sync-relay/worker.js?raw';
-import { saveFile } from '../download';
 
 /** Setting up the relay on a free Cloudflare account (dashboard only; no command line). */
 function RelayGuide() {
@@ -65,16 +77,17 @@ function RelayGuide() {
 
 /** QR code as an inline SVG (black on white regardless of theme, so phone cameras can read it). */
 function Qr({ text, label }: { text: string; label: string }) {
-  const svg = useMemo(() => {
-    const qr = qrcode(0, 'M');
-    qr.addData(text);
-    qr.make();
-    return qr.createSvgTag({ cellSize: 4, margin: 4, scalable: true });
-  }, [text]);
+  const svg = useMemo(() => qrSvg(text), [text]);
   return <div role="img" aria-label={label} className="w-56 max-w-full rounded-lg bg-white p-1" dangerouslySetInnerHTML={{ __html: svg }} />;
 }
 
+async function saveRecoverySheet(app: ReturnType<typeof useApp>, relay: string, key: string) {
+  const html = recoverySheetHtml({ relay, key, qrSvg: qrSvg(buildSyncLink(relay, key)), createdAt: new Date() });
+  return saveFile(app.platform, 'focus-sync-recovery-sheet.html', html, 'text/html');
+}
+
 function JoinDetails({ relay, syncKey }: { relay: string; syncKey: string }) {
+  const app = useApp();
   const pushToast = useUi((s) => s.pushToast);
   const link = buildSyncLink(relay, syncKey);
   const copy = async (text: string, what: string) => {
@@ -107,6 +120,9 @@ function JoinDetails({ relay, syncKey }: { relay: string; syncKey: string }) {
         <Button size="sm" variant="ghost" onClick={() => void copy(link, 'Join link')}>
           <Copy size={14} /> Copy join link
         </Button>
+        <Button size="sm" variant="ghost" onClick={() => void saveRecoverySheet(app, relay, syncKey).then((w) => pushToast({ message: w ?? 'Recovery sheet saved', tone: 'success' }))}>
+          <Download size={14} /> Save recovery sheet
+        </Button>
       </div>
       <p className="text-[0.8rem] text-muted">
         Treat the key like a password: anyone with it and the relay address can read your tasks. Keep a copy somewhere safe (e.g. a password manager) — without it,
@@ -123,22 +139,34 @@ function SetUpDialog({ mode, onClose, prefill }: { mode: 'create' | 'join' | nul
   const [key, setKey] = useState('');
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [licence, setLicence] = useState('');
+  const [needsLicence, setNeedsLicence] = useState(false);
+  const [ownRelay, setOwnRelay] = useState(!HOSTED_RELAY);
   useEffect(() => {
     if (!mode) return;
-    setRelay(prefill?.relay ?? '');
+    setRelay(prefill?.relay ?? HOSTED_RELAY);
+    setOwnRelay(!HOSTED_RELAY || (!!prefill && prefill.relay !== HOSTED_RELAY));
     setKey(prefill?.key ?? '');
     setCreated(null);
-  }, [mode, prefill]);
+    setSaved(false);
+    setLicence('');
+    setNeedsLicence(false);
+    void app.sync.getLicence().then((l) => l && setLicence(l));
+    const r = prefill?.relay ?? HOSTED_RELAY;
+    if (r) void app.sync.relayNeedsLicence(r).then(setNeedsLicence);
+  }, [mode, prefill, app]);
   const go = async () => {
     setBusy(true);
     try {
-      const r = await app.sync.enable({ relayUrl: relay, key: mode === 'join' ? key : undefined });
+      const r = await app.sync.enable({ relayUrl: relay, key: mode === 'join' ? key : undefined, licence: needsLicence ? licence : undefined });
       if (mode === 'create') setCreated(r.key);
       else {
         pushToast({ message: 'Joined: this device is now in sync', tone: 'success' });
         onClose();
       }
     } catch (err) {
+      if (err instanceof RelayError && err.status === 402) setNeedsLicence(true);
       pushToast({ message: errorMessage(err), tone: 'error' });
     } finally {
       setBusy(false);
@@ -151,7 +179,7 @@ function SetUpDialog({ mode, onClose, prefill }: { mode: 'create' | 'join' | nul
       title={mode === 'join' ? 'Join sync' : 'Set up sync'}
       footer={
         created ? (
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="primary" disabled={!saved} onClick={onClose}>
             Done
           </Button>
         ) : (
@@ -173,13 +201,39 @@ function SetUpDialog({ mode, onClose, prefill }: { mode: 'create' | 'join' | nul
               <ShieldCheck size={16} /> Sync is on for this device.
             </p>
             <JoinDetails relay={relay.trim().replace(/\/+$/, '')} syncKey={created} />
+            <label className="flex items-start gap-2 rounded-lg bg-surface-2 p-2 text-[0.88rem]">
+              <input type="checkbox" className="mt-1" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
+              <span>I’ve saved my sync key somewhere safe (recovery sheet, password manager or printout). Without it, my synced data can’t be recovered if I lose my devices.</span>
+            </label>
           </>
         ) : (
           <>
             {mode === 'join' && prefill && <p className="rounded-lg bg-surface-2 p-2 text-[0.85rem]">A join link was opened. Check the relay is yours before joining.</p>}
-            <Field label="Relay address" htmlFor="sync-relay" hint="Your own relay on a free Cloudflare account. It only ever stores encrypted data.">
-              <Input id="sync-relay" value={relay} placeholder="https://focus-sync.your-name.workers.dev" autoComplete="off" spellCheck={false} onChange={(e) => setRelay(e.target.value)} />
-            </Field>
+            {HOSTED_RELAY && !ownRelay ? (
+              <p className="text-[0.85rem] text-muted">
+                Uses Focus Sync. Your data is encrypted on this device before it’s sent; the service can’t read it.{' '}
+                <button type="button" className="text-accent underline" onClick={() => setOwnRelay(true)}>
+                  Use my own relay instead
+                </button>
+              </p>
+            ) : (
+              <Field label="Relay address" htmlFor="sync-relay" hint="A relay you run (free Cloudflare account) or one you were given. It only ever stores encrypted data.">
+                <Input
+                  id="sync-relay"
+                  value={relay}
+                  placeholder="https://focus-sync.your-name.workers.dev"
+                  autoComplete="off"
+                  spellCheck={false}
+                  onChange={(e) => setRelay(e.target.value)}
+                  onBlur={() => relay.trim() && void app.sync.relayNeedsLicence(relay).then(setNeedsLicence)}
+                />
+              </Field>
+            )}
+            {needsLicence && mode === 'create' && (
+              <Field label="Sync licence" htmlFor="sync-licence" hint="This relay needs a licence to set up sync. You get one when you subscribe.">
+                <Input id="sync-licence" value={licence} autoComplete="off" spellCheck={false} onChange={(e) => setLicence(e.target.value)} />
+              </Field>
+            )}
             {mode === 'join' && (
               <Field label="Sync key (from your other device)" htmlFor="sync-key">
                 <Input id="sync-key" value={key} placeholder="XXXX-XXXX-…" autoComplete="off" spellCheck={false} onChange={(e) => setKey(e.target.value)} />
@@ -188,11 +242,41 @@ function SetUpDialog({ mode, onClose, prefill }: { mode: 'create' | 'join' | nul
             {mode === 'create' && (
               <p className="text-[0.85rem] text-muted">Focus creates a new random sync key on this device. Your data is encrypted with it before it leaves the device.</p>
             )}
-            <RelayGuide />
+            {ownRelay && <RelayGuide />}
           </>
         )}
       </div>
     </Dialog>
+  );
+}
+
+/** Paste a renewed licence (hosted relays): sent with every request; the relay extends the expiry. */
+function LicenceRenewal() {
+  const app = useApp();
+  const pushToast = useUi((s) => s.pushToast);
+  const [value, setValue] = useState('');
+  return (
+    <details className="text-[0.85rem]">
+      <summary className="cursor-pointer text-muted">Sync licence</summary>
+      <div className="mt-2 flex flex-wrap items-end gap-2">
+        <Field label="Licence (only if your relay needs one)" htmlFor="sync-licence-renew">
+          <Input id="sync-licence-renew" value={value} autoComplete="off" spellCheck={false} onChange={(e) => setValue(e.target.value)} />
+        </Field>
+        <Button
+          size="sm"
+          disabled={!value.trim()}
+          onClick={() =>
+            void app.sync
+              .setLicence(value)
+              .then(() => app.sync.syncNow())
+              .then(() => (setValue(''), pushToast({ message: 'Licence saved', tone: 'success' })))
+              .catch((err) => pushToast({ message: errorMessage(err), tone: 'error' }))
+          }
+        >
+          Save licence
+        </Button>
+      </div>
+    </details>
   );
 }
 
@@ -272,6 +356,15 @@ export function SyncSettings() {
               {status.pending > 0 && ` · ${status.pending} change${status.pending === 1 ? '' : 's'} to send`}
               {status.waiting > 0 && ` · ${status.waiting} waiting for related items`}
             </p>
+            {(status.usage || status.filesToSend > 0 || status.filesToFetch > 0) && (
+              <p className="text-[0.82rem] text-muted">
+                {status.usage && `Storage used: ${mb(status.usage.bytes)} of ${mb(status.usage.quota)}`}
+                {status.filesToSend > 0 && ` · ${status.filesToSend} file${status.filesToSend === 1 ? '' : 's'} to upload`}
+                {status.filesToFetch > 0 && ` · ${status.filesToFetch} file${status.filesToFetch === 1 ? '' : 's'} to download`}
+                {status.usage?.licenceExpires ? ` · licence until ${new Date(status.usage.licenceExpires * 1000).toLocaleDateString()}` : ''}
+              </p>
+            )}
+            <LicenceRenewal />
             {!hasKey && (
               <div className="flex flex-wrap items-end gap-2 rounded-lg bg-surface-2 p-2">
                 <Field label="This device needs the sync key again" htmlFor="sync-rekey">

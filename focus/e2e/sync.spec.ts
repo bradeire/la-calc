@@ -34,6 +34,14 @@ test('two devices stay in sync through the encrypted relay', async ({ browser })
   if (process.env.SHOT) await d.screenshot({ path: process.env.SHOT });
   const key = (await d.locator('code.font-semibold').textContent())!.trim();
   expect(key).toMatch(/^([0-9A-Z]{4}-){12}[0-9A-Z]{4}$/);
+  // Done stays disabled until the key is saved; the recovery sheet downloads.
+  await expect(d.getByRole('button', { name: 'Done' })).toBeDisabled();
+  const dl = d.waitForEvent('download');
+  await d.getByRole('button', { name: 'Save recovery sheet' }).click();
+  const sheet = Buffer.concat(await (await (await dl).createReadStream()).toArray()).toString();
+  expect(sheet).toContain(key);
+  expect(sheet).toContain('<svg');
+  await d.getByRole('checkbox', { name: /saved my sync key/ }).check();
   await d.getByRole('button', { name: 'Done' }).click();
 
   // Phone: join with the key; the desktop task arrives.

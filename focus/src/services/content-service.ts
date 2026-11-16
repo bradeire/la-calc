@@ -65,7 +65,7 @@ export class ContentService {
     const a = this.r.attachments.get(id);
     if (!a) throw new NotFoundError('That attachment');
     const blob = await this.files.get(a.storageKey);
-    if (!blob) throw new NotFoundError(`The file for “${a.fileName}”`);
+    if (!blob) throw new ValidationError(`“${a.fileName}” hasn’t been downloaded to this device yet. If it was added on another device, it arrives with the next sync.`);
     return { blob: new Blob([blob], { type: a.mimeType }), fileName: a.fileName };
   }
 

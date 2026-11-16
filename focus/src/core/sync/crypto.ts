@@ -117,14 +117,12 @@ function fromBase64(s: string): Uint8Array {
   return out;
 }
 
-/** Encrypt a JSON value: [version][flags][12-byte IV][AES-GCM ciphertext], base64. The vault id is bound as AAD. */
-export async function sealJson(keys: SyncKeys, value: unknown): Promise<string> {
-  const plain = enc.encode(JSON.stringify(value));
-  const zipped = await gzip(plain);
+async function seal(keys: SyncKeys, plain: Uint8Array, aad: string, allowZip: boolean): Promise<string> {
+  const zipped = allowZip ? await gzip(plain) : null;
   const body = zipped && zipped.length < plain.length ? zipped : plain;
   const iv = new Uint8Array(12);
   crypto.getRandomValues(iv);
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: enc.encode(keys.vaultId) }, keys.dataKey, body as BufferSource));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: enc.encode(aad) }, keys.dataKey, body as BufferSource));
   const out = new Uint8Array(2 + 12 + ct.length);
   out[0] = ENVELOPE_VERSION;
   out[1] = body === plain ? 0 : 1;
@@ -133,7 +131,7 @@ export async function sealJson(keys: SyncKeys, value: unknown): Promise<string> 
   return toBase64(out);
 }
 
-export async function openJson<T = unknown>(keys: SyncKeys, data: string): Promise<T> {
+async function open(keys: SyncKeys, data: string, aad: string): Promise<Uint8Array> {
   let bytes: Uint8Array;
   try {
     bytes = fromBase64(data);
@@ -143,12 +141,22 @@ export async function openJson<T = unknown>(keys: SyncKeys, data: string): Promi
   if (bytes[0] !== ENVELOPE_VERSION) throw new SyncDecryptError('Sync data from a newer version of Focus; please update this device');
   let body: Uint8Array;
   try {
-    body = new Uint8Array(
-      await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.subarray(2, 14) as BufferSource, additionalData: enc.encode(keys.vaultId) }, keys.dataKey, bytes.subarray(14) as BufferSource),
-    );
+    body = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: bytes.subarray(2, 14) as BufferSource, additionalData: enc.encode(aad) }, keys.dataKey, bytes.subarray(14) as BufferSource));
   } catch {
     throw new SyncDecryptError('Sync data couldn’t be decrypted with this key');
   }
-  if (bytes[1] === 1) body = await gunzip(body);
-  return JSON.parse(dec.decode(body)) as T;
+  return bytes[1] === 1 ? gunzip(body) : body;
+}
+
+/** Encrypt a file. The blob id is bound as AAD, so a file can't be swapped for another. */
+export const sealBytes = (keys: SyncKeys, blobId: string, data: Uint8Array) => seal(keys, data, `${keys.vaultId}:${blobId}`, false);
+export const openBytes = (keys: SyncKeys, blobId: string, data: string) => open(keys, data, `${keys.vaultId}:${blobId}`);
+
+/** Encrypt a JSON value: [version][flags][12-byte IV][AES-GCM ciphertext], base64. The vault id is bound as AAD. */
+export async function sealJson(keys: SyncKeys, value: unknown): Promise<string> {
+  return seal(keys, enc.encode(JSON.stringify(value)), keys.vaultId, true);
+}
+
+export async function openJson<T = unknown>(keys: SyncKeys, data: string): Promise<T> {
+  return JSON.parse(dec.decode(await open(keys, data, keys.vaultId))) as T;
 }
