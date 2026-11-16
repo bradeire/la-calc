@@ -117,7 +117,8 @@ export function useAutomationRunner() {
     });
     const sweep = () => {
       try {
-        app.automations.sweep();
+        // With sync on, time-based automations run on one chosen device so they don't fire twice.
+        if (app.sync.runsTimedAutomations()) app.automations.sweep();
       } catch (err) {
         console.error('Automation sweep failed', err);
       }

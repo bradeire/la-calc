@@ -117,6 +117,19 @@ _Last updated: 2026-11-16 (session 5 — Phase 4)._
 | Local API (desktop): tasks, projects, labels, approved automations; token, localhost by default, no deletion | Tested | real Linux app under Xvfb |
 | Claude connector (MCP) for Claude Desktop / Claude Code | Tested | against a stand-in API and against the real app; not yet with Claude Desktop itself |
 
+## Sync (post-Phase 4, requested early)
+
+| Feature | Status | Evidence / notes |
+|---|---|---|
+| End-to-end encrypted sync via the user's own relay (Cloudflare Worker + D1, free plan) | Tested | two full app instances; two browser profiles in E2E; relay also run in Cloudflare's local runtime (workerd) |
+| Change capture by database triggers (every write, nothing echoes back, off until sync is enabled) | Tested | |
+| Last-writer-wins per row; deletes and Trash purges sync; same-named labels and duplicate repeat rules settled identically on all devices | Tested | |
+| Joining merges both devices' existing data | Tested | |
+| Offline: changes queue and send later; rows whose parent hasn't arrived wait | Tested | |
+| Set-up: sync key, QR code, focus://sync join link (confirmed before joining) | Tested (browser) | QR scanning by a phone camera not verified on hardware |
+| Time-based automations run on one chosen device | Implemented | |
+| Not synced: attachment files, external calendars, webhooks, AI settings, theme/layout, local API | — | by design (per-device secrets or large files) |
+
 ## Not yet started (later phases)
 
 Android/Windows release builds verified on hardware, background reminders on Android, touch drag-and-drop,

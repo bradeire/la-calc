@@ -5,7 +5,7 @@
  * until the user confirms. Anyone can send a link, so the text is length-capped and
  * stripped of control characters, and unknown actions are ignored.
  */
-export type IncomingLink = { kind: 'add'; text: string } | { kind: 'capture'; text: string };
+export type IncomingLink = { kind: 'add'; text: string } | { kind: 'capture'; text: string } | { kind: 'sync'; relay: string; key: string };
 
 export const LINK_SCHEMES = ['focus', 'web+focus'] as const;
 export const MAX_ADD_LENGTH = 500;
@@ -29,6 +29,13 @@ export function parseIncomingLink(raw: string): IncomingLink | null {
   if (!(LINK_SCHEMES as readonly string[]).includes(scheme)) return null;
   // focus://add?… puts "add" in the host; focus:add?… and focus:///add?… put it in the path.
   const action = (url.host || url.pathname.replace(/^\/+/, '')).replace(/\/+$/, '').toLowerCase();
+  if (action === 'sync') {
+    // Join link from another device: never acted on without the user confirming.
+    const relay = (url.searchParams.get('relay') ?? '').trim();
+    const key = (url.searchParams.get('key') ?? '').trim().toUpperCase();
+    if (!/^https:\/\/[^\s]+$/i.test(relay) || !/^[0-9A-Z-]{40,80}$/.test(key)) return null;
+    return { kind: 'sync', relay, key };
+  }
   const text = clean(url.searchParams.get('text') ?? url.searchParams.get('t') ?? '');
   if (!text) return null;
   if (action === 'add') {
@@ -44,6 +51,7 @@ export function parseIncomingLink(raw: string): IncomingLink | null {
 const encode = (s: string) => encodeURIComponent(s).replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 
 export const buildAddLink = (text: string) => `focus://add?text=${encode(text.trim())}`;
+export const buildSyncLink = (relay: string, key: string) => `focus://sync?relay=${encodeURIComponent(relay)}&key=${encodeURIComponent(key)}`;
 export const buildCaptureLink = (text: string) => `focus://capture?text=${encode(text.trim())}`;
 
 /** Instructions a user can paste into Claude (or another assistant) so it replies with tap-to-add links. */

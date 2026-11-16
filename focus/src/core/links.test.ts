@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAddLink, buildCaptureLink, MAX_ADD_LENGTH, parseIncomingLink } from './links';
+import { buildAddLink, buildCaptureLink, buildSyncLink, MAX_ADD_LENGTH, parseIncomingLink } from './links';
 import { parseQuickAdd } from './nlp/parser';
 
 describe('tap-to-add links', () => {
@@ -32,7 +32,7 @@ describe('tap-to-add links', () => {
     const r = parseIncomingLink(`focus://add?text=${encodeURIComponent('Pay\u0007 bill‮')}`);
     expect(r).toEqual({ kind: 'add', text: 'Pay bill' });
     const long = parseIncomingLink(`focus://add?text=${'a'.repeat(5000)}`);
-    expect(long?.text.length).toBe(MAX_ADD_LENGTH);
+    expect(long && 'text' in long ? long.text.length : 0).toBe(MAX_ADD_LENGTH);
   });
 
   it('round-trips through the link builders, keeping Quick Add tokens intact', () => {
@@ -40,8 +40,16 @@ describe('tap-to-add links', () => {
     expect(parseIncomingLink(buildAddLink(text))).toEqual({ kind: 'add', text });
     expect(buildAddLink(text)).not.toMatch(/[ #@&'()]/);
     expect(parseIncomingLink(buildCaptureLink('A\nB'))).toEqual({ kind: 'capture', text: 'A\nB' });
-    const parsed = parseQuickAdd(parseIncomingLink(buildAddLink('Phone dentist tomorrow 10am p2'))!.text, { now: new Date(2026, 10, 16, 9) });
+    const link = parseIncomingLink(buildAddLink('Phone dentist tomorrow 10am p2'));
+    const parsed = parseQuickAdd(link && 'text' in link ? link.text : '', { now: new Date(2026, 10, 16, 9) });
     expect(parsed.title).toBe('Phone dentist');
     expect(parsed.priority).toBe(2);
+  });
+
+  it('parses sync join links and rejects insecure or malformed ones', () => {
+    const key = 'ABCD-EFGH-JKMN-PQRS-TVWX-YZ01-2345-6789-ABCD-EFGH-JKMN-PQRS-TVWX';
+    expect(parseIncomingLink(buildSyncLink('https://focus-sync.me.workers.dev', key))).toEqual({ kind: 'sync', relay: 'https://focus-sync.me.workers.dev', key });
+    expect(parseIncomingLink(buildSyncLink('http://evil.example', key))).toBeNull();
+    expect(parseIncomingLink(buildSyncLink('https://x.dev', 'short'))).toBeNull();
   });
 });

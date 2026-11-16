@@ -2,6 +2,15 @@
 
 Everything here is optional and off by default. Focus works fully offline without any of it.
 
+## Sync between devices
+
+Settings → **Sync between devices**. You need a relay once: a free Cloudflare account with the worker in
+`tools/focus-sync-relay` (the app shows the steps and can copy the code). Then **Set up on this device** creates a
+sync key; on the other device choose **Join from another device** and enter the relay address and key — or scan the
+QR code / open the join link. Syncs automatically (on start, every minute, after changes, when the app comes to the
+foreground). Everything is encrypted on the device; the relay sees only ciphertext. Keep the sync key safe: a new
+device can't join without it.
+
 ## Claude on your computer (local API + connector)
 
 Desktop app only. Settings → **Local API and Claude connector** → switch on, then **Save focus-mcp.mjs** and add it

@@ -7,6 +7,11 @@ export interface PersistenceAdapter {
   /** Previous good image (rotated on every save) for recovery. */
   loadPrevious(): Promise<Uint8Array | null>;
   save(bytes: Uint8Array): Promise<void>;
+  /**
+   * Synchronous last-chance save while the page unloads with changes still unsaved (browser:
+   * tab-scoped sessionStorage, preferred by the next load). Optional.
+   */
+  saveSync?(bytes: Uint8Array): boolean;
   /** Keep a named copy, e.g. before a migration or an import. */
   saveSnapshot(name: string, bytes: Uint8Array): Promise<void>;
   /** Ask the platform not to evict our storage (browser). Returns whether persistence is granted. */

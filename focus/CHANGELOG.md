@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.0 — 2026-11-16 (sync between devices)
+
+### Added
+- End-to-end encrypted sync between desktop, Android and browser through a relay on your own free Cloudflare
+  account: tasks, projects (with notes), sections, labels, comments, reminders, time entries, dependencies,
+  filters, templates, automations and shared preferences. Set up with a sync key, QR code or join link.
+- Relay code (`tools/focus-sync-relay`) with in-app setup steps.
+
+### Fixed
+- An edit made just before reloading the browser tab could occasionally still be lost; a synchronous copy is now
+  kept for the reload.
+
 ## 0.5.0 — 2026-11-16 (Phase 4: productivity and integrations)
 
 ### Added

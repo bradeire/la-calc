@@ -17,6 +17,7 @@ import { InsightsService } from '@/services/insights-service';
 import { CalendarService } from '@/services/calendar-service';
 import { TransferService } from '@/services/transfer-service';
 import { ApiService } from '@/services/api-service';
+import { RelayTransport, SyncService } from '@/services/sync-service';
 import { WebhookService } from '@/services/webhook-service';
 import { AutomationService } from '@/services/automation-service';
 import { AiService } from '@/services/ai-service';
@@ -104,6 +105,7 @@ export interface AppContainer {
   calendars: CalendarService;
   transfer: TransferService;
   api: ApiService;
+  sync: SyncService;
   webhooks: WebhookService;
   automations: AutomationService;
   ai: AiService;
@@ -146,11 +148,24 @@ export function createContainer(
     const capture = new CaptureService(repos, quickAdd, ai, () => clock.now());
     const automations = new AutomationService(repos, events, { tasks, projects, content, templates, webhooks, filters }, clock);
     const api = new ApiService(repos, { tasks, projects, labels, quickAdd, filters, automations }, () => clock.now());
+    const sync = new SyncService(repos, platform.secrets, new RelayTransport(platform.http), () => clock.now());
     const saver = new Saver(db, platform);
     teardown.push(db.subscribe(() => saver.schedule()));
     teardown.push(() => automations.dispose());
     teardown.push(platform.lifecycle.onPause(() => saver.flush()));
-    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, insights, calendars, transfer, api, webhooks, automations, ai, capture, saver };
+    // Browser: if the page unloads with changes still unsaved, keep a synchronous copy for the reload.
+    if (platform.persistence.saveSync && typeof window !== 'undefined') {
+      const rescue = () => {
+        if (saver.status !== 'saved') platform.persistence.saveSync!(db.export());
+      };
+      window.addEventListener('pagehide', rescue);
+      window.addEventListener('beforeunload', rescue);
+      teardown.push(() => {
+        window.removeEventListener('pagehide', rescue);
+        window.removeEventListener('beforeunload', rescue);
+      });
+    }
+    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, planning, insights, calendars, transfer, api, sync, webhooks, automations, ai, capture, saver };
   };
 
   const container: AppContainer = {

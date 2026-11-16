@@ -3,7 +3,7 @@
 A local-first personal productivity app: tasks, projects, subtasks, natural-language Quick Add, recurring tasks,
 and a calm, fast interface for phone and desktop. **Your data stays on your device.** No account, no cloud, no tracking.
 
-> Status: **Phases 1–4 complete** (see [FEATURES.md](FEATURES.md)). Runs as a web app / installable PWA, and as a
+> Status: **Phases 1–4 complete, plus encrypted sync between devices** (see [FEATURES.md](FEATURES.md)). Runs as a web app / installable PWA, and as a
 > native desktop app via Tauri (verified on Linux). Windows and Android builds must be made on those platforms —
 > see [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md). Nothing has been tested on physical devices yet.
 

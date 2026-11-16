@@ -86,6 +86,6 @@ configuration (documented as requiring macOS + Xcode); accessibility audit;
 virtualised lists and 50k-task performance testing; migration and integrity
 testing; release documentation.
 
-## Synchronisation (post-release)
-Local-network device-to-device sync over an encrypted channel using `change_log`,
-with optional self-hosted relay. Not started until the core is stable.
+## Synchronisation
+Built in session 6 at the user's request (ADR-019): end-to-end encrypted sync through the user's own relay on a
+free Cloudflare account. Possible later: relay compaction, field-level merge, attachment files.

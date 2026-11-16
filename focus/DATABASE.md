@@ -49,6 +49,17 @@ label membership, activity by entity/time, and time entries.
 Migration 004 also drops `calendar_connections`, an unused placeholder from migration 001 (always empty).
 Settings gained `insightsLayout`, `goals` and `localApi` (validated per key).
 
+## Sync tables (migration 005)
+
+| Table | Purpose |
+|---|---|
+| `sync_control` | One row: sync enabled, applying-remote flag, this device's random sync id. |
+| `sync_changes` | Rows changed locally since the last push (filled by triggers). |
+| `sync_versions` | Last known version (`ISO time|device`) of every synced row, for last-writer-wins. |
+| `sync_meta` | Relay address, pull cursor, last sync/error, rows waiting for their parent, timed-automation choice. |
+
+Triggers `sync_<table>_<insert|update|delete>` exist on every synced table (see `src/core/sync/tables.ts`).
+
 ## Migrations
 
 - `migrate(db)` applies pending migrations, **each in its own transaction**; a failure rolls back that migration.

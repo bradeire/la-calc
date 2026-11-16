@@ -3,6 +3,7 @@ import { useUi } from '@/state/ui-store';
 import { useApp, useIsDesktop, useSettings } from '../hooks';
 import { parseIncomingLink } from '@/core/links';
 import { useLocalApiRunner } from '../localApi';
+import { useSyncRunner } from '../syncRunner';
 import { closeTask, navigate, useLocation } from '../router';
 import { cx } from '../primitives';
 import { QuickAdd } from '../components/QuickAdd';
@@ -130,6 +131,7 @@ export function AppShell() {
   useAutomationRunner();
   useCalendarRefresh(settings.onboarded);
   useLocalApiRunner();
+  useSyncRunner();
 
   // Esc closes the detail panel (dialogs handle their own Esc).
   useEffect(() => {
@@ -170,9 +172,15 @@ export function AppShell() {
   const pendingLinks = useRef<string[]>([]);
   useEffect(() => {
     const open = (urls: string[]) => {
-      const links = urls.map(parseIncomingLink).filter((l) => l !== null);
-      if (!links.length) return;
+      const all = urls.map(parseIncomingLink).filter((l) => l !== null);
       const ui = useUi.getState();
+      const join = all.find((l) => l.kind === 'sync');
+      if (join && join.kind === 'sync') {
+        ui.setSyncJoin({ relay: join.relay, key: join.key });
+        navigate('/settings');
+      }
+      const links = all.filter((l) => l.kind !== 'sync') as Exclude<(typeof all)[number], { kind: 'sync' }>[];
+      if (!links.length) return;
       if (links.length === 1 && links[0]!.kind === 'add') openQuickAdd({}, links[0]!.text);
       else {
         ui.closeQuickAdd();

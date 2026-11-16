@@ -34,7 +34,9 @@ npm run check       # typecheck + lint + test + build
 | CSV / Todoist / project-file import and export | `tests/transfer.test.ts` | 7 |
 | Local API request handling | `tests/api.test.ts` | 5 |
 | Claude connector (MCP) as a real subprocess | `tests/mcp.test.ts` | 2 |
-| **Total Vitest** | | **266 passing** |
+| Sync crypto and two-device sync through the real relay code | `tests/sync.test.ts` | 9 |
+| Relay worker (auth, validation, paging, erase) | `tests/relay.test.ts` | 2 |
+| **Total Vitest** | | **278 passing** |
 | Rust: storage, secret names, HTTP validation, export names/base64, local API server (real TCP) | `src-tauri/src/*.rs` | 10 |
 | End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | 26 (13 × 2) |
 | Offline reload, accessibility audit (incl. Insights, Time log) | `e2e/quality.spec.ts` | 3 |
@@ -42,7 +44,11 @@ npm run check       # typecheck + lint + test + build
 | Phase 2 | `e2e/phase2.spec.ts` | 11 |
 | Phase 3 | `e2e/phase3.spec.ts` | 16 |
 | Phase 4: insights, goals, customise, time log, long timer, calendars, CSV/Todoist import | `e2e/phase4.spec.ts` | 14 (7 × 2) |
-| **Total Playwright** | | **69 passing**, 3 skipped (desktop-only tests on Pixel) |
+| Sync: desktop + phone browser profiles through the relay | `e2e/sync.spec.ts` | 1 (runs once) |
+| **Total Playwright** | | **70 passing**, 4 skipped (desktop-only tests on Pixel) |
+
+**Relay in Cloudflare's runtime:** `worker.js` was also run with `wrangler dev --local` (workerd + local D1):
+upload, paging, wrong-token refusal and CORS preflight behaved as in the tests.
 
 **Native check (Linux desktop app under Xvfb, with a Secret Service keyring):** local API refuses requests
 without the token or from a web page; creates and filters tasks; the Claude connector adds a task through it;
@@ -78,6 +84,10 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 - Exports did nothing in the native apps (Android WebView ignores browser downloads): exports now go through the
   platform (Downloads folder on desktop, share sheet on Android).
 - The Claude connector exited before finishing a call when its input closed (found in the native run).
+- Sync review found: enabling sync checked the relay before its address was saved; a first device with no data
+  left nothing for the second to join; the relay cached its schema across databases.
+- "Edit survives an immediate reload" became flaky (2 in 12) as the app grew; the browser now keeps a synchronous
+  unload-time copy for the reload (30/30 afterwards).
 - Workload counted weekend capacity as "Available" bars that hid planned work (chart redesigned after review).
 
 ## Manual checks per release

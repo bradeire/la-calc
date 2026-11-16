@@ -40,11 +40,49 @@ function tx<T>(store: string, mode: IDBTransactionMode, fn: (s: IDBObjectStore) 
 
 const asBytes = (v: unknown): Uint8Array | null => (v instanceof Uint8Array ? v : v instanceof ArrayBuffer ? new Uint8Array(v) : null);
 
+const RESCUE_KEY = 'focus.unsavedDatabase';
+function takeRescued(): Uint8Array | null {
+  try {
+    const b64 = sessionStorage.getItem(RESCUE_KEY);
+    if (!b64) return null;
+    sessionStorage.removeItem(RESCUE_KEY);
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  } catch {
+    return null;
+  }
+}
+
 export class IndexedDbPersistence implements PersistenceAdapter {
   readonly name = 'IndexedDB';
 
   async load() {
+    // An unload-time copy is always at least as new as IndexedDB (it was taken as the page went away).
+    const rescued = takeRescued();
+    if (rescued) {
+      try {
+        await this.save(rescued);
+      } catch (err) {
+        console.error('Could not store the rescued copy', err);
+      }
+      return rescued;
+    }
     return asBytes(await tx(STORE_DB, 'readonly', (s) => s.get('current')));
+  }
+
+  saveSync(bytes: Uint8Array): boolean {
+    // sessionStorage holds ~5 MB of UTF-16; keep well inside it. Larger databases rely on IndexedDB alone.
+    if (bytes.length > 2_500_000) return false;
+    try {
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      sessionStorage.setItem(RESCUE_KEY, btoa(bin));
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async loadPrevious() {

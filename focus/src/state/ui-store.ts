@@ -34,6 +34,9 @@ interface UiState {
   setShortcutsOpen: (v: boolean) => void;
 
   capture: { open: boolean; text: string };
+  /** A sync join link waiting for the user to confirm. */
+  syncJoin: { relay: string; key: string } | null;
+  setSyncJoin: (j: { relay: string; key: string } | null) => void;
   openCapture: (text?: string) => void;
   closeCapture: () => void;
 
@@ -107,6 +110,8 @@ export const useUi = create<UiState>((set, get) => ({
   setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
 
   capture: { open: false, text: '' },
+  syncJoin: null,
+  setSyncJoin: (j) => set({ syncJoin: j }),
   openCapture: (text = '') => set({ capture: { open: true, text } }),
   closeCapture: () => set({ capture: { open: false, text: '' } }),
 

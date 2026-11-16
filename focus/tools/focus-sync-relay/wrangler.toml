@@ -1,0 +1,9 @@
+# Optional: deploy from the command line instead of the dashboard (see README.md).
+name = "focus-sync"
+main = "worker.js"
+compatibility_date = "2025-06-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "focus-sync"
+database_id = "REPLACE_WITH_THE_ID_FROM_wrangler_d1_create"

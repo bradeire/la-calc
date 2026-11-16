@@ -347,3 +347,20 @@ A small Tauri plugin in the app (`SecureStorePlugin.kt`) encrypts secrets with a
 Android Keystore; only IV and ciphertext are stored in private SharedPreferences. If the key is lost (restore to a
 new phone), values read as missing and the user re-enters them. Avoids the deprecated androidx security-crypto
 library and a third-party plugin.
+
+## ADR-019 — Sync: end-to-end encrypted, row-level last-writer-wins, through the user's own relay
+
+**Status:** Accepted (2026-11-16)
+
+The user accepted a free cloud account provided everything is encrypted. A random 256-bit sync key never leaves
+the devices; HKDF derives a vault id, a relay access token (stored hashed on the relay) and an AES-256-GCM data
+key. Changes are captured by SQLite triggers into `sync_changes` with a per-row version (`time|device`) in
+`sync_versions`; triggers are off until sync is enabled and while remote changes are applied, so nothing echoes.
+A sync pulls encrypted batches (gzip, then AES-GCM with the vault id as AAD), applies rows whose version is newer
+(upsert, never REPLACE, so foreign-key cascades can't fire), then pushes local changes in ≤700 KB batches.
+Applied rows raise no domain events, so automations don't run twice; time-based automations run on one chosen
+device. Rows that arrive before their parent wait for a later sync instead of blocking it.
+
+Trade-offs: row-level last-writer-wins (not field-level merge) — two devices editing the same task offline keep
+the later edit; device clocks matter. The relay keeps every batch (no compaction yet); a new device downloads the
+whole history once. The relay is a single-file Cloudflare Worker with D1 that the user deploys in the dashboard.
