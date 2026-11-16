@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X } from 'lucide-react';
+import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, Workflow, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X } from 'lucide-react';
 import { useUi } from '@/state/ui-store';
 import { useAction, useApp, useIsDesktop, useToday } from '../hooks';
 import { go, parseHash, quickAddDefaultsFor, useLocation } from '../router';
@@ -51,7 +51,7 @@ export function BottomNav() {
     { name: 'upcoming', label: 'Upcoming', icon: CalendarDays },
     { name: 'projects', label: 'Browse', icon: Menu },
   ] as const;
-  const isBrowse = ['projects', 'project', 'labels', 'label', 'settings', 'trash', 'calendar', 'focus', 'search', 'filters', 'filter', 'filterEdit'].includes(r);
+  const isBrowse = ['projects', 'project', 'labels', 'label', 'settings', 'trash', 'calendar', 'focus', 'search', 'filters', 'filter', 'filterEdit', 'automations', 'automationEdit'].includes(r);
   return (
     <nav aria-label="Main" className="pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-xl items-stretch">
@@ -86,6 +86,7 @@ export function BottomNav() {
           <MenuItem icon={<Target size={17} />} onClick={() => (more.hide(), go({ name: 'focus' }))}>Focus mode</MenuItem>
           <MenuItem icon={<Filter size={17} />} onClick={() => (more.hide(), go({ name: 'filters' }))}>Filters</MenuItem>
           <MenuItem icon={<Tag size={17} />} onClick={() => (more.hide(), go({ name: 'labels' }))}>Labels</MenuItem>
+          <MenuItem icon={<Workflow size={17} />} onClick={() => (more.hide(), go({ name: 'automations' }))}>Automations</MenuItem>
           <MenuItem icon={<Search size={17} />} onClick={() => (more.hide(), go({ name: 'search', q: '' }))}>Search</MenuItem>
           <MenuItem icon={<Trash2 size={17} />} onClick={() => (more.hide(), go({ name: 'trash' }))}>Trash</MenuItem>
           <MenuItem icon={<Settings size={17} />} onClick={() => (more.hide(), go({ name: 'settings' }))}>Settings</MenuItem>
@@ -215,6 +216,7 @@ const SHORTCUTS: [string, string][] = [
   ['G then I / T / U / C / P / L', 'Go to Inbox, Today, Upcoming, Calendar, Projects, Labels'],
   ['G then F', 'Focus mode'],
   ['G then V', 'Filters'],
+  ['G then A', 'Automations'],
   ['G then S', 'Settings'],
   ['↑ ↓ or J K', 'Move between tasks'],
   ['Enter', 'Open task'],
@@ -262,7 +264,7 @@ export function useGlobalShortcuts() {
         setPending(false);
         const map: Record<string, Parameters<typeof go>[0]> = {
           i: { name: 'inbox' }, t: { name: 'today' }, u: { name: 'upcoming' }, c: { name: 'calendar' }, p: { name: 'projects' },
-          l: { name: 'labels' }, f: { name: 'focus' }, s: { name: 'settings' }, v: { name: 'filters' },
+          l: { name: 'labels' }, f: { name: 'focus' }, s: { name: 'settings' }, v: { name: 'filters' }, a: { name: 'automations' },
         };
         if (map[k]) {
           e.preventDefault();

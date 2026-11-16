@@ -1,9 +1,10 @@
 import type { DatabaseDriver } from '../db/driver';
 import { migration001 } from './001_initial';
 import { migration002 } from './002_task_order_index';
+import { migration003 } from './003_integrations';
 import type { Migration } from './types';
 
-export const MIGRATIONS: readonly Migration[] = [migration001, migration002];
+export const MIGRATIONS: readonly Migration[] = [migration001, migration002, migration003];
 export const LATEST_SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]!.version;
 
 function ensureTable(db: DatabaseDriver) {

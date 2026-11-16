@@ -4,6 +4,7 @@ import { useIsDesktop, useSettings } from '../hooks';
 import { closeTask, navigate, useLocation } from '../router';
 import { cx } from '../primitives';
 import { QuickAdd } from '../components/QuickAdd';
+import { CaptureDialog } from '../components/CaptureDialog';
 import { ReminderPanel, useReminderDelivery } from '../components/ReminderPanel';
 import { TaskDetail } from '../components/TaskDetail';
 import { BottomNav, GlobalConfirm, QuickAddFab, SelectionBar, ShortcutsDialog, Toasts, useGlobalShortcuts } from './Chrome';
@@ -20,6 +21,8 @@ import { FocusView } from '../views/FocusView';
 import { CalendarView } from '../views/CalendarView';
 import { SettingsView } from '../views/SettingsView';
 import { FilterEditorView, FilterResultsView, FiltersView } from '../views/FiltersView';
+import { AutomationEditorView, AutomationsView } from '../views/AutomationsView';
+import { useAutomationRunner } from '../components/ReminderPanel';
 import { Onboarding } from '../views/Onboarding';
 
 function useApplyAppearance() {
@@ -86,6 +89,8 @@ function CurrentView() {
     case 'filters': return <FiltersView />;
     case 'filter': return <FilterResultsView id={route.id} />;
     case 'filterEdit': return <FilterEditorView key={route.id ?? 'new'} id={route.id} />;
+    case 'automations': return <AutomationsView />;
+    case 'automationEdit': return <AutomationEditorView key={route.id ?? 'new'} id={route.id} />;
     case 'settings': return <SettingsView />;
     case 'focus': return <FocusView />;
     default: return <TodayView />;
@@ -101,6 +106,7 @@ export function AppShell() {
   useApplyAppearance();
   useGlobalShortcuts();
   useReminderDelivery();
+  useAutomationRunner();
 
   // Esc closes the detail panel (dialogs handle their own Esc).
   useEffect(() => {
@@ -115,11 +121,26 @@ export function AppShell() {
   const openQuickAdd = useUi((s) => s.openQuickAdd);
   useEffect(() => {
     const params = new URLSearchParams(loc.raw.split('?')[1] ?? '');
+    if (params.get('capture') === '1' && settings.onboarded) {
+      useUi.getState().openCapture();
+      navigate(loc.raw.split('?')[0]!, { replace: true });
+    }
     if (params.get('add') === '1' && settings.onboarded) {
       openQuickAdd({}, params.get('text') ?? undefined);
       navigate(loc.raw.split('?')[0]!, { replace: true });
     }
   }, [loc.raw, settings.onboarded, openQuickAdd]);
+
+  // Android share sheet (installed PWA): text arrives as ?title=&text=&url= on the start URL.
+  useEffect(() => {
+    if (!settings.onboarded) return;
+    const q = new URLSearchParams(window.location.search);
+    const shared = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n').trim();
+    if (!shared) return;
+    history.replaceState(history.state, '', window.location.pathname + window.location.hash);
+    if (shared.includes('\n') || shared.length > 200) useUi.getState().openCapture(shared);
+    else openQuickAdd({}, shared);
+  }, [settings.onboarded, openQuickAdd]);
 
   if (!settings.onboarded) return <Onboarding />;
 
@@ -152,6 +173,7 @@ export function AppShell() {
         </>
       )}
       <QuickAdd />
+      <CaptureDialog />
       <SelectionBar />
       <ShortcutsDialog />
       <GlobalConfirm />

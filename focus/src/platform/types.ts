@@ -44,12 +44,40 @@ export interface NotificationAdapter {
   onAction(cb: (a: { reminderId: string; action: 'complete' | 'snooze' | 'open' }) => void): () => void;
 }
 
+/** Secrets never go in SQLite (spec 6.5). Native: OS keychain. Browser: memory for this session only. */
+export interface SecretStore {
+  /** Whether secrets survive an app restart on this platform. */
+  readonly persistent: boolean;
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<void>;
+  delete(key: string): Promise<void>;
+}
+
+export interface HttpRequest {
+  method: 'GET' | 'POST';
+  url: string;
+  headers?: Record<string, string>;
+  body?: string;
+  timeoutMs?: number;
+}
+export interface HttpResponse {
+  status: number;
+  body: string;
+}
+
+/** Outbound HTTP for user-configured integrations only (AI providers, webhooks). */
+export interface HttpAdapter {
+  request(r: HttpRequest): Promise<HttpResponse>;
+}
+
 export interface Platform {
   kind: 'web' | 'tauri' | 'memory';
   persistence: PersistenceAdapter;
   files: FileStore;
   lifecycle: LifecycleAdapter;
   notifications: NotificationAdapter;
+  secrets: SecretStore;
+  http: HttpAdapter;
   /** Acquire exclusive ownership of the database; false if another window has it. */
   acquireLock(): Promise<boolean>;
 }

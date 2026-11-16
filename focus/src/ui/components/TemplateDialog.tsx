@@ -3,6 +3,7 @@ import { LayoutTemplate, Trash2 } from 'lucide-react';
 import { useAction, useApp, useQuery, useToday } from '../hooks';
 import { go } from '../router';
 import { Button, Dialog, Field, IconButton, Input, cx } from '../primitives';
+import { TemplateFromWords } from './AiFeatures';
 
 /** Create a project from a built-in or saved template (spec 4.7). */
 export function TemplateDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -76,6 +77,7 @@ export function TemplateDialog({ open, onClose }: { open: boolean; onClose: () =
             </Field>
           </div>
         )}
+        <TemplateFromWords onCreated={onClose} />
         <p className="text-[0.8rem] text-subtle">Save any project as a template from its ⋯ menu.</p>
       </div>
     </Dialog>

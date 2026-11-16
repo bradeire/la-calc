@@ -50,4 +50,4 @@ label membership, activity by entity/time, and time entries.
 ## Persistence (browser)
 
 IndexedDB database `focus`, store `database`: keys `current`, `previous` (rotated on every save), `savedAt`,
-and `snapshot:*`. Store `files` holds attachment bytes. Saves are debounced 250 ms and forced on page hide.
+and `snapshot:*`. Store `files` holds attachment bytes. Saves follow each change within ~15 ms (bursts coalesced) and are forced on page hide.

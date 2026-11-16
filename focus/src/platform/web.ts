@@ -1,4 +1,4 @@
-import type { FileStore, LifecycleAdapter, NotificationAdapter, NotificationPermissionState, PersistenceAdapter, Platform } from './types';
+import type { FileStore, HttpAdapter, LifecycleAdapter, NotificationAdapter, NotificationPermissionState, PersistenceAdapter, Platform, SecretStore } from './types';
 
 const DB_NAME = 'focus';
 const DB_VERSION = 1;
@@ -176,6 +176,35 @@ export const webNotifications: NotificationAdapter = {
   },
 };
 
+
+/** Session-only secret store (browser): nothing is written to disk. */
+export class MemorySecretStore implements SecretStore {
+  readonly persistent = false;
+  private m = new Map<string, string>();
+  async get(k: string) {
+    return this.m.get(k) ?? null;
+  }
+  async set(k: string, v: string) {
+    this.m.set(k, v);
+  }
+  async delete(k: string) {
+    this.m.delete(k);
+  }
+}
+
+export const fetchHttp: HttpAdapter = {
+  async request(r) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), r.timeoutMs ?? 30000);
+    try {
+      const res = await fetch(r.url, { method: r.method, headers: r.headers, body: r.body, signal: ctrl.signal });
+      return { status: res.status, body: await res.text() };
+    } finally {
+      clearTimeout(timer);
+    }
+  },
+};
+
 export function createWebPlatform(): Platform {
   return {
     kind: 'web',
@@ -183,6 +212,8 @@ export function createWebPlatform(): Platform {
     files: new IndexedDbFileStore(),
     lifecycle: webLifecycle,
     notifications: webNotifications,
+    secrets: new MemorySecretStore(),
+    http: fetchHttp,
     acquireLock,
   };
 }

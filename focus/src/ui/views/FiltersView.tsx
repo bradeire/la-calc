@@ -9,6 +9,7 @@ import { Button, EmptyState, IconButton, Input, Select, cx } from '../primitives
 import { GroupHeading, ViewBody } from '../components/common';
 import { TaskList } from '../components/TaskList';
 import { ViewHeader } from '../layout/Chrome';
+import { FilterFromWords } from '../components/AiFeatures';
 
 /** One-click starting points (the spec's example filters). */
 const PRESETS: { name: string; query: string }[] = [
@@ -123,7 +124,7 @@ const FIELD_LABELS: Record<Rule['field'], string> = {
   text: 'Text', dependency: 'Dependencies', recurring: 'Repeats', subtask: 'Is a subtask',
 };
 
-function defaultRule(field: Rule['field']): Rule {
+export function defaultRule(field: Rule['field']): Rule {
   switch (field) {
     case 'priority': return { kind: 'rule', field, op: '=', value: 1 };
     case 'status': return { kind: 'rule', field, op: 'is', value: ['waiting'] };
@@ -274,11 +275,11 @@ function RuleEditor({ rule, onChange, onRemove }: { rule: Rule; onChange: (r: Ru
   );
 }
 
-function asGroup(c: Condition): Group {
+export function asGroup(c: Condition): Group {
   return c.kind === 'group' ? c : { kind: 'group', op: 'and', children: [c] };
 }
 
-function GroupEditor({ group, onChange, onRemove, depth = 0 }: { group: Group; onChange: (g: Group) => void; onRemove?: () => void; depth?: number }) {
+export function GroupEditor({ group, onChange, onRemove, depth = 0 }: { group: Group; onChange: (g: Group) => void; onRemove?: () => void; depth?: number }) {
   const setChild = (i: number, c: Condition | null) => {
     const children = [...group.children];
     if (c) children[i] = c;
@@ -402,6 +403,7 @@ export function FilterEditorView({ id }: { id: string | null }) {
           <section aria-label="Conditions">
             <GroupEditor group={root} onChange={syncText} />
           </section>
+          <FilterFromWords onQuery={onText} />
           <label className="flex flex-col gap-1 text-[0.8rem] font-medium text-muted">
             Advanced query (stays in sync with the builder)
             <Input value={text} onChange={(e) => onText(e.target.value)} className="font-mono text-[0.88rem]" aria-invalid={!!textError} aria-describedby="query-help" />

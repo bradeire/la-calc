@@ -15,6 +15,7 @@ import { DatePopover, LabelPopover, PriorityPopover, ProjectPopover, usePopover 
 import { LabelChip, PRIORITY_LABEL, PriorityFlag, ProjectIcon } from './meta';
 import { TaskList } from './TaskList';
 import { DependenciesSection } from './DependenciesSection';
+import { TaskAiMenu } from './AiFeatures';
 
 export function TaskDetail({ taskId, variant }: { taskId: string; variant: 'panel' | 'sheet' }) {
   const app = useApp();
@@ -145,6 +146,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
             </button>
           ))}
         </nav>
+        <TaskAiMenu task={task} />
         <IconButton label="Open in Focus mode" onClick={() => navigate(`/focus?task=${task.id}`)}>
           <Play size={16} />
         </IconButton>

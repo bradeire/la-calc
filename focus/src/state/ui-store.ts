@@ -33,6 +33,10 @@ interface UiState {
   shortcutsOpen: boolean;
   setShortcutsOpen: (v: boolean) => void;
 
+  capture: { open: boolean; text: string };
+  openCapture: (text?: string) => void;
+  closeCapture: () => void;
+
   /** Reminders delivered and awaiting the user's action in the in-app panel. */
   activeReminders: DueReminder[];
   addReminders: (r: DueReminder[]) => void;
@@ -101,6 +105,10 @@ export const useUi = create<UiState>((set, get) => ({
 
   shortcutsOpen: false,
   setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
+
+  capture: { open: false, text: '' },
+  openCapture: (text = '') => set({ capture: { open: true, text } }),
+  closeCapture: () => set({ capture: { open: false, text: '' } }),
 
   activeReminders: [],
   addReminders: (r) => {

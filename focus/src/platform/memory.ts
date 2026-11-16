@@ -1,4 +1,5 @@
-import type { FileStore, PersistenceAdapter, Platform } from './types';
+import type { FileStore, HttpAdapter, HttpRequest, HttpResponse, PersistenceAdapter, Platform } from './types';
+import { MemorySecretStore } from './web';
 
 /** In-memory platform for automated tests. Never used in production screens. */
 export class MemoryPersistence implements PersistenceAdapter {
@@ -42,7 +43,17 @@ export class MemoryFileStore implements FileStore {
   }
 }
 
-export function createMemoryPlatform(): Platform & { persistence: MemoryPersistence; files: MemoryFileStore } {
+/** Test HTTP adapter: records requests and replies via a handler set by the test. */
+export class FakeHttp implements HttpAdapter {
+  requests: HttpRequest[] = [];
+  handler: (r: HttpRequest) => HttpResponse | Promise<HttpResponse> = () => ({ status: 200, body: '{}' });
+  async request(r: HttpRequest) {
+    this.requests.push(r);
+    return this.handler(r);
+  }
+}
+
+export function createMemoryPlatform(): Platform & { persistence: MemoryPersistence; files: MemoryFileStore; http: FakeHttp } {
   return {
     kind: 'memory',
     persistence: new MemoryPersistence(),
@@ -54,6 +65,8 @@ export function createMemoryPlatform(): Platform & { persistence: MemoryPersiste
       show: async () => false,
       onAction: () => () => {},
     },
+    secrets: new MemorySecretStore(),
+    http: new FakeHttp(),
     acquireLock: async () => true,
   };
 }

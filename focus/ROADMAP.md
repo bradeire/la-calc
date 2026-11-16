@@ -29,7 +29,7 @@ Carried forward (need hardware or a platform toolchain, not more code):
 - Manual screen-reader pass (NVDA on Windows, TalkBack on Pixel).
 - Touch drag-and-drop on boards (touch users currently move cards via the project/section picker).
 
-**Phase 2 completed in session 3** — see FEATURES.md. **Next: Phase 3.**
+**Phase 2 completed in session 3; Phase 3 in session 4** — see FEATURES.md. **Next: Phase 4.**
 
 | Work item | Notes |
 |---|---|

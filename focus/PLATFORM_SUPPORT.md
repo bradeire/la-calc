@@ -34,7 +34,7 @@ npm install
 npm run desktop:dev     # runs the native app with live reload
 npm run desktop:build   # creates the installer
 ```
-The installer appears in `src-tauri\target\release\bundle\nsis\Focus_0.3.0_x64-setup.exe`. It installs for the
+The installer appears in `src-tauri\target\release\bundle\nsis\Focus_0.4.0_x64-setup.exe`. It installs for the
 current user only, so no administrator rights are needed. The first build takes several minutes. Because the
 installer isn't code-signed, Windows SmartScreen will warn ("More info → Run anyway").
 
@@ -55,5 +55,8 @@ USB with USB debugging on. Native notification scheduling (Phase 2) will be asse
 - **Browser: one tab at a time.** A second tab shows an explanation instead of risking overwrites.
 - **Drag and drop** is mouse-only; on touch, use swipe, the ⋯ menu, or the task's project/section picker.
 - **Browser storage eviction**: the PWA requests persistent storage. Back up until you move to the native app.
+- **Integrations in the browser:** webhook and AI targets must allow cross-origin requests (e.g. Ollama's
+  `OLLAMA_ORIGINS`); secrets last for the session only. The desktop app has neither limitation.
+- **Voice:** Chrome's recogniser is online by default; on-device recognition is experimental (ADR-012).
 - **App identifier** `uk.periopdigital.focus` is based on the domain your other apps use. It becomes the Android
   package name and is hard to change after a store release, so confirm it before publishing.

@@ -284,6 +284,10 @@ export class TaskService {
 
         this.r.activity.log('task', id, 'completed', nextId ? { nextOccurrenceId: nextId } : {});
         this.events.emit({ type: 'task.completed', taskId: id, nextId });
+        // Last open task in its project: the project is complete (automations can react).
+        if (task.projectId && !nextId && this.r.tasks.listByProject(task.projectId).length === 0) {
+          this.events.emit({ type: 'project.completed', projectId: task.projectId });
+        }
         for (const p of autoParents) this.events.emit({ type: 'task.completed', taskId: p.id, nextId: null });
 
         return {

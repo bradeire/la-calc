@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 — 2026-11-16 (Phase 3: intelligence and automation)
+
+### Added
+- Automations: trigger → conditions (filter builder) → actions, with examples, history, test mode, hourly limits,
+  duplicate and loop prevention.
+- Webhooks with HMAC-SHA256 signing; Home Assistant guide (INTEGRATIONS.md).
+- Capture tasks from pasted emails, meeting notes and text files; Android share target.
+- Optional AI assistant (Ollama or OpenAI-compatible) with consent, payload preview and confirm-before-apply:
+  subtasks, task suggestions, project summary, filter from words, template drafts, plan review, AI capture.
+- Voice dictation in Quick Add with clear online/on-device disclosure.
+- Native: OS keychain for secrets and Rust-side HTTP for integrations.
+
+### Fixed
+- Edits could be lost when the page was reloaded or closed immediately after a change.
+
 ## 0.3.0 — 2026-11-16 (Phase 2: advanced planning)
 
 ### Added

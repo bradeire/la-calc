@@ -9,6 +9,7 @@ import { errorMessage, useAction, useApp, useQuery, useSettings } from '../hooks
 import { Button, ConfirmDialog, Select, Switch, cx } from '../primitives';
 import { ViewBody } from '../components/common';
 import { ViewHeader } from '../layout/Chrome';
+import { AiSettings, WebhookSettings } from './IntegrationSettings';
 
 function Group({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
   return (
@@ -206,6 +207,8 @@ export function SettingsView() {
         </Group>
 
         <NotificationSettings />
+        <AiSettings />
+        <WebhookSettings />
 
         <Group title="Tasks" icon={<FlaskConical size={16} />}>
           <Item label="Complete a parent when all its subtasks are done" hint="Off by default: finishing subtasks doesn’t always mean the parent is finished.">

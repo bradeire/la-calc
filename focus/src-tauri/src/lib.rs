@@ -1,3 +1,5 @@
+mod http;
+mod secrets;
 mod storage;
 
 use std::sync::Mutex;
@@ -82,6 +84,26 @@ fn data_dir(state: State<'_, AppStorage>) -> Result<String, String> {
     Ok(state.0.lock().map_err(|e| e.to_string())?.root().display().to_string())
 }
 
+#[tauri::command]
+fn secret_set(key: String, value: String) -> Result<(), String> {
+    secrets::set(&key, &value)
+}
+
+#[tauri::command]
+fn secret_get(key: String) -> Result<Option<String>, String> {
+    secrets::get(&key)
+}
+
+#[tauri::command]
+fn secret_delete(key: String) -> Result<(), String> {
+    secrets::delete(&key)
+}
+
+#[tauri::command]
+async fn http_request(request: http::HttpRequest) -> Result<http::HttpResponse, String> {
+    http::send(request).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default();
@@ -105,7 +127,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            db_load, db_load_previous, db_save, db_snapshot, file_put, file_get, file_exists, file_delete, file_keys, data_dir
+            db_load, db_load_previous, db_save, db_snapshot, file_put, file_get, file_exists, file_delete, file_keys, data_dir,
+            secret_set, secret_get, secret_delete, http_request
         ])
         .run(tauri::generate_context!())
         .expect("error while running Focus");

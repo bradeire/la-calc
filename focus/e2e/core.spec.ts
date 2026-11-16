@@ -175,3 +175,13 @@ test('project notes and attachments', async ({ page }) => {
   await expect(page.getByRole('textbox', { name: 'Project notes' })).toHaveValue('Ferry from Bowness at 10:00');
   await expect(page.getByText('itinerary.txt')).toBeVisible();
 });
+
+test('an edit survives an immediate reload', async ({ page }) => {
+  await startFresh(page);
+  await page.goto('/#/inbox');
+  const input = await quickAdd(page, 'Saved before reload');
+  await input.press('Enter');
+  await expect(page.getByRole('listitem', { name: 'Saved before reload' })).toBeVisible();
+  await page.reload(); // no waiting for the save indicator
+  await expect(page.getByRole('listitem', { name: 'Saved before reload' })).toBeVisible();
+});

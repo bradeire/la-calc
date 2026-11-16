@@ -15,7 +15,7 @@ import type { TaskService } from './task-service';
 export const BACKUP_TABLES = [
   'settings', 'projects', 'sections', 'labels', 'tasks', 'recurrence_rules', 'task_labels', 'reminders',
   'attachments', 'comments', 'activity_log', 'task_dependencies', 'time_entries', 'project_templates',
-  'saved_filters', 'automations', 'automation_runs', 'calendar_connections', 'backup_history', 'change_log',
+  'saved_filters', 'automations', 'automation_runs', 'calendar_connections', 'integrations', 'backup_history', 'change_log',
 ] as const;
 
 const backupSchema = z.object({

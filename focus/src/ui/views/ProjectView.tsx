@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
-  Archive, ArchiveRestore, LayoutTemplate, ArrowDown, ArrowUp, Columns3, Ellipsis, Eye, EyeOff, FolderPlus, LayoutList, CalendarDays, Pencil, Plus,
+  Archive, ArchiveRestore, LayoutTemplate, Sparkles, ArrowDown, ArrowUp, Columns3, Ellipsis, Eye, EyeOff, FolderPlus, LayoutList, CalendarDays, Pencil, Plus,
   StickyNote, Table2, Trash2,
 } from 'lucide-react';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Priority, type Project, type ProjectLayout, type Section, type Task, type TaskStatus } from '@/core/domain/types';
@@ -16,6 +16,7 @@ import { usePopover } from '../components/pickers';
 import { PRIORITY_COLOR, ProgressRing, ProjectIcon } from '../components/meta';
 import { ViewHeader } from '../layout/Chrome';
 import { AttachmentsSection } from '../components/TaskDetail';
+import { ProjectSummaryDialog, useAiEnabled } from '../components/AiFeatures';
 import { CalendarView } from './CalendarView';
 
 const LAYOUTS: { id: ProjectLayout; label: string; icon: typeof LayoutList }[] = [
@@ -41,6 +42,8 @@ export function ProjectView({ id }: { id: string }) {
   const [notesOpen, setNotesOpen] = useState(false);
   const menu = usePopover();
   const prompt = usePrompt();
+  const aiEnabled = useAiEnabled();
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const hasFiles = useQuery(() => app.repos.attachments.listForProject(id).length > 0, [id]);
 
   if (!project || project.deletedAt) {
@@ -108,6 +111,11 @@ export function ProjectView({ id }: { id: string }) {
           </MenuItem>
           <MenuItem icon={<FolderPlus size={15} />} onClick={() => (menu.hide(), setCreatingChild(true))}>Add sub-project</MenuItem>
           <MenuItem icon={<StickyNote size={15} />} onClick={() => (menu.hide(), setNotesOpen(true))}>Notes and files</MenuItem>
+          {aiEnabled && (
+            <MenuItem icon={<Sparkles size={15} />} onClick={() => (menu.hide(), setSummaryOpen(true))}>
+              Summarise with AI
+            </MenuItem>
+          )}
           <MenuItem
             icon={<LayoutTemplate size={15} />}
             onClick={() => {
@@ -156,6 +164,7 @@ export function ProjectView({ id }: { id: string }) {
       )}
 
       {prompt.element}
+      <ProjectSummaryDialog open={summaryOpen} onClose={() => setSummaryOpen(false)} projectId={id} />
       <ProjectDialog open={editing} onClose={() => setEditing(false)} project={project} />
       <ProjectDialog open={creatingChild} onClose={() => setCreatingChild(false)} parentId={id} />
       <ConfirmDialog

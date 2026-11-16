@@ -98,7 +98,7 @@ That conflicts with the spec's requirement for transactional related changes.
 
 **Durability rules.**
 - Every committed write transaction marks the database dirty; a flush is
-  scheduled (250 ms debounce) and is forced on `visibilitychange → hidden`,
+  scheduled (~15 ms coalescing; originally 250 ms, which lost edits on an immediate reload) and is forced on `visibilitychange → hidden`,
   `pagehide` and app-lifecycle pause events (Android backgrounding).
 - Two rotating snapshots are kept (`current`, `previous`). On start-up the
   current snapshot is integrity-checked (`PRAGMA integrity_check`); if it fails
@@ -115,7 +115,7 @@ That conflicts with the spec's requirement for transactional related changes.
 - (+) True multi-statement transactions with rollback, foreign keys, FTS4, JSON1.
 - (−) The whole database is held in memory. At 50,000 tasks this is roughly
   20–40 MB, acceptable on a Pixel and on desktop. Revisit if users exceed that.
-- (−) A crash between a write and the debounced flush can lose at most ~250 ms
+- (−) A crash between a write and the save can lose at most the last few milliseconds
   of changes. Mitigated by lifecycle-triggered flushes.
 - **Upgrade path:** if memory or durability becomes a problem, the driver can be
   replaced by (a) `wa-sqlite` with an OPFS/IndexedDB page-level VFS in the
@@ -275,3 +275,25 @@ The time grid, month and agenda views are built in-house (~600 lines plus a test
 drag/resize uses its own event system, which would need adapters for Focus's undo, confirmation (dependency) and
 deadline semantics, and its touch interaction on Android webviews is unverified. The in-house grid uses pointer
 events with press-and-hold on touch, snaps to 15 minutes, and goes through the same services as every other edit.
+
+## ADR-012 — Voice capture: online disclosure by default, on-device as an explicit opt-in
+
+**Status:** Accepted (2026-11-16)
+
+Focus uses the Web Speech API. Chrome's default recogniser sends audio to an online service, so Focus explains that
+before first use and remembers the user's agreement. The experimental on-device mode (`processLocally`,
+`SpeechRecognition.available()/install()`, documented on MDN) is offered as an explicit choice rather than probed
+automatically, because calling `available()` crashed the renderer in our Chromium test build. Before probing, Focus
+force-saves the database so a browser crash cannot lose data. Native Android speech recognition will be assessed
+with the Android build.
+
+## ADR-013 — Secrets in the OS keychain; integration HTTP through Rust
+
+**Status:** Accepted (2026-11-16)
+
+API keys and webhook signing secrets go through a `SecretStore`: the OS credential store (keyring crate v4, v1 API —
+Windows Credential Manager, macOS Keychain, Linux Secret Service) in the desktop app, and memory for the current
+session only in the browser (browsers have no secure store; re-entering is the honest trade-off). Nothing secret is
+written to SQLite (tested). Outbound HTTP for AI providers and webhooks goes through a Rust command (reqwest, rustls)
+that only allows http/https GET/POST, so the webview CSP stays strict and local services work without CORS setup.
+Mobile secure storage arrives with the mobile builds.

@@ -5,6 +5,7 @@ import type { Conflict, DayLoad, Suggestion } from '@/core/scheduling';
 import { useAction, useApp, useDatePrefs, useQuery, useToday } from '../hooks';
 import { go, openTask } from '../router';
 import { Button, Dialog, cx } from '../primitives';
+import { PlanReviewButton } from './AiFeatures';
 
 /** Planned minutes against working capacity for one day. */
 export function WorkloadBar({ load, compact }: { load: DayLoad; compact?: boolean }) {
@@ -138,6 +139,7 @@ export function PlanDialog({ open, onClose }: { open: boolean; onClose: () => vo
             </ul>
           )}
         </section>
+        <PlanReviewButton />
         <button type="button" className="self-start text-[0.8rem] text-muted underline" onClick={() => (onClose(), go({ name: 'settings' }))}>
           Change working hours or default estimate
         </button>

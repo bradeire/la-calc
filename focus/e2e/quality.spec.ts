@@ -20,7 +20,7 @@ test('works offline after the first visit', async ({ page, context }, info) => {
   await context.setOffline(false);
 });
 
-const pages = ['/#/today', '/#/inbox', '/#/upcoming', '/#/calendar', '/#/projects', '/#/labels', '/#/search', '/#/settings', '/#/trash', '/#/filters', '/#/filter/new'];
+const pages = ['/#/today', '/#/inbox', '/#/upcoming', '/#/calendar', '/#/projects', '/#/labels', '/#/search', '/#/settings', '/#/trash', '/#/filters', '/#/filter/new', '/#/automations', '/#/automation/new'];
 
 test('no serious accessibility violations on main screens (light and dark)', async ({ page }) => {
   test.setTimeout(90_000);

@@ -57,7 +57,7 @@ describe('migrations', () => {
   it('migrates a new database to the latest version and passes integrity checks', async () => {
     const sql = await getSql();
     const db = new SqlJsDriver(sql);
-    expect(migrate(db)).toEqual([1, 2]);
+    expect(migrate(db)).toEqual(MIGRATIONS.map((m) => m.version));
     expect(currentSchemaVersion(db)).toBe(LATEST_SCHEMA_VERSION);
     expect(integrityCheck(db).ok).toBe(true);
     expect(migrate(db)).toEqual([]); // idempotent

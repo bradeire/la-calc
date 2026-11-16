@@ -8,6 +8,7 @@ import { errorMessage, useApp, useDatePrefs, useQuery, useSettings, useToday } f
 import { openTask } from '../router';
 import { Button, Dialog, Kbd, cx } from '../primitives';
 import { DatePopover, LabelPopover, PillButton, PriorityPopover, ProjectPopover, usePopover } from './pickers';
+import { VoiceButton } from './VoiceButton';
 import { PRIORITY_LABEL, PriorityFlag, ProjectIcon } from './meta';
 
 const KIND_ICON: Record<TokenKind, typeof CalendarDays> = {
@@ -44,6 +45,8 @@ export function QuickAdd() {
   const [ov, setOv] = useState<Overrides>({});
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  /** Text present when dictation started; spoken words are appended to it. */
+  const voiceBase = useRef<string | null>(null);
   const mirrorRef = useRef<HTMLDivElement>(null);
 
   const projects = useQuery(() => app.repos.projects.list(), []);
@@ -186,7 +189,8 @@ export function QuickAdd() {
         }}
       >
         {parentTask && <p className="text-[0.82rem] text-muted">Subtask of “{parentTask.title}”</p>}
-        <div className="relative text-[1.05rem] leading-[1.6]">
+        <div className="flex items-start gap-1">
+        <div className="relative min-w-0 flex-1 text-[1.05rem] leading-[1.6]">
           <div
             ref={mirrorRef}
             aria-hidden
@@ -215,6 +219,16 @@ export function QuickAdd() {
             autoCapitalize="sentences"
             className="relative min-h-[1.7em] w-full resize-none bg-transparent px-0.5 font-medium text-fg caret-accent outline-none placeholder:font-normal placeholder:text-subtle"
           />
+        </div>
+        <VoiceButton
+          onText={(spoken, isFinal) => {
+            // Spoken words are appended to whatever was typed before dictation started.
+            if (voiceBase.current === null) voiceBase.current = text;
+            const base = voiceBase.current;
+            setText(base ? `${base} ${spoken}` : spoken);
+            if (isFinal) voiceBase.current = null;
+          }}
+        />
         </div>
 
         {showDesc ? (

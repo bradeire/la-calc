@@ -2,6 +2,8 @@ import type { DatabaseDriver } from './db/driver';
 import { ActivityRepository, AttachmentRepository, CommentRepository, ReminderRepository, TimeEntryRepository } from './repositories/content';
 import { DependencyRepository } from './repositories/dependencies';
 import { SavedFilterRepository } from './repositories/filters';
+import { AutomationRepository } from './repositories/automations';
+import { IntegrationRepository } from './repositories/integrations';
 import { LabelRepository } from './repositories/labels';
 import { ProjectRepository } from './repositories/projects';
 import { SettingsRepository } from './repositories/settings';
@@ -22,6 +24,8 @@ export interface Repositories {
   dependencies: DependencyRepository;
   templates: TemplateRepository;
   filters: SavedFilterRepository;
+  automations: AutomationRepository;
+  integrations: IntegrationRepository;
 }
 
 export function createRepositories(db: DatabaseDriver): Repositories {
@@ -39,5 +43,7 @@ export function createRepositories(db: DatabaseDriver): Repositories {
     dependencies: new DependencyRepository(db),
     templates: new TemplateRepository(db),
     filters: new SavedFilterRepository(db),
+    automations: new AutomationRepository(db),
+    integrations: new IntegrationRepository(db),
   };
 }

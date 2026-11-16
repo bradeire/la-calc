@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
-import type { FileStore, LifecycleAdapter, NotificationAdapter, PersistenceAdapter, Platform } from './types';
+import type { FileStore, HttpAdapter, LifecycleAdapter, NotificationAdapter, PersistenceAdapter, Platform, SecretStore } from './types';
 
 /**
  * Native platform (Tauri 2). The SQLite image is a real file in the app-data
@@ -89,6 +89,22 @@ const tauriNotifications: NotificationAdapter = {
   onAction: () => () => {},
 };
 
+/** OS credential store via Rust (src-tauri/src/secrets.rs). */
+const tauriSecrets: SecretStore = {
+  persistent: true,
+  get: (key) => invoke<string | null>('secret_get', { key }),
+  set: (key, value) => invoke('secret_set', { key, value }),
+  delete: (key) => invoke('secret_delete', { key }),
+};
+
+/** HTTP through Rust (src-tauri/src/http.rs) so the webview CSP stays strict and CORS does not apply. */
+const tauriHttp: HttpAdapter = {
+  request: (r) =>
+    invoke('http_request', {
+      request: { method: r.method, url: r.url, headers: Object.entries(r.headers ?? {}), body: r.body ?? null, timeout_ms: r.timeoutMs ?? null },
+    }),
+};
+
 export function createTauriPlatform(): Platform {
   return {
     kind: 'tauri',
@@ -96,6 +112,8 @@ export function createTauriPlatform(): Platform {
     files: new TauriFileStore(),
     lifecycle: tauriLifecycle,
     notifications: tauriNotifications,
+    secrets: tauriSecrets,
+    http: tauriHttp,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,
   };

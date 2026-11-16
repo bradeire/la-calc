@@ -105,3 +105,28 @@ export function ReminderPanel() {
     </section>
   );
 }
+
+/** Runs time-based automations every minute and shows "notify" actions. */
+export function useAutomationRunner() {
+  const app = useApp();
+  useEffect(() => {
+    const ui = useUi.getState();
+    app.automations.setNotifier((title, body) => {
+      ui.pushToast({ message: `${title}: ${body}` });
+      if (app.repos.settings.getAll().notificationsEnabled) void app.platform.notifications.show({ id: `auto-${title}-${body}`.slice(0, 120), title, body });
+    });
+    const sweep = () => {
+      try {
+        app.automations.sweep();
+      } catch (err) {
+        console.error('Automation sweep failed', err);
+      }
+    };
+    const first = setTimeout(sweep, 1500);
+    const timer = setInterval(sweep, 60_000);
+    return () => {
+      clearTimeout(first);
+      clearInterval(timer);
+    };
+  }, [app]);
+}

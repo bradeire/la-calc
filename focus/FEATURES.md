@@ -7,7 +7,7 @@ Status levels (spec §11.7): **Not started** · **In progress** · **Implemented
 **No feature has been verified on a physical device yet.** A native Tauri build exists and has been verified on Linux
 (WebKitGTK); Windows and Android builds must be produced on those platforms (see PLATFORM_SUPPORT.md).
 
-_Last updated: 2026-11-16 (session 3 — Phase 2)._
+_Last updated: 2026-11-16 (session 4 — Phase 3)._
 
 ## Phase 1 — Core application
 
@@ -75,10 +75,29 @@ _Last updated: 2026-11-16 (session 3 — Phase 2)._
 | Reminders while the app is fully closed | Not started | needs Android native scheduling (see PLATFORM_SUPPORT.md) |
 | Project templates: save project as template, create from template, relative dates, subtasks, labels, dependencies | Tested | built-in "Holiday planning" |
 
+## Phase 3 — Intelligence and automation
+
+| Feature | Status | Evidence / notes |
+|---|---|---|
+| Offline NLP with configurable date order, 12/24 h, week start (UK default) | Tested | Phase 1 parser + settings |
+| Voice capture in Quick Add (Web Speech API), dictated text parsed like typing | Tested (browser, simulated recogniser) | real microphone not tested; see ADR-012 |
+| Online-recognition disclosure; on-device recognition opt-in (experimental) | Implemented | probe crashes headless Chromium → opt-in, data saved first |
+| AI provider interface: Ollama, OpenAI-compatible; off by default | Tested | fake provider in unit + E2E tests |
+| AI consent tied to address; "what will be sent" preview; descriptions opt-in; keys in OS keychain / session only | Tested | |
+| AI features: subtasks, priority/project/labels/estimate/description, project summary, filter from words, template draft, plan review, capture | Tested (unit) / Implemented (UI) | breakdown flow E2E-tested |
+| Automation engine: 12 triggers, filter-tree conditions, 14 actions | Tested | 13 tests |
+| Automations: enable/disable, history with errors, duplicate prevention, hourly limit, loop prevention (depth 3), test mode | Tested | |
+| Example automations (overdue → notify, waiting > 3 days → follow-up, project done → archive, project created → template, deadline tomorrow) | Tested | the "next recurring instance" example is built into recurrence |
+| Webhooks: configurable, HMAC-SHA256 signed, minimal payload, test button; secrets never in the database | Tested | E2E with intercepted receiver |
+| Home Assistant: outgoing webhooks documented with YAML | Implemented | inbound (HA → Focus) needs the Phase 4 local API |
+| Capture from pasted email / notes / .txt .md .eml .html; suggestions confirmed before creation | Tested | PDF/Word not supported |
+| Android share-sheet target (installed PWA) | Implemented | not tested on hardware |
+| Native HTTP and keychain commands (Tauri) | Tested (Rust unit tests, compiled) | keychain not exercised on Windows/macOS hardware |
+
 ## Not yet started (later phases)
 
-Voice capture, AI, automations, Home Assistant, email/document capture (Phase 3) · Insights/dashboard, reports, goals,
-integrations, CSV, local API (Phase 4) · Android/Windows release builds on hardware (Phase 5).
+Insights/dashboard, reports, goals, external calendars, integration framework, CSV, local API (Phase 4) ·
+Android/Windows release builds on hardware (Phase 5).
 
 **Navigation note:** Insights (Phase 4) is deliberately *absent* from navigation until it works, rather than shown
 as a placeholder screen.
