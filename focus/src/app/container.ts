@@ -9,6 +9,9 @@ import { EventBus } from '@/services/events';
 import { LabelService } from '@/services/label-service';
 import { ProjectService } from '@/services/project-service';
 import { QuickAddService } from '@/services/quick-add-service';
+import { FilterService } from '@/services/filter-service';
+import { ReminderService } from '@/services/reminder-service';
+import { TemplateService } from '@/services/template-service';
 import { systemClock, TaskService, type Clock } from '@/services/task-service';
 
 export type SaveStatus = 'saved' | 'pending' | 'saving' | 'error';
@@ -82,6 +85,9 @@ export interface AppContainer {
   content: ContentService;
   quickAdd: QuickAddService;
   data: DataService;
+  filters: FilterService;
+  reminders: ReminderService;
+  templates: TemplateService;
   saver: Saver;
   platform: Platform;
   /** Replace the live database (after restore), keeping services wired. */
@@ -108,10 +114,13 @@ export function createContainer(
     const content = new ContentService(repos, platform.files);
     const quickAdd = new QuickAddService(repos, tasks, projects, labels);
     const data = new DataService(repos, { tasks, projects, labels }, platform.files, sql);
+    const filters = new FilterService(repos, () => clock.now());
+    const reminders = new ReminderService(repos);
+    const templates = new TemplateService(repos, tasks, projects, labels);
     const saver = new Saver(db, platform);
     teardown.push(db.subscribe(() => saver.schedule()));
     teardown.push(platform.lifecycle.onPause(() => saver.flush()));
-    return { repos, tasks, projects, labels, content, quickAdd, data, saver };
+    return { repos, tasks, projects, labels, content, quickAdd, data, filters, reminders, templates, saver };
   };
 
   const container: AppContainer = {

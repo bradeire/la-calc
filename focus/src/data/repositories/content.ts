@@ -33,6 +33,7 @@ const mapReminder = (r: Row): Reminder => ({
   createdAt: str(r.created_at),
   deliveredAt: strOrNull(r.delivered_at),
   dismissedAt: strOrNull(r.dismissed_at),
+  snoozedUntil: strOrNull(r.snoozed_until),
 });
 
 const mapActivity = (r: Row): ActivityEntry => ({
@@ -146,6 +147,37 @@ export class ReminderRepository {
   }
   listForTask(taskId: string): Reminder[] {
     return this.db.all('SELECT * FROM reminders WHERE task_id = ? ORDER BY created_at', [taskId]).map(mapReminder);
+  }
+  get(id: string): Reminder | undefined {
+    const r = this.db.get('SELECT * FROM reminders WHERE id = ?', [id]);
+    return r ? mapReminder(r) : undefined;
+  }
+  /** Reminders that could still fire: not dismissed, task open and not deleted, project not archived/deleted. */
+  listActive(): Reminder[] {
+    return this.db
+      .all(
+        `SELECT r.* FROM reminders r JOIN tasks t ON t.id = r.task_id
+         WHERE r.dismissed_at IS NULL AND t.deleted_at IS NULL AND t.status IN ('inbox','active','in_progress','waiting')
+         AND (t.project_id IS NULL OR EXISTS (SELECT 1 FROM projects p WHERE p.id = t.project_id AND p.archived_at IS NULL AND p.deleted_at IS NULL))`,
+      )
+      .map(mapReminder);
+  }
+  /** After a task's dates change, its relative reminders should fire again for the new time. */
+  resetRelative(taskId: string) {
+    this.db.run(
+      "UPDATE reminders SET delivered_at = NULL, dismissed_at = NULL, snoozed_until = NULL WHERE task_id = ? AND kind = 'relative'",
+      [taskId],
+    );
+  }
+  setState(id: string, s: { deliveredAt?: string | null; dismissedAt?: string | null; snoozedUntil?: string | null }) {
+    const cols: string[] = [];
+    const vals: (string | null)[] = [];
+    if (s.deliveredAt !== undefined) (cols.push('delivered_at = ?'), vals.push(s.deliveredAt));
+    if (s.dismissedAt !== undefined) (cols.push('dismissed_at = ?'), vals.push(s.dismissedAt));
+    if (s.snoozedUntil !== undefined) (cols.push('snoozed_until = ?'), vals.push(s.snoozedUntil));
+    if (!cols.length) return;
+    this.db.run(`UPDATE reminders SET ${cols.join(', ')} WHERE id = ?`, [...vals, id]);
+    track(this.db, 'reminders', id, 'update');
   }
 }
 

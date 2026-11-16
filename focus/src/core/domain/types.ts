@@ -135,6 +135,8 @@ export interface Reminder {
   createdAt: string;
   deliveredAt: string | null;
   dismissedAt: string | null;
+  /** When snoozed, the reminder fires again at this instant (UTC ISO). */
+  snoozedUntil: string | null;
 }
 
 export interface ActivityEntry {
@@ -266,3 +268,9 @@ export const PALETTE: { name: string; value: string }[] = [
   { name: 'Pink', value: '#db2777' },
   { name: 'Brown', value: '#92400e' },
 ];
+
+/** "taskId cannot be finished before dependsOnId". */
+export interface DependencyEdge {
+  taskId: string;
+  dependsOnId: string;
+}

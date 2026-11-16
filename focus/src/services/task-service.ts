@@ -5,7 +5,8 @@ import { nextOccurrence } from '@/core/recurrence/engine';
 import type { Repositories } from '@/data';
 import { newId, nowIso } from '@/data/repositories/base';
 import type { NewTaskRow } from '@/data/repositories/tasks';
-import { EventBus, NotFoundError, ValidationError, type UndoAction } from './events';
+import { ConfirmationRequired, EventBus, NotFoundError, ValidationError, type UndoAction } from './events';
+import { formatRelativeDate } from '@/core/dates';
 
 export interface Clock {
   now(): Date;
@@ -125,7 +126,37 @@ export class TaskService {
     });
   }
 
-  update(id: string, patch: TaskPatch): Task {
+  /** Open prerequisites of a task. */
+  openPrerequisites(id: string): Task[] {
+    return this.r.tasks.getMany(this.r.dependencies.prerequisitesOf(id)).filter((t) => isOpenStatus(t.status));
+  }
+
+  /**
+   * Dependency order check for a proposed scheduled date (spec 4.4): a task should not be
+   * planned before an unfinished prerequisite, nor a prerequisite after its dependants.
+   */
+  private checkScheduleOrder(id: string, date: string) {
+    const today = this.today();
+    for (const p of this.openPrerequisites(id)) {
+      const pDate = p.scheduledDate ?? p.deadline;
+      if (pDate && pDate > date) {
+        throw new ConfirmationRequired(
+          `This task depends on “${p.title}”, which is planned for ${formatRelativeDate(pDate, today)} — after the date you chose.`,
+          'Schedule anyway',
+        );
+      }
+    }
+    for (const d of this.r.tasks.getMany(this.r.dependencies.dependentsOf(id))) {
+      if (isOpenStatus(d.status) && d.scheduledDate && d.scheduledDate < date) {
+        throw new ConfirmationRequired(
+          `“${d.title}” depends on this task and is planned for ${formatRelativeDate(d.scheduledDate, today)} — before the date you chose.`,
+          'Schedule anyway',
+        );
+      }
+    }
+  }
+
+  update(id: string, patch: TaskPatch, opts: { force?: boolean } = {}): Task {
     let data: z.output<typeof taskPatchSchema>;
     try {
       data = taskPatchSchema.parse(patch);
@@ -153,6 +184,9 @@ export class TaskService {
           }
         }
         if (changes.scheduledDate === null) changes.scheduledTime = null;
+        if (changes.scheduledDate && changes.scheduledDate !== before.scheduledDate && !opts.force) {
+          this.checkScheduleOrder(id, changes.scheduledDate);
+        }
         if (changes.projectId !== undefined && changes.projectId !== before.projectId) {
           if (changes.projectId && before.status === 'inbox' && !changes.status) changes.status = 'active';
           if (!changes.projectId && before.status === 'active' && !changes.status) changes.status = 'inbox';
@@ -181,6 +215,7 @@ export class TaskService {
         }
         const after = this.must(id);
         const changed = TRACKED.filter((k) => JSON.stringify(before[k]) !== JSON.stringify(after[k]));
+        if (changed.some((k) => k === 'scheduledDate' || k === 'scheduledTime' || k === 'deadline')) this.r.reminders.resetRelative(id);
         if (data.labelIds && before.labelIds.join() !== after.labelIds.join()) changed.push('labelIds');
         if (data.recurrence !== undefined && JSON.stringify(before.recurrence) !== JSON.stringify(after.recurrence)) changed.push('recurrence');
         if (changed.length) {
@@ -200,11 +235,19 @@ export class TaskService {
    * Complete a task, its open subtasks, and — for recurring tasks — create the
    * next occurrence exactly once (ADR-005).
    */
-  complete(id: string): UndoAction {
+  complete(id: string, opts: { force?: boolean } = {}): UndoAction {
     return this.events.batch(() =>
       this.r.db.transaction(() => {
         const task = this.must(id);
         if (!isOpenStatus(task.status)) throw new ValidationError('That task is already closed');
+        const blockers = opts.force ? [] : this.openPrerequisites(id);
+        if (blockers.length) {
+          const names = blockers.slice(0, 3).map((b) => `“${b.title}”`).join(', ');
+          throw new ConfirmationRequired(
+            `“${task.title}” is waiting on ${blockers.length} unfinished task${blockers.length > 1 ? 's' : ''}: ${names}${blockers.length > 3 ? '…' : ''}.`,
+            'Complete anyway',
+          );
+        }
         const ts = nowIso();
         const today = this.today();
         const reopened: { id: string; status: TaskStatus }[] = [{ id, status: task.status }];
@@ -301,8 +344,15 @@ export class TaskService {
     };
     const id = copy(task, task.parentId, true);
     this.r.tasks.setRecurrence(id, task.recurrence, task.recurrenceText);
+    // Reminders repeat with the task: relative ones as-is, absolute ones shifted by the same number of days.
+    const shiftDays = task.scheduledDate ? Math.round((Date.parse(date) - Date.parse(task.scheduledDate)) / 86400000) : 0;
     for (const rem of this.r.reminders.listForTask(task.id)) {
       if (rem.kind === 'relative') this.r.reminders.insert({ taskId: id, kind: 'relative', offsetMinutes: rem.offsetMinutes });
+      else if (rem.remindAt && shiftDays) {
+        const at = new Date(rem.remindAt);
+        at.setDate(at.getDate() + shiftDays); // local-calendar shift keeps the wall-clock time across DST
+        this.r.reminders.insert({ taskId: id, kind: 'absolute', remindAt: at.toISOString() });
+      }
     }
     this.r.activity.log('task', id, 'created', { recurrenceOf: task.id, scheduledDate: date });
     return id;
@@ -479,10 +529,10 @@ export class TaskService {
     this.r.tasks.update(id, { sortOrder: order });
   }
 
-  bulkUpdate(ids: readonly string[], patch: TaskPatch): UndoAction {
+  bulkUpdate(ids: readonly string[], patch: TaskPatch, opts: { force?: boolean } = {}): UndoAction {
     return this.r.db.transaction(() => {
       const before = this.r.tasks.getMany(ids);
-      for (const id of ids) this.update(id, patch);
+      for (const id of ids) this.update(id, patch, opts);
       return {
         label: `Updated ${ids.length} tasks`,
         undo: () =>
@@ -490,25 +540,54 @@ export class TaskService {
             for (const b of before) {
               const restore: TaskPatch = {};
               for (const k of Object.keys(patch) as (keyof TaskPatch)[]) (restore as Record<string, unknown>)[k] = b[k as keyof Task];
-              this.update(b.id, restore);
+              this.update(b.id, restore, { force: true });
             }
           }),
       };
     });
   }
 
-  bulkComplete(ids: readonly string[]): UndoAction {
+  bulkComplete(ids: readonly string[], opts: { force?: boolean } = {}): UndoAction {
     return this.r.db.transaction(() => {
       // Skip tasks closed by an earlier completion in this batch (e.g. a selected subtask of a selected parent).
       const undos: UndoAction[] = [];
       for (const id of ids) {
         const t = this.r.tasks.get(id);
-        if (t && isOpenStatus(t.status)) undos.push(this.complete(id));
+        if (t && isOpenStatus(t.status)) undos.push(this.complete(id, opts));
       }
       return {
         label: `Completed ${undos.length} tasks`,
         undo: () => this.r.db.transaction(() => [...undos].reverse().forEach((u) => u.undo())),
       };
+    });
+  }
+
+  // --- Dependencies (spec 4.4) ---------------------------------------------
+
+  /** `taskId` cannot be finished before `dependsOnId`. Rejects self-links and cycles. */
+  addDependency(taskId: string, dependsOnId: string): UndoAction {
+    return this.r.db.transaction(() => {
+      const task = this.must(taskId);
+      const pre = this.must(dependsOnId);
+      if (taskId === dependsOnId) throw new ValidationError('A task cannot depend on itself');
+      if (task.deletedAt || pre.deletedAt) throw new ValidationError('That task is in Trash');
+      if (this.r.dependencies.reaches(dependsOnId, taskId)) {
+        throw new ValidationError(`That would create a circular dependency: “${pre.title}” already depends on “${task.title}”, directly or indirectly.`);
+      }
+      this.r.dependencies.add(taskId, dependsOnId);
+      this.r.activity.log('task', taskId, 'dependency.added', { dependsOn: dependsOnId, title: pre.title });
+      return {
+        label: `“${task.title}” now waits for “${pre.title}”`,
+        undo: () => this.r.db.transaction(() => this.r.dependencies.remove(taskId, dependsOnId)),
+      };
+    });
+  }
+
+  removeDependency(taskId: string, dependsOnId: string): UndoAction {
+    return this.r.db.transaction(() => {
+      this.r.dependencies.remove(taskId, dependsOnId);
+      this.r.activity.log('task', taskId, 'dependency.removed', { dependsOn: dependsOnId });
+      return { label: 'Dependency removed', undo: () => this.r.db.transaction(() => this.r.dependencies.add(taskId, dependsOnId)) };
     });
   }
 

@@ -160,6 +160,11 @@ export class TaskRepository {
     return this.db.all(`${SELECT} WHERE t.project_id = ? AND t.deleted_at IS NULL ${status} ${ORDER}`, [projectId]).map(mapTask);
   }
 
+  /** Every non-deleted task outside archived/deleted projects (filters decide open/closed). */
+  listForFilters(): Task[] {
+    return this.db.all(`${SELECT} WHERE t.deleted_at IS NULL AND ${VISIBLE_PROJECT} ${ORDER}`).map(mapTask);
+  }
+
   listInbox(): Task[] {
     return this.db.all(`${SELECT} WHERE t.project_id IS NULL AND t.deleted_at IS NULL AND ${OPEN} ${ORDER}`).map(mapTask);
   }

@@ -80,3 +80,17 @@ export class NotFoundError extends Error {
     this.name = 'NotFoundError';
   }
 }
+
+/**
+ * The action is allowed but probably unintended (e.g. completing a blocked task).
+ * The UI asks the user and, if they agree, repeats the action with `force`.
+ */
+export class ConfirmationRequired extends Error {
+  constructor(
+    message: string,
+    public readonly confirmLabel: string,
+  ) {
+    super(message);
+    this.name = 'ConfirmationRequired';
+  }
+}
