@@ -66,6 +66,11 @@ history, loop prevention, limits and test mode; Home Assistant webhooks; text,
 email and meeting-note task extraction as suggestions.
 
 ## Phase 4 — Productivity and integrations
+
+**Scope note (2026-11-16):** Focus is for personal, non-work life. Clinical/medical use (patient data, NHS
+governance) is out of scope. Adding tasks from Gmail, Outlook and Teams is covered by Android Share → Focus
+(Capture); no email-account sign-in is planned.
+
 Insights dashboard (completion, trends, distribution, recurring completion);
 time tracking reports and log correction; goals and streaks; external calendar
 integration layer (read-only display + availability, optional export);
