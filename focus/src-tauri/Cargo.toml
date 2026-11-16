@@ -19,12 +19,22 @@ serde_json = "1"
 tauri-plugin-notification = "=2.7.0"
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
 tauri-plugin-deep-link = "=2.6.3"
+# Background sync engine (Rust port of src/services/sync-service.ts; see src/bgsync.rs).
+rusqlite = { version = "0.32", features = ["bundled"] }
+aes-gcm = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+flate2 = "1"
+base64 = "0.22"
 
 [target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
 tauri-plugin-single-instance = { version = "2.5", features = ["deep-link"] }
 keyring = "4.2"
 # Local API (Phase 4): desktop only, off by default.
 tiny_http = "0.12"
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
 
 [dev-dependencies]
 tempfile = "3"

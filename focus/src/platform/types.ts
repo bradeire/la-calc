@@ -106,6 +106,8 @@ export interface Platform {
    * Downloads folder (returns the path). Android: system share sheet (returns null).
    */
   exportFile(name: string, data: Uint8Array | string, mime: string): Promise<string | null>;
+  /** Android: schedule or cancel periodic background sync while the app is closed. */
+  backgroundSync?: (enabled: boolean) => Promise<void>;
   /** Present only where Focus can run a local API (the desktop app). */
   localApi?: LocalApiAdapter;
   /** Acquire exclusive ownership of the database; false if another window has it. */

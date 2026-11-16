@@ -11,7 +11,18 @@ export function useSyncRunner() {
   useEffect(() => {
     if (!onboarded || app.platform.kind === 'memory') return;
     let debounce: ReturnType<typeof setTimeout> | null = null;
+    // Keep Android's background job in step with whether sync is on.
+    let scheduled: boolean | null = null;
+    const schedule = () => {
+      const on = app.sync.status().enabled;
+      if (!app.platform.backgroundSync || on === scheduled) return;
+      scheduled = on;
+      void app.platform.backgroundSync(on).catch(() => {
+        scheduled = null;
+      });
+    };
     const run = () => {
+      schedule();
       if (!app.sync.status().enabled) return;
       void app.sync.syncNow().catch(() => {});
     };

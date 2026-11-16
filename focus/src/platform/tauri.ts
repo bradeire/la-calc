@@ -177,6 +177,7 @@ export function createTauriPlatform(): Platform {
     links: tauriLinks,
     exportFile: tauriExport,
     localApi: isMobile() ? undefined : tauriLocalApi,
+    backgroundSync: /Android/i.test(navigator.userAgent) ? async (enabled) => void (await invoke<boolean>('background_sync', { enabled })) : undefined,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,
   };

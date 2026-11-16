@@ -9,7 +9,14 @@ class MainActivity : TauriActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     enableEdgeToEdge()
     intent = asFocusLink(intent)
+    // Background sync must not replace the database while the app has it open.
+    FocusNative.setAppAlive(true)
     super.onCreate(savedInstanceState)
+  }
+
+  override fun onDestroy() {
+    FocusNative.setAppAlive(false)
+    super.onDestroy()
   }
 
   override fun onNewIntent(intent: Intent) {

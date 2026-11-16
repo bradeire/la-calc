@@ -45,6 +45,7 @@ pub mod android {
 
     pub struct SecureStore<R: Runtime>(pub PluginHandle<R>);
     pub struct Share<R: Runtime>(pub PluginHandle<R>);
+    pub struct BackgroundSync<R: Runtime>(pub PluginHandle<R>);
 
     /// Registers Focus's own Android plugins (SecureStorePlugin.kt, SharePlugin.kt).
     pub fn init<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
@@ -54,9 +55,21 @@ pub mod android {
                 app.manage(SecureStore(store));
                 let share = api.register_android_plugin("uk.periopdigital.focus", "SharePlugin")?;
                 app.manage(Share(share));
+                let bg = api.register_android_plugin("uk.periopdigital.focus", "BackgroundSyncPlugin")?;
+                app.manage(BackgroundSync(bg));
                 Ok(())
             })
             .build()
+    }
+
+    #[derive(Serialize)]
+    struct BackgroundArgs<'a> {
+        enabled: bool,
+        root: &'a str,
+    }
+    pub fn configure_background_sync<R: Runtime>(app: &tauri::AppHandle<R>, enabled: bool, root: &str) -> Result<(), String> {
+        let bg = app.try_state::<BackgroundSync<R>>().ok_or_else(|| "Background sync is not ready".to_string())?;
+        bg.0.run_mobile_plugin::<()>("configure", BackgroundArgs { enabled, root }).map_err(|e| e.to_string())
     }
 
     #[derive(Serialize)]

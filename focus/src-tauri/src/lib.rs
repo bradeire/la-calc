@@ -1,5 +1,6 @@
 mod http;
 mod exports;
+pub mod bgsync;
 #[cfg(desktop)]
 mod api;
 mod secrets;
@@ -225,6 +226,22 @@ fn api_respond(state: State<'_, ApiState>, id: u64, status: u16, body: String) {
     let _ = (state, id, status, body);
 }
 
+/// Android: schedule (or cancel) the periodic background sync of the app's database.
+#[tauri::command]
+async fn background_sync(app: tauri::AppHandle, enabled: bool) -> Result<bool, String> {
+    #[cfg(target_os = "android")]
+    {
+        let root = app.path().app_data_dir().map_err(|e| e.to_string())?;
+        secrets::android::configure_background_sync(&app, enabled, &root.to_string_lossy())?;
+        return Ok(true);
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = (&app, enabled);
+        Ok(false)
+    }
+}
+
 #[tauri::command]
 async fn http_request(request: http::HttpRequest) -> Result<http::HttpResponse, String> {
     http::send(request).await
@@ -267,7 +284,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             db_load, db_load_previous, db_save, db_snapshot, file_put, file_get, file_exists, file_delete, file_keys, data_dir,
-            secret_set, secret_get, secret_delete, http_request, export_file, api_start, api_stop, api_respond
+            secret_set, secret_get, secret_delete, http_request, export_file, api_start, api_stop, api_respond, background_sync
         ])
         .run(tauri::generate_context!())
         .expect("error while running Focus");

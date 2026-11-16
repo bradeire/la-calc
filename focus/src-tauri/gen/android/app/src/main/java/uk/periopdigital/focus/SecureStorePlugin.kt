@@ -28,15 +28,10 @@ class SecretSetArgs {
   lateinit var value: String
 }
 
-/**
- * Secrets (API keys, webhook secrets, calendar addresses) encrypted with an AES-256-GCM key
- * that lives in the Android Keystore and never leaves it. Only "iv:ciphertext" is stored, in
- * the app's private preferences. If the key is lost (e.g. data restored to a new phone), the
- * value reads as missing and the user is asked to enter it again.
- */
-@TauriPlugin
-class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
-  private val prefs by lazy { activity.getSharedPreferences("focus_secure_store", Context.MODE_PRIVATE) }
+/** Keystore-backed encryption shared by the plugin and the background sync worker. */
+object SecureStoreCrypto {
+  private const val ALIAS = "focus-secure-store"
+  private const val PREFS = "focus_secure_store"
 
   private fun key(): SecretKey {
     val ks = KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
@@ -55,14 +50,44 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
   private fun b64(b: ByteArray) = Base64.encodeToString(b, Base64.NO_WRAP)
   private fun unb64(s: String) = Base64.decode(s, Base64.NO_WRAP)
 
+  fun write(context: Context, name: String, value: String) {
+    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+    cipher.init(Cipher.ENCRYPT_MODE, key())
+    val ct = cipher.doFinal(value.toByteArray(Charsets.UTF_8))
+    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(name, b64(cipher.iv) + ":" + b64(ct)).apply()
+  }
+
+  /** The stored value, or null if missing or no longer decryptable (key lost after a restore). */
+  fun read(context: Context, name: String): String? {
+    return try {
+      val stored = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(name, null) ?: return null
+      val (iv, ct) = stored.split(":", limit = 2)
+      val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+      cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, unb64(iv)))
+      String(cipher.doFinal(unb64(ct)), Charsets.UTF_8)
+    } catch (e: Exception) {
+      null
+    }
+  }
+
+  fun delete(context: Context, name: String) {
+    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().remove(name).apply()
+  }
+}
+
+/**
+ * Secrets (API keys, webhook secrets, calendar addresses, the sync key) encrypted with an
+ * AES-256-GCM key that lives in the Android Keystore and never leaves it. Only "iv:ciphertext"
+ * is stored, in the app's private preferences. If the key is lost (e.g. data restored to a new
+ * phone), the value reads as missing and the user is asked to enter it again.
+ */
+@TauriPlugin
+class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
   @Command
   fun set(invoke: Invoke) {
     try {
       val args = invoke.parseArgs(SecretSetArgs::class.java)
-      val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-      cipher.init(Cipher.ENCRYPT_MODE, key())
-      val ct = cipher.doFinal(args.value.toByteArray(Charsets.UTF_8))
-      prefs.edit().putString(args.key, b64(cipher.iv) + ":" + b64(ct)).apply()
+      SecureStoreCrypto.write(activity, args.key, args.value)
       invoke.resolve()
     } catch (e: Exception) {
       invoke.reject("Could not store the secret securely", e)
@@ -74,17 +99,8 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
     val result = JSObject()
     try {
       val args = invoke.parseArgs(SecretKeyArgs::class.java)
-      val stored = prefs.getString(args.key, null)
-      if (stored == null) {
-        result.put("value", null)
-      } else {
-        val (iv, ct) = stored.split(":", limit = 2)
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, unb64(iv)))
-        result.put("value", String(cipher.doFinal(unb64(ct)), Charsets.UTF_8))
-      }
+      result.put("value", SecureStoreCrypto.read(activity, args.key))
     } catch (e: Exception) {
-      // Undecryptable (key lost after a restore or reinstall): treat as missing.
       result.put("value", null)
     }
     invoke.resolve(result)
@@ -94,14 +110,10 @@ class SecureStorePlugin(private val activity: Activity) : Plugin(activity) {
   fun delete(invoke: Invoke) {
     try {
       val args = invoke.parseArgs(SecretKeyArgs::class.java)
-      prefs.edit().remove(args.key).apply()
+      SecureStoreCrypto.delete(activity, args.key)
       invoke.resolve()
     } catch (e: Exception) {
       invoke.reject("Could not delete the secret", e)
     }
-  }
-
-  companion object {
-    private const val ALIAS = "focus-secure-store"
   }
 }
