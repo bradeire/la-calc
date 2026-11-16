@@ -121,14 +121,17 @@ _Last updated: 2026-11-16 (session 5 — Phase 4)._
 
 | Feature | Status | Evidence / notes |
 |---|---|---|
-| End-to-end encrypted sync via the user's own relay (Cloudflare Worker + D1, free plan) | Tested | two full app instances; two browser profiles in E2E; relay also run in Cloudflare's local runtime (workerd) |
-| Change capture by database triggers (every write, nothing echoes back, off until sync is enabled) | Tested | |
-| Last-writer-wins per row; deletes and Trash purges sync; same-named labels and duplicate repeat rules settled identically on all devices | Tested | |
-| Joining merges both devices' existing data | Tested | |
-| Offline: changes queue and send later; rows whose parent hasn't arrived wait | Tested | |
-| Set-up: sync key, QR code, focus://sync join link (confirmed before joining) | Tested (browser) | QR scanning by a phone camera not verified on hardware |
-| Time-based automations run on one chosen device | Implemented | |
-| Not synced: attachment files, external calendars, webhooks, AI settings, theme/layout, local API | — | by design (per-device secrets or large files) |
+| End-to-end encrypted sync via a relay (Cloudflare Worker + D1): yours, or a hosted one in release builds | Tested | two app instances; two browser profiles in E2E; relay also run in workerd |
+| Field-level merge with hybrid logical clocks (different-field edits both survive; skewed clocks can't win later) | Tested | fast-clock test confirms the stored clock really was ahead |
+| Deletes, Trash purges, edit-after-delete, same-named labels, duplicate repeat rules | Tested | |
+| Joining merges both devices' existing data; works after compaction | Tested | compaction bug found and fixed |
+| Compaction via snapshots; late joiners load the snapshot | Tested | |
+| Attachment files sync encrypted (per-run budget) | Tested | |
+| Relay: quotas + usage, rate limits, new-vault limits, licences with expiry, upgrade in place | Tested | |
+| Recovery sheet; set-up requires confirming the key is saved | Tested (browser) | |
+| Android background sync (WorkManager + Rust engine) | Tested (engine) / Implemented (Android) | Rust engine matches TS on shared vectors and in a cross-engine run; the Android job is compiled into the APK but not run on a phone yet |
+| Set-up: key, QR, focus://sync link; licence field; default hosted relay per build | Tested (browser) | QR scanning by a phone camera not verified |
+| Not synced: external calendars, webhooks, AI settings, theme/layout, local API | — | per-device secrets |
 
 ## Not yet started (later phases)
 

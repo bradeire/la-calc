@@ -8,8 +8,10 @@ Settings → **Sync between devices**. You need a relay once: a free Cloudflare 
 `tools/focus-sync-relay` (the app shows the steps and can copy the code). Then **Set up on this device** creates a
 sync key; on the other device choose **Join from another device** and enter the relay address and key — or scan the
 QR code / open the join link. Syncs automatically (on start, every minute, after changes, when the app comes to the
-foreground). Everything is encrypted on the device; the relay sees only ciphertext. Keep the sync key safe: a new
-device can't join without it.
+foreground; on Android also every ~15 minutes while closed). Everything is encrypted on the device; the relay sees
+only ciphertext. Edits to different fields on two devices both survive. Save the recovery sheet when you set up:
+without the sync key a new device can't join, and nobody can reset it. Attachment files sync too.
+Running a hosted relay for others: see `tools/focus-sync-relay/README.md`.
 
 ## Claude on your computer (local API + connector)
 

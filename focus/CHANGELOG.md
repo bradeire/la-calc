@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0 — 2026-11-16 (sync ready for release)
+
+### Added
+- Field-level merging with hybrid logical clocks: edits to different fields on two devices both survive, and a
+  device with a wrong clock can't override later edits.
+- Relay hardening for a hosted service: storage quotas and usage, rate limits, limits on new vaults, optional
+  sync licences (with expiry), snapshots that compact history, encrypted attachment files.
+- Attachment files now sync (encrypted).
+- Recovery sheet for the sync key, and a required "I've saved my key" step.
+- Android background sync every ~15 minutes while Focus is closed (Rust engine + WorkManager).
+- Builds can offer a default hosted relay (`VITE_SYNC_RELAY_URL`).
+
+### Fixed
+- Joining failed after the relay had compacted history; the relay returned one batch per page when no limit was
+  given.
+
 ## 0.6.0 — 2026-11-16 (sync between devices)
 
 ### Added

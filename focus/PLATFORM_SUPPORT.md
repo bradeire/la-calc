@@ -87,8 +87,9 @@ Native notification scheduling and voice on Android are still to be assessed on 
 - **Calendar subscriptions in the browser** are usually blocked by the calendar servers (CORS); import a .ics file
   instead, or use the desktop/Android app.
 - **Sync:** desktop and Android keep the sync key in secure storage; the browser keeps it for the session only and
-  asks for it again after a restart. Android syncs while Focus is open or brought back to the foreground, not while
-  it is closed.
+  asks for it again after a restart. Android also syncs in the background about every 15 minutes while Focus is
+  closed (WorkManager; Android may delay it to save battery). Attachment files and compaction happen when the app
+  is open.
 - **Voice:** Chrome's recogniser is online by default; on-device recognition is experimental (ADR-012).
 - **App identifier** `uk.periopdigital.focus` is based on the domain your other apps use. It becomes the Android
   package name and is hard to change after a store release, so confirm it before publishing.

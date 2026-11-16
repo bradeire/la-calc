@@ -34,10 +34,12 @@ npm run check       # typecheck + lint + test + build
 | CSV / Todoist / project-file import and export | `tests/transfer.test.ts` | 7 |
 | Local API request handling | `tests/api.test.ts` | 5 |
 | Claude connector (MCP) as a real subprocess | `tests/mcp.test.ts` | 2 |
-| Sync crypto and two-device sync through the real relay code | `tests/sync.test.ts` | 9 |
-| Relay worker (auth, validation, paging, erase) | `tests/relay.test.ts` | 2 |
-| **Total Vitest** | | **278 passing** |
-| Rust: storage, secret names, HTTP validation, export names/base64, local API server (real TCP) | `src-tauri/src/*.rs` | 10 |
+| Sync: crypto, two devices, field merge, clocks, compaction, files, licences | `tests/sync.test.ts` | 18 |
+| Relay worker: auth, quota, rate limits, licences, snapshots, files, upgrade | `tests/relay.test.ts` | 8 |
+| Shared vectors TS ↔ Rust (keys, envelopes, exact merge result) | `tests/sync-vectors.test.ts` | 1 |
+| Rust background engine with TS devices through the relay over HTTP (opt-in: `BGSYNC_E2E=1`) | `tests/bgsync-e2e.test.ts` | 1 (skipped by default) |
+| **Total Vitest** | | **294 passing**, 1 opt-in |
+| Rust: storage, secrets, HTTP, exports, local API, background sync engine (shared vectors) | `src-tauri/src/*.rs` | 13 (+1 driven by the opt-in E2E) |
 | End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | 26 (13 × 2) |
 | Offline reload, accessibility audit (incl. Insights, Time log) | `e2e/quality.spec.ts` | 3 |
 | 5,000-task rendering | `e2e/performance.spec.ts` | 1 |
@@ -84,6 +86,8 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 - Exports did nothing in the native apps (Android WebView ignores browser downloads): exports now go through the
   platform (Downloads folder on desktop, share sheet on Android).
 - The Claude connector exited before finishing a call when its input closed (found in the native run).
+- Sync v2 found: joining after compaction failed; the relay returned one batch per page without `limit`; the
+  Rust engine wrote whole-number REALs as `1.0` (JavaScript writes `1`).
 - Sync review found: enabling sync checked the relay before its address was saved; a first device with no data
   left nothing for the second to join; the relay cached its schema across databases.
 - "Edit survives an immediate reload" became flaky (2 in 12) as the app grew; the browser now keeps a synchronous

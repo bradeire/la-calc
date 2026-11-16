@@ -60,6 +60,14 @@ Settings gained `insightsLayout`, `goals` and `localApi` (validated per key).
 
 Triggers `sync_<table>_<insert|update|delete>` exist on every synced table (see `src/core/sync/tables.ts`).
 
+## Sync v2 (migration 006)
+
+`sync_versions` is replaced by `sync_fields (tbl, row_key, col, version)` and `sync_tombstones (tbl, row_key,
+version)`; `sync_control` gains `hlc_ms` and `hlc_counter`. Triggers record a version per changed field (hybrid
+logical clock) and attachments become a synced table. Existing versions are converted.
+**When adding a column to a synced table:** update `src/core/sync/tables.ts` (a test fails until you do) and drop
+and recreate that table's `sync_<table>_*` triggers in the same migration (see `v6Triggers()`).
+
 ## Migrations
 
 - `migrate(db)` applies pending migrations, **each in its own transaction**; a failure rolls back that migration.
