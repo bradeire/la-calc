@@ -1,7 +1,7 @@
 {
   "name": "focus",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Focus – a local-first, cross-platform personal productivity application",
   "scripts": {
@@ -13,10 +13,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test --trace off",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "tauri": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.23",
+    "@tauri-apps/api": "2.12.4",
     "date-fns": "4.4.0",
     "lucide-react": "1.73.0",
     "react": "19.3.1",
@@ -30,6 +34,7 @@
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.63.0",
     "@tailwindcss/vite": "4.3.5",
+    "@tauri-apps/cli": "2.12.4",
     "@types/node": "22.19.21",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

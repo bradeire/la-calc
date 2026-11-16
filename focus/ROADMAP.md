@@ -19,10 +19,17 @@ per-feature status.
 
 ## Phase 1 — Core application
 
-**Status after session 1:** core workflow complete and tested in the browser. Remaining before Phase 1 sign-off:
-project attachments UI; offline-reload E2E test; list virtualisation check with 10k tasks; accessibility pass
-(screen reader labels audited with axe); touch drag-and-drop for board columns; first Tauri Android/Windows
-shell to confirm persistence works natively (pulled forward from Phase 5 to de-risk ADR-003).
+**Status after session 2:** Phase 1 complete in the browser and in a native Linux build. Done in session 2:
+project attachments, offline reload test, virtualised lists (20k-task benchmarks), automated WCAG AA audit, and a
+Tauri native shell with atomic file storage, verified end to end on Linux.
+
+Carried forward (need hardware or a platform toolchain, not more code):
+- Build and smoke-test the Windows installer on a Windows 11 PC.
+- `tauri android init` + run on a physical Pixel.
+- Manual screen-reader pass (NVDA on Windows, TalkBack on Pixel).
+- Touch drag-and-drop on boards (touch users currently move cards via the project/section picker).
+
+**Next: Phase 2.**
 
 | Work item | Notes |
 |---|---|

@@ -22,7 +22,7 @@ export interface FileStore {
 
 export interface LifecycleAdapter {
   /** App is being hidden/backgrounded — flush now. */
-  onPause(cb: () => void): () => void;
+  onPause(cb: () => void | Promise<void>): () => void;
 }
 
 export interface Platform {

@@ -4,9 +4,10 @@ Status levels (spec §11.7): **Not started** · **In progress** · **Implemented
 **Tested** (automated tests pass) · **Verified on device** (physical hardware).
 
 "Browser" below means headless Chromium via Playwright at desktop size and at Pixel 7 emulated size.
-**No feature has been verified on a physical device yet. No native (Tauri) build exists yet.**
+**No feature has been verified on a physical device yet.** A native Tauri build exists and has been verified on Linux
+(WebKitGTK); Windows and Android builds must be produced on those platforms (see PLATFORM_SUPPORT.md).
 
-_Last updated: 2026-11-14 (session 1)._
+_Last updated: 2026-11-16 (session 2)._
 
 ## Phase 1 — Core application
 
@@ -25,7 +26,7 @@ _Last updated: 2026-11-14 (session 1)._
 | Projects: nested, colour, icon, description, notes, favourites, archive, progress | Tested | |
 | Project sections (add, rename, reorder, delete keeping tasks) | Tested | |
 | Project layouts: List, Board, Table, Calendar (month) | Implemented | Board/Table covered by E2E; per-project default layout persisted |
-| Project attachments | Not started | Schema + service support exist; no UI yet |
+| Project notes and attachments | Tested | E2E: add file, reload, still present |
 | Project templates | Not started | Phase 2 (table exists) |
 | Labels: CRUD, colours, unique names, Quick Add creation, label view | Tested | |
 | Inbox, Today, Upcoming, Search, Trash views | Tested | |
@@ -45,8 +46,11 @@ _Last updated: 2026-11-14 (session 1)._
 | Onboarding: empty / demo data / import; preferences | Tested | |
 | Sample data load and safe removal (user tasks rescued) | Tested | |
 | JSON backup (incl. attachments) and SQLite export, verified restore | Tested | full backup suite → Phase 4 |
-| PWA: manifest, icons, offline service worker | Implemented | build verified; offline reload not yet E2E-tested |
+| PWA: manifest, icons, offline service worker | Tested | E2E offline reload (found and fixed a cache-matching bug) |
 | Responsive mobile + desktop layouts, dark mode | Implemented | screenshots reviewed at 1440×900 and Pixel 7 |
+| Accessibility (WCAG 2.1 AA automated audit) | Tested | axe-core on 9 screens + task detail, light & dark, desktop & Pixel; manual screen-reader test not yet done |
+| Large lists (virtualised over 150 rows) | Tested | 5,000-task Inbox: 0.2 s render; 20,000-task query benchmarks |
+| Native shell (Tauri 2): atomic file storage, single instance, flush on close | Tested (Linux) | Rust unit tests + native persistence round trip under Xvfb |
 
 ## Not yet started (later phases)
 

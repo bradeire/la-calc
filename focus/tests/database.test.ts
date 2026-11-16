@@ -142,6 +142,18 @@ describe('persistence and boot', () => {
     expect(rec.app.repos.tasks.listInbox().map((t) => t.title)).toContain('Good data');
   });
 
+  it('persists a new database at start-up and does not re-run migrations next launch', async () => {
+    const sql = await getSql();
+    const platform = createMemoryPlatform();
+    const first = await boot(sql, platform);
+    if (first.status !== 'ready') throw new Error(first.status);
+    expect(platform.persistence.current).not.toBeNull();
+    first.app.dispose();
+    const second = await boot(sql, platform);
+    if (second.status !== 'ready') throw new Error(second.status);
+    expect(platform.persistence.snapshots.size).toBe(0); // no pre-migration snapshot: nothing to migrate
+  });
+
   it('a second window is refused rather than overwriting data', async () => {
     const sql = await getSql();
     const platform = createMemoryPlatform();

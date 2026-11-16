@@ -4,7 +4,7 @@ import initSqlJs from 'sql.js';
 import wasmUrl from 'sql.js/dist/sql-wasm-browser.wasm?url';
 import { boot, type BootResult } from './app/bootstrap';
 import type { AppContainer } from './app/container';
-import { createWebPlatform } from './platform/web';
+import { createWebPlatform, isTauri } from './platform/web';
 import { AppProvider } from './ui/hooks';
 import { AppShell } from './ui/layout/AppShell';
 import './index.css';
@@ -112,7 +112,9 @@ async function main() {
   let result: BootResult;
   try {
     const sql = await initSqlJs({ locateFile: () => wasmUrl });
-    result = await boot(sql, createWebPlatform());
+    // The native adapter is loaded only inside the Tauri shell, keeping it out of the web path.
+    const platform = isTauri() ? (await import('./platform/tauri')).createTauriPlatform() : createWebPlatform();
+    result = await boot(sql, platform);
   } catch (err) {
     result = { status: 'error', error: err instanceof Error ? err : new Error(String(err)) };
   }
@@ -123,7 +125,7 @@ async function main() {
   );
   document.getElementById('boot-splash')?.remove();
 
-  if ('serviceWorker' in navigator && import.meta.env.PROD && location.protocol.startsWith('http')) {
+  if ('serviceWorker' in navigator && import.meta.env.PROD && location.protocol.startsWith('http') && !isTauri()) {
     navigator.serviceWorker.register('./sw.js').catch((err: unknown) => console.warn('Offline support unavailable', err));
   }
 }

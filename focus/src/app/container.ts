@@ -45,13 +45,14 @@ export class Saver {
     this.timer = setTimeout(() => void this.flush(), this.delayMs);
   }
 
-  flush(): Promise<void> {
+  /** Persist now. `force` saves even if nothing changed since the saver was created (start-up, migrations). */
+  flush(force = false): Promise<void> {
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
     }
     this.chain = this.chain.then(async () => {
-      if (this.db.version === this.savedVersion && this.status !== 'error') return;
+      if (!force && this.db.version === this.savedVersion && this.status !== 'error') return;
       const version = this.db.version;
       this.set('saving');
       try {
@@ -109,7 +110,7 @@ export function createContainer(
     const data = new DataService(repos, { tasks, projects, labels }, platform.files, sql);
     const saver = new Saver(db, platform);
     teardown.push(db.subscribe(() => saver.schedule()));
-    teardown.push(platform.lifecycle.onPause(() => void saver.flush()));
+    teardown.push(platform.lifecycle.onPause(() => saver.flush()));
     return { repos, tasks, projects, labels, content, quickAdd, data, saver };
   };
 

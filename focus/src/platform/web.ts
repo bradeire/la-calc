@@ -103,14 +103,15 @@ export class IndexedDbFileStore implements FileStore {
 
 export const webLifecycle: LifecycleAdapter = {
   onPause(cb) {
-    const vis = () => document.visibilityState === 'hidden' && cb();
+    const run = () => void cb();
+    const vis = () => document.visibilityState === 'hidden' && run();
     document.addEventListener('visibilitychange', vis);
-    window.addEventListener('pagehide', cb);
-    window.addEventListener('beforeunload', cb);
+    window.addEventListener('pagehide', run);
+    window.addEventListener('beforeunload', run);
     return () => {
       document.removeEventListener('visibilitychange', vis);
-      window.removeEventListener('pagehide', cb);
-      window.removeEventListener('beforeunload', cb);
+      window.removeEventListener('pagehide', run);
+      window.removeEventListener('beforeunload', run);
     };
   },
 };
@@ -144,3 +145,6 @@ export function createWebPlatform(): Platform {
     acquireLock,
   };
 }
+
+/** True inside the Tauri native shell. */
+export const isTauri = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;

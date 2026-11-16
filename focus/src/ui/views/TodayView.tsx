@@ -50,10 +50,17 @@ export function TodayView() {
             <TaskList tasks={overdue} tree={false} showProject ariaLabel="Overdue tasks" />
           </GroupHeading>
         )}
-        <GroupHeading title={overdue.length ? 'Today' : formatLongDate(today, prefs)} count={rest.length}>
-          <TaskList tasks={rest} tree={false} showProject hideDate ariaLabel="Today’s tasks" />
-          <AddTaskRow defaults={{ scheduledDate: today }} />
-        </GroupHeading>
+        {overdue.length ? (
+          <GroupHeading title="Today" count={rest.length}>
+            <TaskList tasks={rest} tree={false} showProject hideDate draggable ariaLabel="Today’s tasks" />
+            <AddTaskRow defaults={{ scheduledDate: today }} />
+          </GroupHeading>
+        ) : (
+          <div className="mt-1">
+            <TaskList tasks={rest} tree={false} showProject hideDate draggable ariaLabel="Today’s tasks" />
+            <AddTaskRow defaults={{ scheduledDate: today }} />
+          </div>
+        )}
         {tasks.length === 0 && (
           <EmptyState
             icon={<CalendarCheck size={26} />}

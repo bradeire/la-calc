@@ -232,3 +232,20 @@ touch adapters.
 but no Android SDK/NDK and no WebKitGTK, and cannot build Windows binaries.
 Native builds are therefore *not* produced or claimed in this session; see
 PLATFORM_SUPPORT.md.
+
+---
+
+## ADR-009 — Native storage via custom Tauri commands with raw binary IPC
+
+**Status:** Accepted (2026-11-16)
+
+**Decision.** The Tauri shell exposes a small set of Focus-specific commands (`db_load`, `db_save`,
+`db_snapshot`, `file_put/get/delete/keys`) implemented in `src-tauri/src/storage.rs`, rather than granting the
+webview the general `fs` plugin. Bytes travel as raw IPC bodies (`tauri::ipc::Request`/`Response`), not JSON arrays,
+so a 20 MB database saves in one copy.
+
+**Why.** (1) Least privilege: the webview can only touch Focus's own data folder, and every name is validated
+against path traversal. (2) Atomic writes and rotation live in one audited place. (3) Avoids JSON-encoding large
+byte arrays.
+
+**Verified.** Linux/WebKitGTK build: create task → kill process → relaunch → task present (session 2).

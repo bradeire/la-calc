@@ -14,11 +14,16 @@ npm run check       # typecheck + lint + test + build
 |---|---|---|
 | Recurrence engine | `src/core/recurrence/engine.test.ts` | 21 |
 | NLP parser | `src/core/nlp/parser.test.ts` | 73 |
-| Database, migrations, boot, recovery | `tests/database.test.ts` | 10 |
+| Database, migrations, boot, recovery | `tests/database.test.ts` | 12 |
 | Task service (lifecycle, subtasks, recurrence, views, time) | `tests/task-service.test.ts` | 22 |
 | Projects, labels, sample data, backup/restore | `tests/data-service.test.ts` | 12 |
-| **Total Vitest** | | **138 passing** |
-| End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | **24 passing** (12 × 2) |
+| Performance (20,000 tasks) | `tests/performance.test.ts` | 1 |
+| **Total Vitest** | | **141 passing** |
+| Rust storage (atomic save, rotation, path-escape rejection) | `src-tauri/src/storage.rs` | 3 |
+| End-to-end (desktop + Pixel 7 emulation) | `e2e/core.spec.ts` | 26 (13 × 2) |
+| Offline reload, accessibility audit | `e2e/quality.spec.ts` | 3 |
+| 5,000-task rendering | `e2e/performance.spec.ts` | 1 |
+| **Total Playwright** | | **30 passing** (2 desktop-only tests skipped on Pixel) |
 
 Integration tests run on sql.js in Node, i.e. the same SQLite engine the app ships, not a mock.
 The in-memory platform (`src/platform/memory.ts`) is used only in tests.
@@ -31,6 +36,11 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 - `DROP TABLE` with foreign keys enabled fires delete triggers; the down-migration now drops triggers first.
 - Quick Add measured its textarea before the native dialog opened (height 0).
 - Menus opened from Quick Add rendered behind the modal dialog (browser top layer); popovers now render inside an open dialog.
+- Every task insert scanned all top-level tasks (missing index) — 5.5× faster after migration 002.
+- 5,000-row lists took 4.8 s to render — now virtualised (0.2 s).
+- The installed PWA did not work offline: cached modules never matched because of `Vary: Origin`.
+- "Add file" did nothing while the attachments section was collapsed.
+- A new database was not written to storage until the first edit, so migrations repeated on every launch.
 
 ## Manual checks per release
 
@@ -41,7 +51,14 @@ The in-memory platform (`src/platform/memory.ts`) is used only in tests.
 5. Export JSON + SQLite backup; restore into a fresh profile.
 6. Dark mode, 130 % text size, reduced motion, keyboard-only navigation.
 
+## Native checks (Linux, under Xvfb)
+
+```bash
+cd src-tauri && cargo test          # storage unit tests
+npx tauri build --debug --no-bundle # then launch, add a task, kill, relaunch: task must persist
+```
+
 ## Not yet tested
 
-Physical devices (any), native Tauri builds, multi-tab lock in a real browser, offline reload of the PWA,
-screen readers (TalkBack/NVDA/VoiceOver), performance at 10k+ tasks.
+Physical devices (any), Windows and Android native builds, multi-tab lock in a real browser,
+manual screen-reader testing (TalkBack/NVDA/VoiceOver).

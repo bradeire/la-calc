@@ -56,8 +56,9 @@ export async function boot(sql: SqlJsStatic, platform: Platform): Promise<BootRe
         throw err;
       }
       const app = createContainer(sql, (b) => new SqlJsDriver(sql, b), db, platform);
-      if (recovered) app.saver.schedule();
-      await app.saver.flush();
+      // Always persist at start-up: a new database must exist on disk, and a migrated
+      // one must be saved so the migration (and its snapshot) does not repeat next launch.
+      await app.saver.flush(true);
       return { status: 'ready', app, recovered };
     };
 

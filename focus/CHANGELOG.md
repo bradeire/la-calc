@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.0 — 2026-11-16 (Phase 1 completion)
+
+### Added
+- Native desktop/mobile shell (Tauri 2): SQLite stored as a real file with atomic saves, rotation and snapshots;
+  single-instance guard; flush before window close; per-user Windows installer configuration; app icons.
+- Project notes and attachments.
+- Virtualised task lists for large views.
+- Automated accessibility audit, offline test, performance tests.
+
+### Changed
+- Higher-contrast secondary text, accessible accent palette, readable label colours, calendar ARIA structure.
+- Database migration 002 (sibling-order index).
+
+### Fixed
+- Quick Add menus appeared behind the dialog.
+- Installed web app failed to load offline.
+- "Add file" did nothing while the attachments section was collapsed.
+- New databases weren't saved until the first edit.
+- Upcoming showed "Today" for timed tasks on other days.
+
 ## 0.1.0 — 2026-11-14 (Phase 1, first session)
 
 ### Added

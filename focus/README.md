@@ -3,8 +3,9 @@
 A local-first personal productivity app: tasks, projects, subtasks, natural-language Quick Add, recurring tasks,
 and a calm, fast interface for phone and desktop. **Your data stays on your device.** No account, no cloud, no tracking.
 
-> Status: **Phase 1 in progress** (see [FEATURES.md](FEATURES.md)). Runs today as a web app / installable PWA.
-> Native Android, Windows, macOS and iOS packages are planned (Phase 5) and **not yet built or device-tested**.
+> Status: **Phase 1 complete** (see [FEATURES.md](FEATURES.md)). Runs as a web app / installable PWA, and as a
+> native desktop app via Tauri (verified on Linux). Windows and Android builds must be made on those platforms —
+> see [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md). Nothing has been tested on physical devices yet.
 
 ## Quick start
 
@@ -18,6 +19,8 @@ npm run build      # production build in dist/ (relative paths; host anywhere)
 npm run preview    # serve the production build
 npm run check      # typecheck, lint, tests, build
 npm run e2e        # browser tests (desktop + Pixel 7 emulation)
+npm run desktop:dev    # native app (needs Rust; see PLATFORM_SUPPORT.md)
+npm run desktop:build  # native installer for the current OS
 ```
 
 The production build is static files: host `dist/` on any HTTPS server, open it in Chrome on Android or
