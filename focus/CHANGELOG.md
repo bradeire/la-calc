@@ -11,6 +11,7 @@
   subtasks, task suggestions, project summary, filter from words, template drafts, plan review, AI capture.
 - Voice dictation in Quick Add with clear online/on-device disclosure.
 - Native: OS keychain for secrets and Rust-side HTTP for integrations.
+- First Android build: signed arm64 release APK (Tauri Android project in `src-tauri/gen/android`).
 
 ### Fixed
 - Edits could be lost when the page was reloaded or closed immediately after a change.

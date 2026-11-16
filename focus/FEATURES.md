@@ -97,7 +97,7 @@ _Last updated: 2026-11-16 (session 4 — Phase 3)._
 ## Not yet started (later phases)
 
 Insights/dashboard, reports, goals, external calendars, integration framework, CSV, local API (Phase 4) ·
-Android/Windows release builds on hardware (Phase 5).
+Android APK builds (signed, arm64) but has not been run on hardware yet; Windows installer build on hardware (Phase 5).
 
 **Navigation note:** Insights (Phase 4) is deliberately *absent* from navigation until it works, rather than shown
 as a placeholder screen.

@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/plugin-notification';
+import { MemorySecretStore } from './web';
 import type { FileStore, HttpAdapter, LifecycleAdapter, NotificationAdapter, PersistenceAdapter, Platform, SecretStore } from './types';
 
 /**
@@ -112,7 +113,8 @@ export function createTauriPlatform(): Platform {
     files: new TauriFileStore(),
     lifecycle: tauriLifecycle,
     notifications: tauriNotifications,
-    secrets: tauriSecrets,
+    // No Android Keystore / iOS Keychain integration yet: keep secrets for the session only there.
+    secrets: /Android|iPhone|iPad/i.test(navigator.userAgent) ? new MemorySecretStore() : tauriSecrets,
     http: tauriHttp,
     // The single-instance plugin guarantees one process owns the database.
     acquireLock: async () => true,

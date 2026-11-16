@@ -5,7 +5,7 @@
 | Web / PWA (Chromium) | — | ✅ | ✅ `vite build` | ✅ Playwright desktop + Pixel 7 emulation, offline reload | ❌ |
 | Linux desktop (Tauri, WebKitGTK) | Dev only | ✅ | ✅ `.deb` release bundle (3.2 MB) | ✅ native persistence round trip under Xvfb | ❌ |
 | Windows 11 (Tauri, WebView2) | Highest | ✅ shared shell + per-user NSIS installer config | ❌ must be built on Windows | ❌ | ❌ |
-| Android (Pixel, Tauri) | Highest | ✅ mobile entry point in Rust; UI touch-ready | ❌ needs Android SDK/NDK (`tauri android init`) | Emulated viewport only | ❌ |
+| Android (Pixel, Tauri) | Highest | ✅ generated project in `src-tauri/gen/android` | ✅ signed release APK, arm64 (11 MB) | Emulated viewport only; APK not run (no emulator in the build container) | ❌ |
 | macOS | Compatibility | Shared | ❌ requires a Mac | ❌ | ❌ |
 | iOS / iPadOS | Compatibility | Shared | ❌ requires macOS + Xcode | ❌ | ❌ |
 
@@ -43,9 +43,32 @@ Settings → Data → Back up (JSON) in one and Restore in the other.
 
 ## Building for Android (Pixel)
 
-Not yet attempted: the build container can't download the Android SDK. On a PC with Android Studio installed
-(SDK, NDK and a JDK), run `npx tauri android init` once, then `npx tauri android dev` with the Pixel connected over
-USB with USB debugging on. Native notification scheduling (Phase 2) will be assessed on Android at that point (ADR-008).
+The APK is built in the cloud session (Android SDK + NDK 29, Rust `aarch64-linux-android`):
+
+```bash
+export ANDROID_HOME=~/android-sdk NDK_HOME=~/android-sdk/ndk/29.0.14206865
+npx tauri android build --target aarch64 --apk --ci
+# → src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk
+```
+
+**Signing.** Release builds are signed with the Focus key (`focus-release.jks`, alias `focus`). The key and its
+password are *not* in the repository: `src-tauri/gen/android/keystore.properties` (git-ignored) points at them:
+
+```properties
+storeFile=/path/to/focus-release.jks
+keyAlias=focus
+password=…
+```
+
+Android only installs an update over an existing app if it is signed with the same key, so **every future build must
+use this key** — otherwise you would have to uninstall Focus (losing its data) first. Without `keystore.properties`
+the release APK is unsigned and will not install.
+
+**Installing on the Pixel:** copy the APK to the phone, open it, and allow "Install unknown apps" for the app you
+opened it from. Android's data is separate from the browser and desktop versions: move tasks with
+Settings → Data → Back up / Restore.
+
+Native notification scheduling and voice on Android are still to be assessed on the device (ADR-008).
 
 ## Known limitations
 
@@ -57,6 +80,7 @@ USB with USB debugging on. Native notification scheduling (Phase 2) will be asse
 - **Browser storage eviction**: the PWA requests persistent storage. Back up until you move to the native app.
 - **Integrations in the browser:** webhook and AI targets must allow cross-origin requests (e.g. Ollama's
   `OLLAMA_ORIGINS`); secrets last for the session only. The desktop app has neither limitation.
+- **Android:** API keys and webhook secrets are kept for the session only (no Android keystore integration yet).
 - **Voice:** Chrome's recogniser is online by default; on-device recognition is experimental (ADR-012).
 - **App identifier** `uk.periopdigital.focus` is based on the domain your other apps use. It becomes the Android
   package name and is hard to change after a store release, so confirm it before publishing.
