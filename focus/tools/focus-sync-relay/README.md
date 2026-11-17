@@ -14,7 +14,8 @@ Two ways to use it:
 
 1. Create a free account at <https://dash.cloudflare.com>.
 2. **Storage & Databases → D1 → Create database**, name it `focus-sync`.
-3. **Workers & Pages → Create → Worker**, name it `focus-sync`, **Deploy**.
+3. **Workers & Pages → Create application → Start with Hello World!** (not "Import a repository" or "Upload
+   static files"; if it isn't shown, pick a Hello World template), name it `focus-sync`, **Deploy**.
 4. **Edit code**, replace everything with [`worker.js`](worker.js) (Focus can copy or save it: Settings → Sync
    between devices → Use my own relay → How to set up your relay), **Deploy**.
 5. The worker's **Settings → Bindings → Add → D1 database**: variable name `DB`, database `focus-sync`, **Save**.

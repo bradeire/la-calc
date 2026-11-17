@@ -52,7 +52,10 @@ function RelayGuide() {
       <ol className="mt-2 flex list-decimal flex-col gap-1.5 pl-5 text-muted">
         <li>Create a free account at dash.cloudflare.com (no card needed for the free plan).</li>
         <li>Storage &amp; Databases → D1 → Create database, name it <code>focus-sync</code>.</li>
-        <li>Workers &amp; Pages → Create → Worker → name it <code>focus-sync</code> → Deploy.</li>
+        <li>
+          Workers &amp; Pages → Create application → <strong>Start with Hello World!</strong> (not “Import a repository” or “Upload static files”; if it isn’t
+          there, choose a Hello World template) → name it <code>focus-sync</code> → Deploy.
+        </li>
         <li>
           Edit code → replace everything with the relay code → Deploy.{' '}
           <span className="inline-flex gap-1">
