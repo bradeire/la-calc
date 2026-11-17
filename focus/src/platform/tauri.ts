@@ -13,6 +13,14 @@ import type { FileStore, HttpAdapter, LifecycleAdapter, LinkAdapter, LocalApiAda
  */
 const asBytes = (buf: ArrayBuffer) => (buf.byteLength ? new Uint8Array(buf) : null);
 
+/**
+ * Binary bodies for Rust. Android's WebView can't hand a raw request body to Rust, so Tauri
+ * falls back to JSON there; send base64 (compact) instead of letting a Uint8Array become a
+ * JSON array of numbers. Rust (lib.rs body_bytes) accepts both forms.
+ */
+const ANDROID = typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent);
+const binaryBody = (bytes: Uint8Array) => (ANDROID ? { b64: toBase64(bytes) } : bytes);
+
 class TauriPersistence implements PersistenceAdapter {
   readonly name = 'SQLite file';
   async load() {
@@ -22,10 +30,10 @@ class TauriPersistence implements PersistenceAdapter {
     return asBytes(await invoke<ArrayBuffer>('db_load_previous'));
   }
   async save(bytes: Uint8Array) {
-    await invoke('db_save', bytes);
+    await invoke('db_save', binaryBody(bytes));
   }
   async saveSnapshot(name: string, bytes: Uint8Array) {
-    await invoke('db_snapshot', bytes, { headers: { 'x-focus-name': name } });
+    await invoke('db_snapshot', binaryBody(bytes), { headers: { 'x-focus-name': name } });
   }
   async requestDurable() {
     return true; // App-data files are not subject to browser eviction.
@@ -34,7 +42,7 @@ class TauriPersistence implements PersistenceAdapter {
 
 class TauriFileStore implements FileStore {
   async put(key: string, data: Blob) {
-    await invoke('file_put', new Uint8Array(await data.arrayBuffer()), { headers: { 'x-focus-key': key } });
+    await invoke('file_put', binaryBody(new Uint8Array(await data.arrayBuffer())), { headers: { 'x-focus-key': key } });
   }
   async get(key: string) {
     if (!(await invoke<boolean>('file_exists', { key }))) return null;

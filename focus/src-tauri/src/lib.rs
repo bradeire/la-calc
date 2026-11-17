@@ -14,11 +14,27 @@ use tauri::{Manager, State};
 /// Serialises all file operations so a save can never interleave with another.
 struct AppStorage(Mutex<Storage>);
 
-fn raw_body(request: &Request<'_>) -> Result<Vec<u8>, String> {
-    match request.body() {
+/// Binary request bodies. Desktop sends raw bytes; Android's WebView can't pass a raw body to
+/// Rust, so Tauri sends JSON there: the app sends `{ "b64": "…" }`, and a plain array of numbers
+/// (what Tauri makes of a Uint8Array on Android) is accepted too.
+fn body_bytes(body: &InvokeBody) -> Result<Vec<u8>, String> {
+    use base64::Engine;
+    match body {
         InvokeBody::Raw(bytes) => Ok(bytes.clone()),
+        InvokeBody::Json(serde_json::Value::Object(o)) => match o.get("b64") {
+            Some(serde_json::Value::String(s)) => base64::engine::general_purpose::STANDARD.decode(s).map_err(|e| format!("invalid base64 body: {e}")),
+            _ => Err("expected a binary request body".into()),
+        },
+        InvokeBody::Json(serde_json::Value::Array(items)) => items
+            .iter()
+            .map(|v| v.as_u64().filter(|n| *n <= 255).map(|n| n as u8).ok_or_else(|| "expected a byte array".to_string()))
+            .collect(),
         InvokeBody::Json(_) => Err("expected a binary request body".into()),
     }
+}
+
+fn raw_body(request: &Request<'_>) -> Result<Vec<u8>, String> {
+    body_bytes(request.body())
 }
 
 fn header<'a>(request: &'a Request<'_>, name: &str) -> Result<&'a str, String> {
@@ -291,4 +307,21 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running Focus");
+}
+
+#[cfg(test)]
+mod body_tests {
+    use super::*;
+
+    #[test]
+    fn binary_bodies_arrive_from_every_platform() {
+        let want = b"SQLite format 3\0abc".to_vec();
+        assert_eq!(body_bytes(&InvokeBody::Raw(want.clone())).unwrap(), want);
+        let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &want);
+        assert_eq!(body_bytes(&InvokeBody::Json(serde_json::json!({ "b64": b64 }))).unwrap(), want);
+        assert_eq!(body_bytes(&InvokeBody::Json(serde_json::json!(want))).unwrap(), want);
+        assert!(body_bytes(&InvokeBody::Json(serde_json::json!([1, 300]))).is_err());
+        assert!(body_bytes(&InvokeBody::Json(serde_json::json!({ "b64": "!!" }))).is_err());
+        assert!(body_bytes(&InvokeBody::Json(serde_json::json!({}))).is_err());
+    }
 }

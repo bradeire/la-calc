@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.4 — 2026-11-17
+
+### Fixed
+- **Android never saved anything** (since the first Android build): every launch started at set-up with no data.
+  Android's WebView can't pass raw binary to the native side, so Tauri sent the database as JSON, which the save
+  command rejected. The app now sends base64 on Android, and the native side accepts raw bytes, base64 or a byte
+  array. Attachments and snapshots had the same fault.
+- Save failures were only shown by a small icon in the sidebar, which phones don't show. A red bar now appears on
+  every screen while changes aren't being saved.
+
 ## 0.7.3 — 2026-11-17
 
 ### Fixed

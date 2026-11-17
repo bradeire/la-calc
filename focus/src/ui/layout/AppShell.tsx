@@ -29,6 +29,7 @@ import { InsightsView } from '../views/InsightsView';
 import { LongTimerPrompt, TimeLogView } from '../views/TimeLogView';
 import { useAutomationRunner } from '../components/ReminderPanel';
 import { Onboarding } from '../views/Onboarding';
+import { SaveFailureBanner } from './SaveFailureBanner';
 
 /** Refresh subscribed calendars shortly after start-up and every 30 minutes (errors are shown in Settings). */
 function useCalendarRefresh(enabled: boolean) {
@@ -198,7 +199,13 @@ export function AppShell() {
     };
   }, [app, settings.onboarded, openQuickAdd]);
 
-  if (!settings.onboarded) return <Onboarding />;
+  if (!settings.onboarded)
+    return (
+      <>
+        <SaveFailureBanner />
+        <Onboarding />
+      </>
+    );
 
   const isFocus = loc.route.name === 'focus';
   const detail = loc.taskId && !isFocus ? loc.taskId : null;
@@ -206,6 +213,7 @@ export function AppShell() {
   return (
     <div className="flex h-[100dvh] overflow-hidden">
       {isDesktop && !collapsed && !isFocus && <Sidebar />}
+      <SaveFailureBanner />
       <main id="main" data-scroll-root className={cx('min-w-0 flex-1 overflow-y-auto scrollbar-thin', !isDesktop && !isFocus && 'pb-36')}>
         <CurrentView />
       </main>
