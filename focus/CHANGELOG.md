@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.5 — 2026-11-17
+
+### Changed
+- **Imported tasks always go to the Inbox.** Tasks from Claude links, Share, Capture and the local API's `text` field
+  no longer choose or create a project from a `#Project` tag; the tag is kept in the task's description as
+  "Suggested project: …" for you to file the task yourself. Dates, priorities and @labels still apply. (An explicit
+  `projectId`/`project` in the local API, or the project picked in the Capture dialog, is still honoured.)
+- The instructions for Claude no longer ask for `#project` tags (paste the new version into Claude).
+
+### Fixed
+- Capture created a new project for every task with the same new `#Project` (it looked the projects up once per
+  import), e.g. four "Home" projects from one daily brief.
+
+### Added
+- Project menu → **Delete project, move tasks to Inbox** (the existing Delete still sends tasks to Trash).
+
 ## 0.7.4 — 2026-11-17
 
 ### Fixed

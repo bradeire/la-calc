@@ -3,7 +3,7 @@
  * (spec 5.6). Results are *suggestions*; nothing is created until the user confirms.
  */
 import { parseIncomingLink } from './links';
-import { parseQuickAdd, type ParseContext, type ParseResult } from './nlp/parser';
+import { parseQuickAdd, stripProjectTags, type ParseContext, type ParseResult } from './nlp/parser';
 
 export interface CaptureSource {
   kind: 'email' | 'notes';
@@ -19,6 +19,8 @@ export interface Candidate {
   sourceLine: string;
   confidence: 'high' | 'medium';
   why: string;
+  /** Projects the text asked for ("#Home"); imports go to the Inbox, so these are only suggestions. */
+  suggestedProjects?: string[];
 }
 
 const HEADER = /^(subject|from|to|cc|date|sent):\s*(.*)$/i;
@@ -103,14 +105,16 @@ export function extractCandidates(raw: string, ctx: ParseContext = {}, opts: Ext
   const out: Candidate[] = [];
   const seen = new Set<string>();
   const add = (text: string, sourceLine: string, confidence: Candidate['confidence'], why: string) => {
-    const clean = tidy(text);
-    if (clean.length < 3 || clean.length > 300) return;
+    const tidied = tidy(text);
+    if (tidied.length < 3 || tidied.length > 300) return;
+    // Imports land in the Inbox: "#Project" becomes a suggestion, never a new project.
+    const { text: clean, suggested } = stripProjectTags(tidied, ctx);
     const key = clean.toLowerCase();
     if (seen.has(key)) return;
     seen.add(key);
     const parsed = parseQuickAdd(clean, ctx);
     if (!parsed.title.trim()) return;
-    out.push({ text: clean, parsed, sourceLine: sourceLine.trim(), confidence, why });
+    out.push({ text: clean, parsed, sourceLine: sourceLine.trim(), confidence, why, ...(suggested.length ? { suggestedProjects: suggested } : {}) });
   };
 
   const lines = source.body.split('\n');

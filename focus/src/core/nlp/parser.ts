@@ -661,3 +661,21 @@ export function parseQuickAdd(input: string, ctx: ParseContext = {}): ParseResul
   result.tokens.sort((a, b) => a.start - b.start);
   return result;
 }
+
+/**
+ * Imported tasks (Claude links, shares, Capture) go to the Inbox for the user to file, so a
+ * "#Project" in the text must not choose or create a project. Removes project tags and returns
+ * the names they asked for (shown to the user as a suggestion). "#name" that means a label stays.
+ */
+export function stripProjectTags(text: string, ctx: ParseContext = {}): { text: string; suggested: string[] } {
+  const suggested: string[] = [];
+  let out = text;
+  for (let i = 0; i < 10; i++) {
+    const parsed = parseQuickAdd(out, ctx);
+    const tok = parsed.project && parsed.tokens.find((t) => t.kind === 'project');
+    if (!parsed.project || !tok) break;
+    suggested.push(parsed.project.name);
+    out = (out.slice(0, tok.start) + out.slice(tok.end)).replace(/[ \t]{2,}/g, ' ').trim();
+  }
+  return { text: out, suggested };
+}

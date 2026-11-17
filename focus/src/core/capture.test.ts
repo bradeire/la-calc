@@ -114,7 +114,8 @@ describe('lists and Focus links', () => {
       '1. Phone dentist Friday #Home',
     ].join('\n');
     const c = pick(reply);
-    expect(c.map((x) => x.text)).toEqual(['Phone dentist Friday #Home', 'Buy paint p2', 'Mow lawn']);
+    expect(c.map((x) => x.text)).toEqual(['Phone dentist Friday', 'Buy paint p2', 'Mow lawn']);
+    expect(c[0]!.suggestedProjects).toEqual(['Home']);
     expect(c.every((x) => x.confidence === 'high')).toBe(true);
   });
 

@@ -1,5 +1,5 @@
 import { extractCandidates, type Candidate, type CaptureSource, type ExtractOptions } from '@/core/capture';
-import { parseQuickAdd } from '@/core/nlp/parser';
+import { parseQuickAdd, stripProjectTags } from '@/core/nlp/parser';
 import type { Task } from '@/core/domain/types';
 import type { Repositories } from '@/data';
 import type { AiService } from './ai-service';
@@ -33,20 +33,28 @@ export class CaptureService {
     const items = await this.ai.extract(source.body || text);
     const ctx = this.ctx();
     const candidates = items.map((i) => {
-      const t = `${i.title}${i.due ? ` by ${i.due}` : ''}`;
-      return { text: t, parsed: parseQuickAdd(t, ctx), sourceLine: i.title, confidence: 'medium' as const, why: 'Suggested by the AI assistant' };
+      const { text: t, suggested } = stripProjectTags(`${i.title}${i.due ? ` by ${i.due}` : ''}`, ctx);
+      return { text: t, parsed: parseQuickAdd(t, ctx), sourceLine: i.title, confidence: 'medium' as const, why: 'Suggested by the AI assistant', ...(suggested.length ? { suggestedProjects: suggested } : {}) };
     });
     return { source, candidates: candidates.filter((c) => c.parsed.title.trim()) };
   }
 
   /** Create the chosen suggestions; the source is recorded in each description. */
-  commit(chosen: { text: string; sourceLine: string }[], source: CaptureSource, projectId: string | null): Task[] {
-    const ctx = this.ctx();
+  /**
+   * Create the chosen suggestions in the Inbox (or the project the user picked in the dialog).
+   * A "#Project" typed into a row never creates or chooses a project: it is kept as a suggestion
+   * in the description, for the user to file the task themselves.
+   */
+  commit(chosen: { text: string; sourceLine: string; suggestedProjects?: string[] }[], source: CaptureSource, projectId: string | null): Task[] {
     const origin = source.kind === 'email' ? `From email “${source.subject ?? '(no subject)'}”${source.from ? ` — ${source.from}` : ''}` : 'Captured from notes';
     return this.r.db.transaction(() =>
-      chosen.map((c) =>
-        this.quickAdd.commit(parseQuickAdd(c.text, ctx), { projectId }, { description: `${origin}\n> ${c.sourceLine.slice(0, 500)}` }),
-      ),
+      chosen.map((c) => {
+        const ctx = this.ctx();
+        const { text, suggested } = stripProjectTags(c.text, ctx);
+        const names = [...new Set([...(c.suggestedProjects ?? []), ...suggested])];
+        const hint = names.length ? `\nSuggested project: ${names.join(', ')}` : '';
+        return this.quickAdd.commit(parseQuickAdd(text, ctx), { projectId }, { description: `${origin}${hint}\n> ${c.sourceLine.slice(0, 500)}` });
+      }),
     );
   }
 }

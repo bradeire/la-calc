@@ -30,6 +30,7 @@ import { LongTimerPrompt, TimeLogView } from '../views/TimeLogView';
 import { useAutomationRunner } from '../components/ReminderPanel';
 import { Onboarding } from '../views/Onboarding';
 import { SaveFailureBanner } from './SaveFailureBanner';
+import { stripProjectTags } from '@/core/nlp/parser';
 
 /** Refresh subscribed calendars shortly after start-up and every 30 minutes (errors are shown in Settings). */
 function useCalendarRefresh(enabled: boolean) {
@@ -182,7 +183,11 @@ export function AppShell() {
       }
       const links = all.filter((l) => l.kind !== 'sync') as Exclude<(typeof all)[number], { kind: 'sync' }>[];
       if (!links.length) return;
-      if (links.length === 1 && links[0]!.kind === 'add') openQuickAdd({}, links[0]!.text);
+      // Linked tasks land in the Inbox: a "#Project" from the link never picks or creates a project.
+      if (links.length === 1 && links[0]!.kind === 'add') {
+        const ctx = { projects: app.repos.projects.list(), labels: app.repos.labels.list() };
+        openQuickAdd({ projectId: null }, stripProjectTags(links[0]!.text, ctx).text);
+      }
       else {
         ui.closeQuickAdd();
         ui.openCapture(links.map((l) => l.text).join('\n'), { list: true });

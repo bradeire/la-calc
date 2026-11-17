@@ -66,10 +66,11 @@ export function assistantInstructions(relayUrl: string | null): string {
   const base = relayUrl ? openPageBase(relayUrl) : 'focus://';
   return `When I ask you to add tasks to Focus (my to-do app), reply with one Markdown link per task in this form:
 [Task title and details](${base}add?text=URL-ENCODED-TEXT)
-Write the text the way I'd type it in Focus Quick Add, e.g. "Phone dentist Friday 10am #Home p2 @calls":
+Write the text the way I'd type it in Focus Quick Add, e.g. "Phone dentist Friday 10am p2 @calls":
 - dates/times in plain English: today, tomorrow, Fri 3pm, 20 Nov, every Monday, every 4 weeks after completion
 - deadline: "by 20 November"; duration: "for 30m"; start: "starts Monday"
-- #Project, @label, priority p1 (highest) to p4
+- @label, priority p1 (highest) to p4
+- no #project tags: Focus puts these tasks in my Inbox and I file them myself (if you think a project fits, say so in the plain list instead)
 Percent-encode the text (space = %20, # = %23, @ = %40, & = %26).
 For a whole list at once, also give one link: [Add all](${base}capture?text=ONE-TASK-PER-LINE-URL-ENCODED) with lines separated by %0A.
 Then show the same tasks as a plain list too, so I can copy it into Focus if a link doesn't open.`;

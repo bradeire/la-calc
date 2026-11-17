@@ -71,6 +71,8 @@ instructions). Claude then replies with links such as
 [Add all](focus://capture?text=Buy%20milk%0ARing%20the%20garage)
 ```
 
+- Imported tasks go to the **Inbox**: a `#Project` in a link, share or Capture never chooses or creates a project
+  (it's kept as "Suggested project: …" in the description). Dates, priority and @labels still apply.
 - `focus://add?text=…` opens **Quick Add** filled in; `focus://capture?text=…` (or several lines) opens **Capture**
   so you can tick which tasks to create. **Nothing is created until you confirm**, so a link from anyone is harmless.
 - Text is capped (500 characters for one task, 20,000 for capture); control characters are removed; other actions

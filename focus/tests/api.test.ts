@@ -20,7 +20,9 @@ describe('local API', () => {
     const home = app.projects.create({ name: 'Home' });
     const a = call('POST', '/v1/tasks', { text: 'Phone dentist tomorrow 10am #Home p2 @calls' });
     expect(a.status).toBe(201);
-    expect(a.body.task).toMatchObject({ title: 'Phone dentist', project: 'Home', priority: 2, scheduledDate: '2026-11-17', scheduledTime: '10:00', labels: ['calls'] });
+    // "#Home" in text is only a suggestion: imported tasks go to the Inbox for the user to file.
+    expect(a.body.task).toMatchObject({ title: 'Phone dentist', project: null, priority: 2, scheduledDate: '2026-11-17', scheduledTime: '10:00', labels: ['calls'] });
+    expect(a.body.task!.description).toContain('Suggested project: Home');
     const b = call('POST', '/v1/tasks', { title: 'Buy paint', project: 'home', deadline: '2026-11-30', labels: ['diy'] });
     expect(b.body.task).toMatchObject({ projectId: home.id, deadline: '2026-11-30', labels: ['diy'] });
 

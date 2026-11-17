@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { applyFilter } from '@/core/filters/evaluate';
 import { isOpenStatus, type Task } from '@/core/domain/types';
-import { parseQuickAdd } from '@/core/nlp/parser';
+import { parseQuickAdd, stripProjectTags } from '@/core/nlp/parser';
 import type { Repositories } from '@/data';
 import type { AutomationService } from './automation-service';
 import { ConfirmationRequired, NotFoundError, ValidationError } from './events';
@@ -175,7 +175,11 @@ export class ApiService {
         let t: Task;
         if (b.text) {
           const ctx = { now: this.now(), projects: this.svc.filters.lookups().projects, labels: this.svc.filters.lookups().labels };
-          t = this.svc.quickAdd.commit(parseQuickAdd(b.text, ctx), { projectId: b.projectId ?? undefined });
+          // "#Project" in text never creates or picks a project: tasks go to the Inbox (or the
+          // existing projectId given) and the user files them; the tag is kept as a suggestion.
+          const { text, suggested } = stripProjectTags(b.text, ctx);
+          const description = [b.description ?? '', suggested.length ? `Suggested project: ${suggested.join(', ')}` : ''].filter(Boolean).join('\n');
+          t = this.svc.quickAdd.commit(parseQuickAdd(text, ctx), { projectId: b.projectId ?? null }, { description });
         } else {
           const projectId = b.project ? this.projectByName(b.project) : (b.projectId ?? null);
           t = this.svc.tasks.create({

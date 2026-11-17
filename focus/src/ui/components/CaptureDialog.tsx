@@ -165,6 +165,7 @@ export function CaptureDialog() {
                         {r.parsed.scheduledDate && <span>Scheduled {formatRelativeDate(r.parsed.scheduledDate, today, prefs)}</span>}
                         {r.parsed.deadline && <span>Deadline {formatRelativeDate(r.parsed.deadline, today, prefs)}</span>}
                         {r.parsed.priority && r.parsed.priority < 4 && <span>P{r.parsed.priority}</span>}
+                        {r.suggestedProjects?.length ? <span>Suggested project: {r.suggestedProjects.join(', ')} (kept as a note)</span> : null}
                       </div>
                     </div>
                   </li>
@@ -178,7 +179,7 @@ export function CaptureDialog() {
                 {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
               </Select>
             </label>
-            <p className="text-[0.78rem] text-subtle">Each task records where it came from in its description.</p>
+            <p className="text-[0.78rem] text-subtle">Tasks go to the Inbox unless you pick a project above; “#Project” tags never create projects. Each task records where it came from in its description.</p>
           </>
         )}
         {error && <p role="alert" className="text-[0.85rem] text-danger">{error}</p>}

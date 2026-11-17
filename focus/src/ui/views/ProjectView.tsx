@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import {
   Archive, ArchiveRestore, LayoutTemplate, Sparkles, ArrowDown, ArrowUp, Columns3, Ellipsis, Eye, EyeOff, FolderPlus, LayoutList, CalendarDays, Pencil, Plus,
-  StickyNote, Table2, Trash2, FileDown } from 'lucide-react';
+  StickyNote, Table2, Trash2, FileDown, Inbox } from 'lucide-react';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Priority, type Project, type ProjectLayout, type Section, type Task, type TaskStatus } from '@/core/domain/types';
 import { formatDuration, formatRelativeDate } from '@/core/dates';
 import { useUi } from '@/state/ui-store';
@@ -39,6 +39,7 @@ export function ProjectView({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const [creatingChild, setCreatingChild] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDissolve, setConfirmDissolve] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const menu = usePopover();
   const prompt = usePrompt();
@@ -154,6 +155,7 @@ export function ProjectView({ id }: { id: string }) {
           ) : (
             <MenuItem icon={<Archive size={15} />} onClick={() => (menu.hide(), act(() => app.projects.archive(id)))}>Archive</MenuItem>
           )}
+          <MenuItem icon={<Inbox size={15} />} onClick={() => (menu.hide(), setConfirmDissolve(true))}>Delete project, move tasks to Inbox</MenuItem>
           <MenuItem icon={<Trash2 size={15} />} danger onClick={() => (menu.hide(), setConfirmDelete(true))}>Delete project</MenuItem>
         </div>
       </Popover>
@@ -187,6 +189,30 @@ export function ProjectView({ id }: { id: string }) {
       <ProjectSummaryDialog open={summaryOpen} onClose={() => setSummaryOpen(false)} projectId={id} />
       <ProjectDialog open={editing} onClose={() => setEditing(false)} project={project} />
       <ProjectDialog open={creatingChild} onClose={() => setCreatingChild(false)} parentId={id} />
+      <ConfirmDialog
+        open={confirmDissolve}
+        onClose={() => setConfirmDissolve(false)}
+        title={`Delete “${project.name}” and keep its tasks?`}
+        body={`Its open and completed tasks move to the Inbox (subtasks stay with their parents)${children.length ? ', and its sub-projects are deleted too (their tasks also move to the Inbox)' : ''}. The empty project goes to Trash.`}
+        confirmLabel="Move tasks and delete"
+        onConfirm={() => {
+          act(() => {
+            const projectIds = [id, ...app.repos.projects.descendantIds(id)];
+            const tasks = projectIds.flatMap((pid) => app.repos.tasks.listByProject(pid, { includeClosed: true }));
+            const inSet = new Set(tasks.map((t) => t.id));
+            const tops = tasks.filter((t) => !t.parentId || !inSet.has(t.parentId)).map((t) => t.id);
+            return app.repos.db.transaction(() => {
+              const moved = tops.length ? app.tasks.move(tops, { projectId: null }) : null;
+              const removed = app.projects.remove(id);
+              return {
+                label: `“${project.name}” deleted; ${tops.length} task${tops.length === 1 ? '' : 's'} moved to Inbox`,
+                undo: () => app.repos.db.transaction(() => (removed.undo(), moved?.undo())),
+              };
+            });
+          });
+          go({ name: 'projects' });
+        }}
+      />
       <ConfirmDialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
