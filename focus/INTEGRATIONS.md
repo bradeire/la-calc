@@ -79,7 +79,13 @@ instructions). Claude then replies with links such as
   in Capture.
 - Links open the installed app (Android, Windows, macOS, Linux). In the browser version they can be passed as
   `?link=focus%3A%2F%2Fadd%3Ftext%3D…`.
-- Not yet confirmed: whether the Claude Android app makes `focus://` links tappable. If it doesn't, use Share.
+- **Claude's apps don't make `focus://` links tappable** (reported on the Pixel, 0.7.2). With sync set up, the
+  instructions in Settings use your relay's page instead: `https://<relay>/open#add?text=…`. It shows the task(s)
+  and an **Open in Focus** button (an Android intent on phones, `focus://` elsewhere). The text is after the `#`,
+  which browsers never send, so the relay never sees it. The relay needs `worker.js` version 3 (Settings → Sync →
+  Update your relay's code).
+- **Copy instead:** paste Claude's reply or a plain list into Capture. Focus links in it are read directly, and a
+  plain list is taken one task per line (chatty lines ending in `.`, `?` or `:` are skipped).
 
 ## Webhooks (Home Assistant, Zapier, IFTTT, anything that accepts JSON)
 

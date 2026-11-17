@@ -92,7 +92,7 @@ _Last updated: 2026-11-16 (session 5 — Phase 4)._
 | Home Assistant: outgoing webhooks documented with YAML | Implemented | inbound (HA → Focus) needs the Phase 4 local API |
 | Capture from pasted email / notes / .txt .md .eml .html; suggestions confirmed before creation | Tested | PDF/Word not supported |
 | Android share-sheet target (installed PWA) | Implemented | not tested on hardware |
-| Tap-to-add links `focus://add` / `focus://capture` (pre-fill only, confirm to create); Settings instructions for Claude | Tested (browser flow, parser) | native link delivery built into the APK and desktop app, not yet tried on hardware |
+| Tap-to-add links `focus://add` / `focus://capture` (pre-fill only, confirm to create); Settings instructions for Claude, through the relay's `/open` page when sync is set up | Tested (browser flow, parser, relay page in Chromium) | Claude's app doesn't make `focus://` tappable (seen on the Pixel); the relay-page route is not yet tried on hardware |
 | Android "Share → Focus" for text (Claude, Gmail, Outlook, Teams…) opens Capture | Implemented | in APK manifest; not tried on hardware |
 | Native HTTP and keychain commands (Tauri) | Tested (Rust unit tests, compiled) | keychain not exercised on Windows/macOS hardware |
 

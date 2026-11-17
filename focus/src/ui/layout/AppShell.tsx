@@ -184,7 +184,7 @@ export function AppShell() {
       if (links.length === 1 && links[0]!.kind === 'add') openQuickAdd({}, links[0]!.text);
       else {
         ui.closeQuickAdd();
-        ui.openCapture(links.map((l) => l.text).join('\n'));
+        ui.openCapture(links.map((l) => l.text).join('\n'), { list: true });
       }
     };
     const handle = (urls: string[]) => (settings.onboarded ? open(urls) : pendingLinks.current.push(...urls));

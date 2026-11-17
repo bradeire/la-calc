@@ -84,3 +84,42 @@ TODO: renew domain name next week
     expect(titles('- [ ] Send invoice\nTODO: send invoice')).toEqual(['Send invoice']);
   });
 });
+
+describe('lists and Focus links', () => {
+  const now2 = new Date('2026-11-17T09:00:00');
+  const pick = (text: string, opts = {}) => extractCandidates(text, { now: now2 }, opts).candidates;
+
+  it('takes a plain to-do list line by line when nothing else looks like an action', () => {
+    const c = pick('Paint fence\nDentist Friday 10am\nGarden tidy #Home p2');
+    expect(c.map((x) => x.parsed.title)).toEqual(['Paint fence', 'Dentist', 'Garden tidy']);
+    expect(c.every((x) => x.confidence === 'high')).toBe(true);
+  });
+
+  it('skips the chatty lines around a copied list', () => {
+    expect(pick('Here are your tasks:\n\nPaint fence\nMow lawn Saturday\n\nWant me to add more?').map((x) => x.parsed.title)).toEqual(['Paint fence', 'Mow lawn']);
+  });
+
+  it('still ignores prose', () => {
+    expect(pick('The weather was lovely today.\nWe talked about holidays.')).toHaveLength(0);
+  });
+
+  it('reads tasks from a pasted Claude reply with focus:// and relay /open links', () => {
+    const reply = [
+      'Here you go:',
+      '- [Phone dentist Friday](focus://add?text=Phone%20dentist%20Friday%20%23Home)',
+      '- [Buy paint](https://focus-sync.me.workers.dev/open#add?text=Buy%20paint%20p2)',
+      '[Add all](https://focus-sync.me.workers.dev/open#capture?text=Phone%20dentist%20Friday%20%23Home%0ABuy%20paint%20p2%0AMow%20lawn)',
+      '',
+      'Plain list:',
+      '1. Phone dentist Friday #Home',
+    ].join('\n');
+    const c = pick(reply);
+    expect(c.map((x) => x.text)).toEqual(['Phone dentist Friday #Home', 'Buy paint p2', 'Mow lawn']);
+    expect(c.every((x) => x.confidence === 'high')).toBe(true);
+  });
+
+  it('list mode (from a Focus link) takes every line, even sentences', () => {
+    const c = pick('Fix the gate.\n- [ ] Call Mum\n- [x] Done already', { list: true });
+    expect(c.map((x) => x.parsed.title)).toEqual(['Fix the gate', 'Call Mum']);
+  });
+});

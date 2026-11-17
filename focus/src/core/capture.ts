@@ -2,6 +2,7 @@
  * Deterministic action extraction from pasted text, emails and meeting notes
  * (spec 5.6). Results are *suggestions*; nothing is created until the user confirms.
  */
+import { parseIncomingLink } from './links';
 import { parseQuickAdd, type ParseContext, type ParseResult } from './nlp/parser';
 
 export interface CaptureSource {
@@ -75,7 +76,29 @@ function sentences(line: string): string[] {
   return line.split(/(?<=[.?!])\s+(?=[A-Z])/).map((s) => s.trim()).filter(Boolean);
 }
 
-export function extractCandidates(raw: string, ctx: ParseContext = {}): { source: CaptureSource; candidates: Candidate[] } {
+/** focus:// links (bare or in Markdown) and their https://…/open#… bridge form, as found in an assistant's reply. */
+const LINK = /(?:web\+)?focus:[^\s)\]>"']+|https?:\/\/[^\s)\]>"'#]+\/open#[^\s)\]>"']+/gi;
+
+/** The texts carried by Focus links on a line (one per task). */
+export function linkTexts(line: string): string[] {
+  const out: string[] = [];
+  for (const m of line.matchAll(LINK)) {
+    const raw = m[0];
+    const hash = raw.indexOf('/open#');
+    const link = parseIncomingLink(hash >= 0 && /^https?:/i.test(raw) ? `focus://${raw.slice(hash + 6)}` : raw);
+    if (link && link.kind !== 'sync') out.push(...link.text.split('\n'));
+  }
+  return out.map((t) => t.trim()).filter(Boolean);
+}
+
+const LIST_MARK = /^(?:[-*+•]\s*(?:\[\s?\]\s*)?|\[\s?\]\s*|\d+[.)]\s+)/;
+
+export interface ExtractOptions {
+  /** The text is a list of tasks, one per line (from a Focus link or a pasted list): take every line. */
+  list?: boolean;
+}
+
+export function extractCandidates(raw: string, ctx: ParseContext = {}, opts: ExtractOptions = {}): { source: CaptureSource; candidates: Candidate[] } {
   const source = parseSource(raw);
   const out: Candidate[] = [];
   const seen = new Set<string>();
@@ -90,9 +113,31 @@ export function extractCandidates(raw: string, ctx: ParseContext = {}): { source
     out.push({ text: clean, parsed, sourceLine: sourceLine.trim(), confidence, why });
   };
 
+  const lines = source.body.split('\n');
+  // Each line as a task: list mode, or (as a fallback) a short list where no line looked like an action.
+  const asList = (confidence: Candidate['confidence'], why: string, keep: (line: string) => boolean = () => true) => {
+    for (const l of lines) {
+      const line = l.trim();
+      if (!line || /^[-*+]?\s*\[[xX]\]/.test(line) || ACTION_HEADINGS.test(line) || /^#+\s/.test(line) || !keep(line)) continue;
+      const links = linkTexts(line);
+      if (links.length) links.forEach((t) => add(t, t, 'high', 'From a Focus link'));
+      else add(line.replace(LIST_MARK, ''), line, confidence, why);
+      if (out.length >= 100) break;
+    }
+  };
+  if (opts.list) {
+    asList('high', 'One task per line');
+    return { source, candidates: out };
+  }
+
   let inActionSection = false;
-  for (const rawLine of source.body.split('\n')) {
+  for (const rawLine of lines) {
     const line = rawLine.trim();
+    const links = linkTexts(line);
+    if (links.length) {
+      for (const t of links) add(t, t, 'high', 'From a Focus link');
+      continue;
+    }
     if (!line) {
       inActionSection = false;
       continue;
@@ -126,5 +171,8 @@ export function extractCandidates(raw: string, ctx: ParseContext = {}): { source
     }
     if (out.length >= 50) break;
   }
+  // Nothing looked like an action, but it's a short list (e.g. "Paint fence", "Dentist Friday"): offer each line, unticked.
+  // Short lines that aren't sentences (or are bullets) read as to-do items; prose still finds nothing.
+  if (!out.length && source.kind === 'notes') asList('high', 'A line from your list', (l) => l.length <= 120 && (LIST_MARK.test(l) || !/[.?!:;,]$/.test(l)));
   return { source, candidates: out };
 }

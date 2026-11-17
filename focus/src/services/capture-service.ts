@@ -1,4 +1,4 @@
-import { extractCandidates, type Candidate, type CaptureSource } from '@/core/capture';
+import { extractCandidates, type Candidate, type CaptureSource, type ExtractOptions } from '@/core/capture';
 import { parseQuickAdd } from '@/core/nlp/parser';
 import type { Task } from '@/core/domain/types';
 import type { Repositories } from '@/data';
@@ -21,10 +21,10 @@ export class CaptureService {
   }
 
   /** Deterministic, offline extraction. */
-  analyse(text: string): { source: CaptureSource; candidates: Candidate[] } {
+  analyse(text: string, opts: ExtractOptions = {}): { source: CaptureSource; candidates: Candidate[] } {
     if (!text.trim()) throw new ValidationError('Paste some text or choose a file first');
     if (text.length > 200_000) throw new ValidationError('That text is too long (200,000 characters max)');
-    return extractCandidates(text, this.ctx());
+    return extractCandidates(text, this.ctx(), opts);
   }
 
   /** AI extraction (only when configured and consented); results go through the same parser. */

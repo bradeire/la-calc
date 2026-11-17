@@ -367,6 +367,7 @@ function TimeGrid({ from, to, entries, external, today, projectId }: { from: ISO
               </div>
               <div
                 className="mt-1 flex min-h-6 flex-col gap-0.5"
+                role="group"
                 aria-label={`All-day items for ${formatLongDate(d, prefs)}`}
                 onDragOver={(e) => e.dataTransfer.types.includes(DRAG_MIME) && e.preventDefault()}
                 onDrop={(e) => {

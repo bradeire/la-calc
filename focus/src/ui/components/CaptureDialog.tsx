@@ -29,7 +29,7 @@ export function CaptureDialog() {
   const today = useToday();
   const prefs = useDatePrefs();
   const aiEnabled = useAiEnabled();
-  const { open, text: initial } = useUi((s) => s.capture);
+  const { open, text: initial, list } = useUi((s) => s.capture);
   const close = useUi((s) => s.closeCapture);
   const pushToast = useUi((s) => s.pushToast);
   const [text, setText] = useState('');
@@ -42,12 +42,21 @@ export function CaptureDialog() {
   const projects = useQuery(() => orderProjects(app.repos.projects.list()), []);
 
   useEffect(() => {
-    if (open) {
-      setText(initial);
-      setRows(null);
-      setError(null);
+    if (!open) return;
+    setText(initial);
+    setRows(null);
+    setError(null);
+    // From a Focus link: the tasks are already one per line, so go straight to the review.
+    if (list && initial.trim()) {
+      try {
+        const r = app.capture.analyse(initial, { list: true });
+        setSource(r.source);
+        setRows(r.candidates.map((c) => ({ ...c, on: true })));
+      } catch (err) {
+        setError(errorMessage(err));
+      }
     }
-  }, [open, initial]);
+  }, [open, initial, list, app]);
 
   const show = (r: { source: CaptureSource; candidates: Candidate[] }) => {
     setSource(r.source);
@@ -138,7 +147,7 @@ export function CaptureDialog() {
               </p>
             )}
             {rows.length === 0 ? (
-              <p className="text-[0.9rem] text-muted">No action items found. Try checkboxes, “Action:” lines or an “Action items” heading — or add tasks with Quick Add.</p>
+              <p className="text-[0.9rem] text-muted">No tasks found. Put one task per line, or use checkboxes, “Action:” lines or an “Action items” heading — or add tasks with Quick Add.</p>
             ) : (
               <ul className="flex flex-col divide-y divide-line rounded-lg border border-line" aria-label="Suggested tasks">
                 {rows.map((r, i) => (

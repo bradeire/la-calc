@@ -141,10 +141,43 @@ async function readBody(request) {
 }
 const validData = (d) => typeof d === 'string' && d.length > 0 && d.length <= MAX_PART && /^[A-Za-z0-9+/=]+$/.test(d);
 
+/**
+ * Tap-to-add bridge: https://<relay>/open#add?text=… → focus://add?text=…
+ * Chat apps (Claude included) only make http(s) links tappable. The task text is in the fragment
+ * (after #), which browsers never send to the server, so the relay never sees it. The page is static.
+ */
+const OPEN_PAGE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Add to Focus</title><style>
+:root{color-scheme:light dark;font:16px/1.45 system-ui,sans-serif}body{margin:0;display:grid;place-items:center;min-height:100vh;background:Canvas;color:CanvasText}
+main{max-width:30rem;padding:1.5rem}ul{padding-left:1.2rem}a.b{display:block;text-align:center;background:#4f46e5;color:#fff;padding:.9rem 1rem;border-radius:.7rem;text-decoration:none;font-weight:600;font-size:1.1rem}
+p.s{opacity:.7;font-size:.85rem}[hidden]{display:none!important}</style></head><body><main><h1>Add to Focus</h1><ul id="l"></ul>
+<a class="b" id="go" href="#">Open in Focus</a>
+<p class="s">Focus opens with this filled in; nothing is added until you confirm. The task text stays on your device: it is never sent to this server.</p>
+<p class="s" id="e" hidden>This link has no task in it.</p></main><script>
+(function(){var h=location.hash.slice(1),m=/^(add|capture)\\?(.*)$/i.exec(h),go=document.getElementById('go');
+if(!m){go.hidden=true;document.getElementById('e').hidden=false;return}
+var q=new URLSearchParams(m[2]),t=(q.get('text')||q.get('t')||'').split('\\n').filter(function(x){return x.trim()});
+t.slice(0,50).forEach(function(x){var li=document.createElement('li');li.textContent=x;document.getElementById('l').appendChild(li)});
+if(!t.length){go.hidden=true;document.getElementById('e').hidden=false;return}
+var path=m[1].toLowerCase()+'?text='+encodeURIComponent(t.join('\\n').slice(0,20000));
+go.href=/Android/i.test(navigator.userAgent)?'intent://'+path+'#Intent;scheme=focus;package=uk.periopdigital.focus;end':'focus://'+path;
+})();</script></body></html>`;
+const openPage = () =>
+  new Response(OPEN_PAGE, {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Security-Policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+      'Referrer-Policy': 'no-referrer',
+      'Cache-Control': 'public, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
+
 export async function handle(request, env) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   const url = new URL(request.url);
-  if (url.pathname === '/v1/health') return json({ ok: true, app: 'focus-sync-relay', version: 2, licenceRequired: !!env.LICENCE_SECRET });
+  if (url.pathname === '/v1/health') return json({ ok: true, app: 'focus-sync-relay', version: 3, licenceRequired: !!env.LICENCE_SECRET, open: true });
+  if (url.pathname === '/open' && request.method === 'GET') return openPage();
   if (!env.DB) return json({ error: 'The relay has no database: bind a D1 database as DB (see README)' }, 500);
   const db = env.DB;
   const cfg = config(env);

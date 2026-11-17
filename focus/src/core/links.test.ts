@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAddLink, buildCaptureLink, buildSyncLink, MAX_ADD_LENGTH, parseIncomingLink } from './links';
+import { buildAddLink, buildCaptureLink, buildSyncLink, MAX_ADD_LENGTH, parseIncomingLink, assistantInstructions, buildOpenLink } from './links';
 import { parseQuickAdd } from './nlp/parser';
 
 describe('tap-to-add links', () => {
@@ -51,5 +51,17 @@ describe('tap-to-add links', () => {
     expect(parseIncomingLink(buildSyncLink('https://focus-sync.me.workers.dev', key))).toEqual({ kind: 'sync', relay: 'https://focus-sync.me.workers.dev', key });
     expect(parseIncomingLink(buildSyncLink('http://evil.example', key))).toBeNull();
     expect(parseIncomingLink(buildSyncLink('https://x.dev', 'short'))).toBeNull();
+  });
+});
+
+describe('links through the relay page', () => {
+  it('builds https links whose text is only in the fragment', () => {
+    const link = buildOpenLink('https://focus-sync.me.workers.dev/', 'Phone dentist #Home');
+    expect(link).toBe('https://focus-sync.me.workers.dev/open#add?text=Phone%20dentist%20%23Home');
+    expect(new URL(link).search).toBe('');
+  });
+  it('instructions use the relay page when there is one', () => {
+    expect(assistantInstructions('https://r.example')).toContain('(https://r.example/open#add?text=');
+    expect(assistantInstructions(null)).toContain('(focus://add?text=');
   });
 });

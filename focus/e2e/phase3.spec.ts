@@ -192,7 +192,11 @@ test('tap-to-add link pre-fills Quick Add and adds nothing until confirmed', asy
 test('capture link and unsafe links', async ({ page }) => {
   await startFresh(page);
   await page.goto('/?link=' + encodeURIComponent('focus://capture?text=Buy%20milk%0ARing%20the%20garage') + '#/inbox');
-  await expect(page.getByRole('textbox', { name: 'Text to capture from' })).toHaveValue('Buy milk\nRing the garage');
+  // A link's lines are tasks already: straight to the review, all ticked.
+  const suggested = page.getByRole('list', { name: 'Suggested tasks' });
+  await expect(suggested.getByRole('textbox', { name: 'Task text' })).toHaveCount(2);
+  await expect(suggested.getByRole('textbox', { name: 'Task text' }).first()).toHaveValue('Buy milk');
+  await expect(page.getByRole('button', { name: 'Create 2 tasks' })).toBeEnabled();
   await page.keyboard.press('Escape');
   // Unknown actions are ignored rather than acted on.
   await page.goto('/?link=' + encodeURIComponent('focus://delete?text=everything') + '#/inbox');
@@ -200,4 +204,5 @@ test('capture link and unsafe links', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto('/#/settings');
   await expect(page.getByRole('textbox', { name: 'Instructions for Claude' })).toHaveValue(/focus:\/\/add\?text=/);
+  await expect(page.getByText('Claude’s apps don’t make focus:// links tappable')).toBeVisible();
 });

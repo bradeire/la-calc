@@ -24,6 +24,10 @@ Two ways to use it:
 
 Tables are created automatically and upgraded in place when you deploy a newer `worker.js`.
 
+**Updating:** Workers & Pages → `focus-sync` → Edit code → paste the new `worker.js` → Deploy (Focus: Settings → Sync
+between devices → Update your relay's code). Version 3 adds the `/open` page that makes tap-to-add links from Claude
+tappable (Claude's apps only make `http(s)` links tappable).
+
 ## Running a hosted relay (for a release)
 
 1. Deploy as above (or with `npx wrangler deploy` and `wrangler.toml`), ideally on your own domain
@@ -66,6 +70,7 @@ the relay needs a licence. CORS is open because every request needs the token.
 | Method | Path | |
 |---|---|---|
 | GET | `/v1/health` | `{ ok, version, licenceRequired }` |
+| GET | `/open` | Static “Add to Focus” page for tap-to-add links: `/open#add?text=…` hands the text to `focus://`. The text is in the fragment, so it never reaches the relay. No token needed. |
 | POST | `/batches` | `{ device, data }` (base64 ciphertext ≤ 1.5 MB). The first upload creates the vault. |
 | GET | `/batches?after=&limit=` | batches in order, `more`, and `snapshot` when the caller is behind the latest snapshot |
 | POST / GET | `/snapshots/{id}/parts/{n}` | upload `{ parts, upTo, data }` / download a part; completion deletes covered batches |

@@ -6,6 +6,15 @@ const T1 = '1'.repeat(64);
 const T2 = '2'.repeat(64);
 
 describe('sync relay worker', () => {
+  it('serves the static tap-to-add page, which carries no task text', async () => {
+    const { http } = await fakeRelay();
+    const r = await http({ method: 'GET', url: 'https://relay.test/open' });
+    expect(r.status).toBe(200);
+    expect(r.body).toContain('Open in Focus');
+    expect(r.body).toContain('location.hash');
+    expect(JSON.parse((await http({ method: 'GET', url: 'https://relay.test/v1/health' })).body)).toMatchObject({ version: 3, open: true });
+  });
+
   it('creates a vault on first upload and only accepts its token afterwards', async () => {
     const { http, db } = await fakeRelay();
     const base = 'https://relay.test';

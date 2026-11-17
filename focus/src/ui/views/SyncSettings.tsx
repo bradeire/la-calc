@@ -34,6 +34,32 @@ function Group({ title, icon, children }: { title: string; icon: ReactNode; chil
   );
 }
 
+/** Updating your own relay's code (e.g. to add the tap-to-add page) without re-creating anything. */
+function RelayUpdate() {
+  const app = useApp();
+  const pushToast = useUi((s) => s.pushToast);
+  return (
+    <details className="text-[0.85rem]">
+      <summary className="cursor-pointer text-muted">Update your relay’s code (if you run your own relay)</summary>
+      <ol className="mt-2 flex list-decimal flex-col gap-1.5 pl-5 text-muted">
+        <li>dash.cloudflare.com → Workers &amp; Pages → your <code>focus-sync</code> worker → Edit code.</li>
+        <li>
+          Replace everything with the latest relay code → Deploy. Your data, database and address stay as they are.{' '}
+          <span className="inline-flex gap-1">
+            <Button size="sm" onClick={() => void navigator.clipboard.writeText(relayCode).then(() => pushToast({ message: 'Relay code copied', tone: 'success' }), () => pushToast({ message: 'Could not copy', tone: 'error' }))}>
+              <Copy size={13} /> Copy relay code
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => void saveFile(app.platform, 'worker.js', relayCode, 'text/javascript').then((w) => w && pushToast({ message: w, tone: 'success' }))}>
+              Save worker.js
+            </Button>
+          </span>
+        </li>
+        <li>Check: opening <code>/v1/health</code> on your relay shows <code>"version":3</code>.</li>
+      </ol>
+    </details>
+  );
+}
+
 /** Setting up the relay on a free Cloudflare account (dashboard only; no command line). */
 function RelayGuide() {
   const app = useApp();
@@ -393,6 +419,7 @@ export function SyncSettings() {
               </span>
               <Switch checked={status.runsTimedAutomations} onChange={(v) => (app.sync.setRunsTimedAutomations(v), setTick((t) => t + 1))} label="Run time-based automations on this device" />
             </label>
+            {status.relayUrl && status.relayUrl !== HOSTED_RELAY && <RelayUpdate />}
             <details className="text-[0.85rem]">
               <summary className="cursor-pointer text-muted">Turn off</summary>
               <div className="mt-2 flex flex-wrap gap-2">

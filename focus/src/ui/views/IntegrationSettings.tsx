@@ -4,7 +4,7 @@ import { PALETTE } from '@/core/domain/types';
 import { saveFile } from '../download';
 import { getApiToken, regenerateApiToken, useLocalApiStatus } from '../localApi';
 import connectorScript from '../../../tools/focus-mcp/focus-mcp.mjs?raw';
-import { ASSISTANT_INSTRUCTIONS, buildAddLink } from '@/core/links';
+import { assistantInstructions, buildAddLink } from '@/core/links';
 import { isLocalUrl, type AiConfig } from '@/services/ai-service';
 import { useUi } from '@/state/ui-store';
 import { errorMessage, useAction, useApp, useQuery } from '../hooks';
@@ -234,9 +234,11 @@ export function AddFromAssistantSettings() {
   const app = useApp();
   const pushToast = useUi((s) => s.pushToast);
   const native = app.platform.kind === 'tauri';
+  const relayUrl = app.sync.status().relayUrl;
+  const instructions = assistantInstructions(relayUrl);
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(ASSISTANT_INSTRUCTIONS);
+      await navigator.clipboard.writeText(instructions);
       pushToast({ message: 'Instructions copied', tone: 'success' });
     } catch {
       pushToast({ message: 'Could not copy: select the text and copy it instead', tone: 'error' });
@@ -253,10 +255,23 @@ export function AddFromAssistantSettings() {
           Paste these instructions into Claude once (Settings → Profile → personal preferences, or a project’s
           instructions). On Android you can also share any Claude reply to Focus to pick tasks from it.
         </p>
+        {relayUrl ? (
+          <p className="text-[0.85rem] text-muted">
+            Claude only makes web links tappable, so these links open a small page on your sync relay ({relayUrl}) with an
+            “Open in Focus” button. The task text is after the # in the link, which is never sent to the relay. If you set
+            the relay up before version 0.7.3, update its code (Settings → Sync → How to set up your relay) so it has this page.
+            If you change these instructions, paste the new version into Claude.
+          </p>
+        ) : (
+          <p className="text-[0.85rem] text-warn">
+            Claude’s apps don’t make focus:// links tappable. Set up sync between devices first: the links can then go
+            through your relay, which makes them tappable. Until then, copy Claude’s list into Capture (it takes one task per line).
+          </p>
+        )}
         <textarea
           readOnly
           aria-label="Instructions for Claude"
-          value={ASSISTANT_INSTRUCTIONS}
+          value={instructions}
           onFocus={(e) => e.currentTarget.select()}
           rows={7}
           className="w-full resize-y rounded-lg border border-line bg-surface-2 p-2 font-mono text-[0.78rem] leading-snug"

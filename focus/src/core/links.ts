@@ -54,13 +54,23 @@ export const buildAddLink = (text: string) => `focus://add?text=${encode(text.tr
 export const buildSyncLink = (relay: string, key: string) => `focus://sync?relay=${encodeURIComponent(relay)}&key=${encodeURIComponent(key)}`;
 export const buildCaptureLink = (text: string) => `focus://capture?text=${encode(text.trim())}`;
 
+/**
+ * Chat apps only make http(s) links tappable, so links for Claude go through the relay's /open page,
+ * which hands them to focus://. The text is after the #, so it never reaches the server.
+ */
+export const openPageBase = (relayUrl: string) => `${relayUrl.trim().replace(/\/+$/, '')}/open#`;
+export const buildOpenLink = (relayUrl: string, text: string) => `${openPageBase(relayUrl)}add?text=${encode(text.trim())}`;
+
 /** Instructions a user can paste into Claude (or another assistant) so it replies with tap-to-add links. */
-export const ASSISTANT_INSTRUCTIONS = `When I ask you to add tasks to Focus (my to-do app), reply with one Markdown link per task in this form:
-[Task title and details](focus://add?text=URL-ENCODED-TEXT)
+export function assistantInstructions(relayUrl: string | null): string {
+  const base = relayUrl ? openPageBase(relayUrl) : 'focus://';
+  return `When I ask you to add tasks to Focus (my to-do app), reply with one Markdown link per task in this form:
+[Task title and details](${base}add?text=URL-ENCODED-TEXT)
 Write the text the way I'd type it in Focus Quick Add, e.g. "Phone dentist Friday 10am #Home p2 @calls":
 - dates/times in plain English: today, tomorrow, Fri 3pm, 20 Nov, every Monday, every 4 weeks after completion
 - deadline: "by 20 November"; duration: "for 30m"; start: "starts Monday"
 - #Project, @label, priority p1 (highest) to p4
 Percent-encode the text (space = %20, # = %23, @ = %40, & = %26).
-For a whole list at once, also give one link: [Add all](focus://capture?text=ONE-TASK-PER-LINE-URL-ENCODED) with lines separated by %0A.
+For a whole list at once, also give one link: [Add all](${base}capture?text=ONE-TASK-PER-LINE-URL-ENCODED) with lines separated by %0A.
 Then show the same tasks as a plain list too, so I can copy it into Focus if a link doesn't open.`;
+}

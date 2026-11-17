@@ -33,11 +33,12 @@ interface UiState {
   shortcutsOpen: boolean;
   setShortcutsOpen: (v: boolean) => void;
 
-  capture: { open: boolean; text: string };
+  capture: { open: boolean; text: string; list: boolean };
   /** A sync join link waiting for the user to confirm. */
   syncJoin: { relay: string; key: string } | null;
   setSyncJoin: (j: { relay: string; key: string } | null) => void;
-  openCapture: (text?: string) => void;
+  /** `list`: the text is one task per line (from a Focus link), so every line is offered. */
+  openCapture: (text?: string, opts?: { list?: boolean }) => void;
   closeCapture: () => void;
 
   /** Reminders delivered and awaiting the user's action in the in-app panel. */
@@ -109,11 +110,11 @@ export const useUi = create<UiState>((set, get) => ({
   shortcutsOpen: false,
   setShortcutsOpen: (v) => set({ shortcutsOpen: v }),
 
-  capture: { open: false, text: '' },
+  capture: { open: false, text: '', list: false },
   syncJoin: null,
   setSyncJoin: (j) => set({ syncJoin: j }),
-  openCapture: (text = '') => set({ capture: { open: true, text } }),
-  closeCapture: () => set({ capture: { open: false, text: '' } }),
+  openCapture: (text = '', opts = {}) => set({ capture: { open: true, text, list: !!opts.list } }),
+  closeCapture: () => set({ capture: { open: false, text: '', list: false } }),
 
   activeReminders: [],
   addReminders: (r) => {

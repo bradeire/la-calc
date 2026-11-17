@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.3 — 2026-11-17
+
+### Fixed
+- Tap-to-add links from Claude didn't open: Claude's apps only make web links tappable. With sync set up, the
+  instructions now use a page on your relay (`/open#…`, relay version 3) with an "Open in Focus" button; the task text
+  stays in the part after `#`, which never reaches the relay. Settings → Sync shows how to update the relay's code.
+- Capture found no tasks in a plain list or in a pasted Claude reply. It now reads Focus links in pasted text, takes a
+  plain list one task per line, and Capture opened from a link goes straight to the review with every line ticked.
+- Calendar all-day cells had an accessibility label without a role.
+
 ## 0.7.0 — 2026-11-16 (sync ready for release)
 
 ### Added
