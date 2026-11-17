@@ -263,7 +263,10 @@ pub fn run() {
     }
     #[cfg(target_os = "android")]
     {
-        builder = builder.plugin(secrets::android::init());
+        builder = builder
+            .plugin(secrets::android::init_secure_store())
+            .plugin(secrets::android::init_share())
+            .plugin(secrets::android::init_background_sync());
     }
     builder
         .plugin(tauri_plugin_deep_link::init())

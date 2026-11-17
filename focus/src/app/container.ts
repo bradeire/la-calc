@@ -148,7 +148,7 @@ export function createContainer(
     const capture = new CaptureService(repos, quickAdd, ai, () => clock.now());
     const automations = new AutomationService(repos, events, { tasks, projects, content, templates, webhooks, filters }, clock);
     const api = new ApiService(repos, { tasks, projects, labels, quickAdd, filters, automations }, () => clock.now());
-    const sync = new SyncService(repos, platform.secrets, new RelayTransport(platform.http, () => platform.secrets.get('sync:licence')), () => clock.now(), platform.files);
+    const sync = new SyncService(repos, platform.secrets, new RelayTransport(platform.http, () => platform.secrets.get('sync:licence').catch(() => null)), () => clock.now(), platform.files);
     const saver = new Saver(db, platform);
     teardown.push(db.subscribe(() => saver.schedule()));
     teardown.push(() => automations.dispose());

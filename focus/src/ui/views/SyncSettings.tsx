@@ -342,7 +342,7 @@ export function SyncSettings() {
               Keep tasks, projects, notes, comments, labels, filters, templates and automations the same on your phone and computer. Everything is encrypted
               on the device before it’s sent, through a relay on your own free Cloudflare account; the relay can’t read it.
             </p>
-            <p className="text-[0.8rem] text-muted">Not synced: attachment files, external calendars, webhooks and AI settings (set those up on each device).</p>
+            <p className="text-[0.8rem] text-muted">Attachment files sync too. Not synced: external calendars, webhooks and AI settings (set those up on each device).</p>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="primary" onClick={() => setMode('create')}>
                 Set up on this device

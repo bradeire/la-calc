@@ -47,16 +47,29 @@ pub mod android {
     pub struct Share<R: Runtime>(pub PluginHandle<R>);
     pub struct BackgroundSync<R: Runtime>(pub PluginHandle<R>);
 
-    /// Registers Focus's own Android plugins (SecureStorePlugin.kt, SharePlugin.kt).
-    pub fn init<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
-        tauri::plugin::Builder::new("focusnative")
+    /// Registers Focus's own Android plugins (SecureStorePlugin.kt, SharePlugin.kt, BackgroundSyncPlugin.kt).
+    /// Each needs its own Tauri plugin name: Tauri routes Android commands by plugin name, so
+    /// registering several under one name sent every command to the last one registered.
+    pub fn init_secure_store<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
+        tauri::plugin::Builder::new("focus-secure-store")
             .setup(|app, api| {
-                let store = api.register_android_plugin("uk.periopdigital.focus", "SecureStorePlugin")?;
-                app.manage(SecureStore(store));
-                let share = api.register_android_plugin("uk.periopdigital.focus", "SharePlugin")?;
-                app.manage(Share(share));
-                let bg = api.register_android_plugin("uk.periopdigital.focus", "BackgroundSyncPlugin")?;
-                app.manage(BackgroundSync(bg));
+                app.manage(SecureStore(api.register_android_plugin("uk.periopdigital.focus", "SecureStorePlugin")?));
+                Ok(())
+            })
+            .build()
+    }
+    pub fn init_share<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
+        tauri::plugin::Builder::new("focus-share")
+            .setup(|app, api| {
+                app.manage(Share(api.register_android_plugin("uk.periopdigital.focus", "SharePlugin")?));
+                Ok(())
+            })
+            .build()
+    }
+    pub fn init_background_sync<R: Runtime>() -> tauri::plugin::TauriPlugin<R> {
+        tauri::plugin::Builder::new("focus-background-sync")
+            .setup(|app, api| {
+                app.manage(BackgroundSync(api.register_android_plugin("uk.periopdigital.focus", "BackgroundSyncPlugin")?));
                 Ok(())
             })
             .build()
