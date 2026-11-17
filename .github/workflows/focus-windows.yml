@@ -1,0 +1,57 @@
+# Builds the Focus Windows installer (NSIS, per-user, unsigned) on GitHub's Windows machines.
+# Download it from the repository's Actions tab → the latest "Focus Windows installer" run → Artifacts.
+name: Focus Windows installer
+
+on:
+  push:
+    paths:
+      - 'focus/**'
+      - '.github/workflows/focus-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: focus-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: focus
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: focus/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: focus/src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build installer
+        run: npx tauri build --bundles nsis --ci
+
+      - name: Find version
+        id: version
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Focus-${{ steps.version.outputs.version }}-windows-x64-setup
+          path: focus/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          retention-days: 30
