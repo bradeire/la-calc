@@ -92,7 +92,7 @@ export class CalendarService {
     try {
       res = await this.http.request({ method: 'GET', url, timeoutMs: 30_000 });
     } catch (err) {
-      throw new ValidationError(`Couldn’t reach the calendar: ${err instanceof Error ? err.message : 'network error'}. In the browser version, calendar servers usually block this; use the desktop or Android app, or import an .ics file.`);
+      throw new ValidationError(`Couldn’t reach the calendar: ${err instanceof Error ? err.message : typeof err === 'string' ? err : 'network error'}. In the browser version, calendar servers usually block this; use the desktop or Android app, or import an .ics file.`);
     }
     if (res.status === 401 || res.status === 403 || res.status === 404) throw new ValidationError(`The calendar server refused the address (${res.status}). Check that it’s the private/secret address and still valid.`);
     if (res.status < 200 || res.status >= 300) throw new ValidationError(`The calendar server answered ${res.status}`);

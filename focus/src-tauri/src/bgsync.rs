@@ -589,7 +589,7 @@ pub struct Relay {
 
 impl Relay {
     pub fn new(url: &str, licence: Option<String>) -> Result<Self, String> {
-        let client = reqwest::Client::builder().timeout(std::time::Duration::from_secs(60)).build().map_err(|e| e.to_string())?;
+        let client = crate::http::client_builder().timeout(std::time::Duration::from_secs(60)).build().map_err(|e| e.to_string())?;
         Ok(Relay { url: url.trim_end_matches('/').to_string(), licence, client })
     }
     async fn call(&self, method: &str, path: &str, token: &str, body: Option<J>) -> Result<J, String> {

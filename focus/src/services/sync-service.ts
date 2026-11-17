@@ -83,7 +83,7 @@ export class RelayTransport implements SyncTransport {
         timeoutMs: 60_000,
       });
     } catch (err) {
-      throw new ValidationError(`Couldn’t reach the sync relay (${err instanceof Error ? err.message : 'network error'}). Changes are kept and will sync later.`);
+      throw new ValidationError(`Couldn’t reach the sync relay (${err instanceof Error ? err.message : typeof err === 'string' ? err : 'network error'}). Changes are kept and will sync later.`);
     }
     let data: Record<string, unknown>;
     try {
@@ -159,6 +159,18 @@ export interface SyncOptions {
   compactAfterBatches: number;
   /** Bytes of attachment files moved per sync run, each way (the rest follows on later runs). */
   fileBudgetBytes: number;
+}
+
+/** Run a set-up step; failures say which step and keep the underlying message (native calls reject with strings). */
+async function step<T>(label: string, fn: () => Promise<T> | T): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    if (e instanceof ValidationError) throw e;
+    const detail = e instanceof Error ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
+    console.error(`Sync set-up failed while ${label}`, e);
+    throw new ValidationError(`Sync set-up failed while ${label}: ${detail || 'unknown error'}`);
+  }
 }
 
 const SECRET = 'sync:key';
@@ -290,8 +302,8 @@ export class SyncService {
       throw new ValidationError(e instanceof SyncKeyError ? e.message : 'That isn’t a valid sync key');
     }
     // Check the relay and the key before changing anything.
-    const derived = await deriveSyncKeys(key);
-    const first = await this.transport.pull(url, derived.vaultId, derived.token, 0, 1);
+    const derived = await step('preparing the encryption keys', () => deriveSyncKeys(key));
+    const first = await step('contacting the relay', () => this.transport.pull(url, derived.vaultId, derived.token, 0, 1));
     if (joining && first.batches.length === 0 && !first.snapshot) throw new ValidationError('Nothing has been synced with this key yet. Check the key, or set up sync on the other device first.');
     // Check the key opens what's there (a batch, or the snapshot older history was compacted into).
     const sample = first.batches[0]?.data ?? (first.snapshot && this.transport.getSnapshotPart ? await this.transport.getSnapshotPart(url, derived.vaultId, derived.token, first.snapshot.id, 0) : null);
@@ -299,18 +311,21 @@ export class SyncService {
       throw new ValidationError('This key doesn’t match the data on the relay.');
     });
     // A new vault always gets a first (empty) batch, so other devices can join even if this one has no data yet.
-    if (!joining) await this.transport.push(url, derived.vaultId, derived.token, this.control().device_id, await sealJson(derived, []));
-    await this.secrets.set(SECRET, key);
+    if (!joining) {
+      const hello = await step('encrypting the first upload', () => sealJson(derived, []));
+      await step('creating your sync space on the relay', () => this.transport.push(url, derived.vaultId, derived.token, this.control().device_id, hello));
+    }
+    await step('saving the sync key in secure storage', () => this.secrets.set(SECRET, key));
     this.keys = { key, derived };
-    this.r.db.transaction(() => {
+    await step('preparing this device’s data', () => this.r.db.transaction(() => {
       this.setMeta('relayUrl', url);
       this.setMeta('cursor', '0');
       this.setMeta('lastError', null);
       this.setMeta('timedAutomations', joining ? '0' : '1');
       this.r.db.run('UPDATE sync_control SET enabled = 1 WHERE id = 1');
       this.bootstrap();
-    });
-    await this.syncNow();
+    }));
+    await step('running the first sync', () => this.syncNow());
     return { key };
   }
 
@@ -389,13 +404,13 @@ export class SyncService {
 
   private async run() {
     try {
-      const keys = await this.derived();
-      await this.pull(keys);
-      await this.push(keys);
+      const keys = await step('reading the sync key', () => this.derived());
+      await step('downloading changes', () => this.pull(keys));
+      await step('uploading changes', () => this.push(keys));
       // Advance past our own batches, so a snapshot can cover them.
-      await this.pull(keys);
-      await this.syncFiles(keys);
-      await this.housekeeping(keys);
+      await step('downloading changes', () => this.pull(keys));
+      await step('syncing attachment files', () => this.syncFiles(keys));
+      await step('tidying up sync history', () => this.housekeeping(keys));
       this.setMeta('lastSyncAt', this.now().toISOString());
       this.setMeta('lastError', null);
     } catch (err) {

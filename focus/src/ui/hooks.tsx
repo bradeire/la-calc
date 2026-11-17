@@ -67,6 +67,15 @@ export function useToday(): string {
 export function errorMessage(err: unknown): string {
   if (err instanceof ValidationError || err instanceof NotFoundError) return err.message;
   if (err instanceof Error) return `Something went wrong: ${err.message}`;
+  // Native (Tauri) calls reject with plain strings or objects: show them rather than hiding the cause.
+  if (typeof err === 'string' && err.trim()) return `Something went wrong: ${err}`;
+  if (err && typeof err === 'object' && 'message' in err && typeof (err as { message: unknown }).message === 'string') return `Something went wrong: ${(err as { message: string }).message}`;
+  try {
+    const text = JSON.stringify(err);
+    if (text && text !== '{}' && text !== 'null') return `Something went wrong: ${text.slice(0, 300)}`;
+  } catch {
+    // fall through
+  }
   return 'Something went wrong';
 }
 

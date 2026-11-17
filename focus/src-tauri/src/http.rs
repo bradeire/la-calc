@@ -36,9 +36,19 @@ pub fn validate(req: &HttpRequest) -> Result<reqwest::Method, String> {
     }
 }
 
+/// An HTTP client builder that works on every platform. On Android, reqwest's default
+/// (the OS certificate verifier) needs JVM initialisation the app doesn't do, which made every
+/// HTTPS request fail there; Mozilla's root certificates are used instead.
+pub fn client_builder() -> reqwest::ClientBuilder {
+    let builder = reqwest::Client::builder();
+    #[cfg(target_os = "android")]
+    let builder = builder.tls_certs_only(webpki_root_certs::TLS_SERVER_ROOT_CERTS.iter().filter_map(|c| reqwest::Certificate::from_der(c.as_ref()).ok()));
+    builder
+}
+
 pub async fn send(req: HttpRequest) -> Result<HttpResponse, String> {
     let method = validate(&req)?;
-    let client = reqwest::Client::builder()
+    let client = client_builder()
         .timeout(Duration::from_millis(req.timeout_ms.unwrap_or(30_000).min(120_000)))
         .user_agent("Focus")
         .build()
