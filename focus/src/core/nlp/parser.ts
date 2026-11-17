@@ -77,6 +77,13 @@ export interface ParseContext {
   disabled?: ReadonlySet<string>;
   /** Selected option index per ambiguity key. */
   choices?: Readonly<Record<string, number>>;
+  /**
+   * Text that wasn't typed into Quick Add (Capture, links, Share, the local API): be conservative.
+   * Nothing inside (brackets) or [brackets] is read as a date, time, priority etc., and a day and
+   * month without a year that has just passed (e.g. "11 Nov" on 17 Nov) stays text instead of
+   * jumping to next year.
+   */
+  imported?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -436,6 +443,8 @@ export function parseQuickAdd(input: string, ctx: ParseContext = {}): ParseResul
   const pickDate = (raw: string, key: string): ISODate | null => {
     const r = resolveDate(raw, today, prefs);
     if (!r) return null;
+    // Imported text: a recently passed day/month (no year) is a reference, not next year's date.
+    if (ctx.imported && !/\d{4}/.test(raw) && r.date > addDays(today, 300)) return null;
     if (r.ambiguity) {
       const sel = ambiguity(key, r.ambiguity.message, r.ambiguity.options.map((o) => o.label));
       return r.ambiguity.options[sel]!.date;
@@ -595,11 +604,16 @@ export function parseQuickAdd(input: string, ctx: ParseContext = {}): ParseResul
     return true;
   }
 
+  // Imported text: spans inside (…) or […] are never parsed.
+  const protectedSpans: [number, number][] = [];
+  if (ctx.imported) for (const p of input.matchAll(/\([^()]*\)|\[[^[\]]*\]/g)) protectedSpans.push([p.index!, p.index! + p[0].length]);
+  const isProtected = (s: number, e: number) => protectedSpans.some(([a, b]) => s < b && e > a);
+
   for (const matcher of matchers) {
     matcher.regex.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = matcher.regex.exec(work)) !== null) {
-      if (m[0].trim() === '') {
+      if (m[0].trim() === '' || isProtected(m.index, m.index + m[0].length)) {
         matcher.regex.lastIndex = m.index + 1;
         continue;
       }

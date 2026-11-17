@@ -174,7 +174,7 @@ export class ApiService {
         const b = this.parse(createSchema, req.body);
         let t: Task;
         if (b.text) {
-          const ctx = { now: this.now(), projects: this.svc.filters.lookups().projects, labels: this.svc.filters.lookups().labels };
+          const ctx = { imported: true, now: this.now(), projects: this.svc.filters.lookups().projects, labels: this.svc.filters.lookups().labels };
           // "#Project" in text never creates or picks a project: tasks go to the Inbox (or the
           // existing projectId given) and the user files them; the tag is kept as a suggestion.
           const { text, suggested } = stripProjectTags(b.text, ctx);

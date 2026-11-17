@@ -1,7 +1,7 @@
 {
   "name": "focus",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.8.1",
   "type": "module",
   "description": "Focus – a local-first, cross-platform personal productivity application",
   "scripts": {

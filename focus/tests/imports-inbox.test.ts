@@ -51,4 +51,12 @@ describe('imports land in the Inbox', () => {
     const b = post({ text: 'Paint fence', projectId: home.id }).body as { task: { projectId: string } };
     expect(b.task.projectId).toBe(home.id);
   });
+
+  it('Capture reads dates conservatively (brackets, recently passed dates)', async () => {
+    const { app } = await makeApp(new Date(2026, 10, 17, 9));
+    const { source, candidates } = app.capture.analyse('- [ ] Check portal messages (5 and 11 Nov) re Octopus tomorrow');
+    const [t] = app.capture.commit(candidates, source, null);
+    expect(t!.title).toBe('Check portal messages (5 and 11 Nov) re Octopus');
+    expect(t!.scheduledDate).toBe('2026-11-18');
+  });
 });

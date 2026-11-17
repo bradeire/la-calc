@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.1 — 2026-11-17
+
+### Fixed
+- Imported tasks (Capture, Claude links, Share, the local API) read dates conservatively: nothing inside (brackets)
+  or [brackets] is taken as a date, time, priority or label, so references like "(5 and 11 Nov)" stay in the title;
+  and a day and month without a year that has just passed (e.g. "11 Nov" on 17 Nov) stays text instead of being
+  scheduled for next year, so a later "tomorrow" is used. Typing in Quick Add is unchanged.
+
 ## 0.8.0 — 2026-11-17 (sorting, grouping, easier deadlines)
 
 ### Added

@@ -13,6 +13,8 @@ export class CaptureService {
   private ctx() {
     const s = this.r.settings.getAll();
     return {
+      // Pasted/linked/shared text: conservative date reading (see ParseContext.imported).
+      imported: true,
       now: this.now(),
       prefs: { dateOrder: s.dateOrder, hour12: s.hour12, weekStartsOn: s.weekStartsOn },
       projects: this.r.projects.list().map((p) => ({ id: p.id, name: p.name })),
