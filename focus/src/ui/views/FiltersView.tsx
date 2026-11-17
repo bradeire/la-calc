@@ -8,6 +8,7 @@ import { go, navigate } from '../router';
 import { Button, EmptyState, IconButton, Input, Select, cx } from '../primitives';
 import { GroupHeading, ViewBody } from '../components/common';
 import { TaskList } from '../components/TaskList';
+import { OrganisedTaskList, ViewOptionsButton } from '../components/ViewOptions';
 import { ViewHeader } from '../layout/Chrome';
 import { FilterFromWords } from '../components/AiFeatures';
 
@@ -99,15 +100,18 @@ export function FilterResultsView({ id }: { id: string }) {
         icon={<Filter size={22} style={{ color: filter.color }} />}
         subtitle={<code>{filter.query}</code>}
         actions={
-          <Button size="sm" variant="ghost" onClick={() => navigate(`/filter/${id}/edit`)}>
-            <Pencil size={14} /> Edit
-          </Button>
+          <>
+            <ViewOptionsButton viewId={`filter:${id}`} />
+            <Button size="sm" variant="ghost" onClick={() => navigate(`/filter/${id}/edit`)}>
+              <Pencil size={14} /> Edit
+            </Button>
+          </>
         }
       />
       <ViewBody>
         {!filter.definition && <p className="text-danger">This filter could not be read. Edit it to repair it.</p>}
         <p className="mb-2 text-[0.85rem] text-muted">{tasks.length} task{tasks.length === 1 ? '' : 's'}</p>
-        <TaskList tasks={tasks} tree={false} showProject draggable ariaLabel={`Tasks matching ${filter.name}`} />
+        <OrganisedTaskList viewId={`filter:${id}`} tasks={tasks} tree={false} showProject draggable ariaLabel={`Tasks matching ${filter.name}`} />
         {tasks.length === 0 && <EmptyState icon={<Filter size={26} />} title="Nothing matches right now" />}
       </ViewBody>
     </>

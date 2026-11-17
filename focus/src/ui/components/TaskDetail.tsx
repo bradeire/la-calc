@@ -98,6 +98,19 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
   const openQuickAdd = useUi((s) => s.openQuickAdd);
   const [title, setTitle] = useState(task.title);
   const [desc, setDesc] = useState(task.description);
+  // Optional fields show only when set, or once the user taps "+ <field>" (keeps new tasks calm).
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
+  useEffect(() => setRevealed(new Set()), [task.id]);
+  const reveal = (k: string) => setRevealed((s) => new Set(s).add(k));
+  const optional = {
+    status: task.status !== 'inbox' && task.status !== 'active',
+    starts: !!task.startDate,
+    estimate: !!task.durationMinutes,
+    repeat: !!task.recurrence,
+    labels: task.labelIds.length > 0,
+    today: task.pinnedToday,
+  };
+  const shows = (k: keyof typeof optional) => optional[k] || revealed.has(k);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => setTitle(task.title), [task.title]);
   useEffect(() => setDesc(task.description), [task.description]);
@@ -200,6 +213,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
         />
 
         <div className="mt-2 flex flex-col">
+          {shows('status') && (
           <Row icon={<CircleDot size={15} />} label="Status">
             <Select
               aria-label="Status"
@@ -214,6 +228,7 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
               ))}
             </Select>
           </Row>
+          )}
           <Row icon={<Folder size={15} />} label="Project">
             <ValueButton innerRef={projPop.ref} onClick={projPop.toggle} label="Change project">
               {project ? <ProjectIcon icon={project.icon} color={project.color} size={14} /> : <Inbox size={14} />}
@@ -242,17 +257,24 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
               <span className="text-[0.8rem] text-danger">Scheduled after the deadline</span>
             )}
           </Row>
+          {shows('starts') && (
           <Row icon={<CalendarRange size={15} />} label="Starts">
             <ValueButton innerRef={startPop.ref} onClick={startPop.toggle} muted={!task.startDate} label="Change start date">
               {task.startDate ? formatRelativeDate(task.startDate, today, prefs) : 'Any time'}
             </ValueButton>
           </Row>
+          )}
+          {shows('estimate') && (
           <Row icon={<Timer size={15} />} label="Estimate">
             <DurationInput value={task.durationMinutes} onChange={(m) => update({ durationMinutes: m })} />
           </Row>
+          )}
+          {shows('repeat') && (
           <Row icon={<Repeat size={15} />} label="Repeat">
             <RecurrenceEditor task={task} />
           </Row>
+          )}
+          {shows('labels') && (
           <Row icon={<Tag size={15} />} label="Labels">
             {task.labelIds
               .map((id) => labels.find((l) => l.id === id))
@@ -264,10 +286,38 @@ function TaskEditor({ task, variant }: { task: Task; variant: 'panel' | 'sheet' 
               <Plus size={14} /> {task.labelIds.length ? '' : 'Add label'}
             </ValueButton>
           </Row>
+          )}
+          {shows('today') && (
           <Row icon={<Pin size={15} />} label="On Today">
             <Switch checked={task.pinnedToday} onChange={(v) => update({ pinnedToday: v })} label="Show on Today even without a date" />
             <span className="text-[0.8rem] text-subtle">Show on Today without a date</span>
           </Row>
+          )}
+          {(Object.keys(optional) as (keyof typeof optional)[]).some((k) => !shows(k)) && (
+            <div className="flex flex-wrap items-center gap-1 py-1.5" aria-label="Add details">
+              {(
+                [
+                  ['labels', 'Labels', <Tag key="i" size={13} />],
+                  ['estimate', 'Estimate', <Timer key="i" size={13} />],
+                  ['repeat', 'Repeat', <Repeat key="i" size={13} />],
+                  ['starts', 'Start date', <CalendarRange key="i" size={13} />],
+                  ['today', 'Pin to Today', <Pin key="i" size={13} />],
+                  ['status', 'Status', <CircleDot key="i" size={13} />],
+                ] as const
+              )
+                .filter(([k]) => !shows(k))
+                .map(([k, label, icon]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => (k === 'labels' ? (reveal(k), setTimeout(() => labelPop.show(), 0)) : reveal(k))}
+                    className="inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-[0.8rem] text-muted hover:bg-surface-2 hover:text-fg"
+                  >
+                    <Plus size={12} aria-hidden /> {icon} {label}
+                  </button>
+                ))}
+            </div>
+          )}
         </div>
 
         <Section icon={<CircleDot size={15} />} title="Subtasks" count={subtasks.length} action={

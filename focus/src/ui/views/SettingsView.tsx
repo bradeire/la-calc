@@ -29,13 +29,14 @@ function Group({ title, icon, children }: { title: string; icon: ReactNode; chil
 function Item({ label, hint, children, htmlFor }: { label: string; hint?: ReactNode; children: ReactNode; htmlFor?: string }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-      <div className="min-w-0 flex-1">
+      {/* At least ~12rem for the label: on narrow screens the controls wrap onto their own line instead of squeezing it. */}
+      <div className="min-w-[min(12rem,100%)] flex-1 basis-48">
         <label htmlFor={htmlFor} className="text-[0.93rem]">
           {label}
         </label>
         {hint && <p className="text-[0.8rem] text-muted">{hint}</p>}
       </div>
-      <div className="flex items-center gap-2">{children}</div>
+      <div className="flex max-w-full flex-wrap items-center gap-2">{children}</div>
     </div>
   );
 }

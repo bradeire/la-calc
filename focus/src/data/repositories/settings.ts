@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PALETTE } from '@/core/domain/types';
+import { viewOptionsSchema } from '@/core/view-options';
 import type { DatabaseDriver } from '../db/driver';
 import { nowIso } from './base';
 
@@ -63,6 +64,8 @@ export const settingsSchema = z.object({
       approvedAutomations: z.array(z.string()).default([]),
     })
     .default({ enabled: false, port: 47615, allowLan: false, approvedAutomations: [] }),
+  /** Sort and grouping per task list, keyed by view (e.g. "inbox", "project:<id>"). This device only. */
+  viewOptions: z.record(z.string(), viewOptionsSchema).default({}),
   goals: goalsSchema.default({ dailyTasks: null, weeklyTasks: null, dailyMinutes: null, weeklyMinutes: null, skipNonWorkingDays: true }),
 });
 

@@ -5,7 +5,7 @@ import { errorMessage, useAction, useApp, useQuery } from '../hooks';
 import { go } from '../router';
 import { Button, Dialog, EmptyState, Field, IconButton, Input, cx } from '../primitives';
 import { AddTaskRow, ViewBody } from '../components/common';
-import { TaskList } from '../components/TaskList';
+import { OrganisedTaskList, ViewOptionsButton } from '../components/ViewOptions';
 import { ViewHeader } from '../layout/Chrome';
 
 function LabelDialog({ open, onClose, label }: { open: boolean; onClose: () => void; label?: Label }) {
@@ -106,9 +106,14 @@ export function LabelView({ id }: { id: string }) {
   if (!label || label.deletedAt) return <EmptyState icon={<Tag size={26} />} title="Label not found" action={<Button onClick={() => go({ name: 'labels' })}>All labels</Button>} />;
   return (
     <>
-      <ViewHeader title={label.name} icon={<Tag size={22} style={{ color: label.color }} />} subtitle={`${tasks.length} open task${tasks.length === 1 ? '' : 's'}`} />
+      <ViewHeader
+        title={label.name}
+        icon={<Tag size={22} style={{ color: label.color }} />}
+        subtitle={`${tasks.length} open task${tasks.length === 1 ? '' : 's'}`}
+        actions={<ViewOptionsButton viewId={`label:${id}`} />}
+      />
       <ViewBody>
-        <TaskList tasks={tasks} tree={false} showProject draggable ariaLabel={`Tasks labelled ${label.name}`} />
+        <OrganisedTaskList viewId={`label:${id}`} tasks={tasks} tree={false} showProject draggable ariaLabel={`Tasks labelled ${label.name}`} />
         <AddTaskRow defaults={{ labelIds: [id] }} />
         {tasks.length === 0 && <EmptyState icon={<Tag size={26} />} title={`Nothing labelled ${label.name}`} />}
       </ViewBody>

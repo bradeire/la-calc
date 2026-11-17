@@ -8,6 +8,7 @@ import { Button, IconButton, cx } from '../primitives';
 import { AddTaskRow, GroupHeading, ViewBody } from '../components/common';
 import { DRAG_MIME, TaskList } from '../components/TaskList';
 import { ViewHeader } from '../layout/Chrome';
+import { ViewOptionsButton, useTaskSorter } from '../components/ViewOptions';
 
 export function UpcomingView() {
   const app = useApp();
@@ -27,6 +28,7 @@ export function UpcomingView() {
   const { attention } = usePlan();
   const loads = useQuery(() => new Map(app.planning.workload(start, end).map((l) => [l.date, l])), [start, end]);
 
+  const sortDay = useTaskSorter('upcoming');
   // Each task is listed once: on its scheduled date if in range, otherwise on its deadline.
   const byDay = useMemo(() => {
     const m = new Map<string, Task[]>();
@@ -35,8 +37,9 @@ export function UpcomingView() {
       if (!m.has(day)) m.set(day, []);
       m.get(day)!.push(t);
     }
+    for (const [d, list] of m) m.set(d, sortDay(list));
     return m;
-  }, [tasks, start, end]);
+  }, [tasks, start, end, sortDay]);
 
   const weekStart = startOfWeek(start, prefs.weekStartsOn);
   const strip = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -49,6 +52,7 @@ export function UpcomingView() {
         icon={<CalendarRange size={22} className="text-violet-500" />}
         actions={
           <>
+            <ViewOptionsButton viewId="upcoming" groups={['none']} />
             <Button size="sm" variant={attention ? 'secondary' : 'ghost'} onClick={() => setPlanOpen(true)}>
               <Scale size={14} /> Review plan{attention ? ` (${attention})` : ''}
             </Button>

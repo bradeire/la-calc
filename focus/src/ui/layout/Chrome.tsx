@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, Workflow, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X, BarChart3 } from 'lucide-react';
+import { CalendarDays, Check, CircleCheck, Ellipsis, Filter, Flag, Workflow, FolderInput, Inbox, Menu, PanelLeftOpen, Plus, Search, Settings, Sun, Tag, Target, Trash2, X, BarChart3, CalendarClock } from 'lucide-react';
 import { useUi } from '@/state/ui-store';
 import { useAction, useApp, useIsDesktop, useToday } from '../hooks';
 import { go, parseHash, quickAddDefaultsFor, useLocation } from '../router';
@@ -15,20 +15,21 @@ export function ViewHeader({ title, subtitle, icon, actions, wide }: { title: Re
   const isDesktop = useIsDesktop();
   return (
     <header className="pt-safe sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur lg:static lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
-      <div className={cx('mx-auto flex min-h-14 items-center gap-2 px-4 lg:min-h-16 lg:px-8 lg:pt-4', wide ? 'max-w-5xl' : 'max-w-3xl')}>
+      {/* Wraps on narrow screens: the title keeps at least ~10rem and the buttons move to a second line. */}
+      <div className={cx('mx-auto flex min-h-14 flex-wrap items-center gap-x-2 gap-y-1 px-4 py-1 lg:min-h-16 lg:px-8 lg:pt-4', wide ? 'max-w-5xl' : 'max-w-3xl')}>
         {isDesktop && collapsed && (
           <IconButton label="Open sidebar" onClick={toggleSidebar}>
             <PanelLeftOpen size={18} />
           </IconButton>
         )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[min(10rem,100%)] flex-1">
           <h1 className="flex items-center gap-2 truncate text-[1.3rem] font-bold tracking-tight lg:text-[1.45rem]">
             {icon}
             {title}
           </h1>
           {subtitle && <p className="truncate text-[0.82rem] text-muted">{subtitle}</p>}
         </div>
-        <div className="flex shrink-0 items-center gap-0.5">
+        <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-0.5">
           {actions}
           {!isDesktop && (
             <IconButton label="Search" onClick={() => go({ name: 'search', q: '' })}>
@@ -165,6 +166,7 @@ export function SelectionBar() {
   const selection = useUi((s) => s.selection);
   const clear = useUi((s) => s.clearSelection);
   const date = usePopover();
+  const deadline = usePopover();
   const prio = usePopover();
   const move = usePopover();
   const loc = useLocation();
@@ -191,6 +193,9 @@ export function SelectionBar() {
         <IconButton ref={date.ref} label="Schedule selected" onClick={date.toggle}>
           <CalendarDays size={17} />
         </IconButton>
+        <IconButton ref={deadline.ref} label="Set deadline for selected" onClick={deadline.toggle}>
+          <CalendarClock size={17} />
+        </IconButton>
         <IconButton ref={prio.ref} label="Set priority" onClick={prio.toggle}>
           <Flag size={17} />
         </IconButton>
@@ -205,6 +210,7 @@ export function SelectionBar() {
         </IconButton>
       </div>
       <DatePopover anchor={date.ref} open={date.open} onClose={date.hide} value={null} onChange={(d) => run((force) => app.tasks.bulkUpdate(selection, { scheduledDate: d }, { force }))} />
+      <DatePopover anchor={deadline.ref} open={deadline.open} onClose={deadline.hide} title="Deadline" value={null} onChange={(d) => run((force) => app.tasks.bulkUpdate(selection, { deadline: d }, { force }))} />
       <PriorityPopover anchor={prio.ref} open={prio.open} onClose={prio.hide} value={4} onChange={(p) => run(() => app.tasks.bulkUpdate(selection, { priority: p }))} />
       <ProjectPopover anchor={move.ref} open={move.open} onClose={move.hide} value={{ projectId: null }} onChange={(v) => run(() => app.tasks.move(selection, v))} />
     </div>

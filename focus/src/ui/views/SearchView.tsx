@@ -5,7 +5,7 @@ import { useApp, useQuery } from '../hooks';
 import { go, navigate } from '../router';
 import { EmptyState, Input, Switch } from '../primitives';
 import { GroupHeading, ViewBody } from '../components/common';
-import { TaskList } from '../components/TaskList';
+import { OrganisedTaskList, ViewOptionsButton } from '../components/ViewOptions';
 import { ProjectIcon, readableColor } from '../components/meta';
 import { ViewHeader } from '../layout/Chrome';
 
@@ -30,15 +30,15 @@ export function SearchView({ q }: { q: string }) {
   const shown = includeDone ? results : results.filter((t) => isOpenStatus(t.status));
   return (
     <>
-      <ViewHeader title="Search" icon={<Search size={22} className="text-muted" />} />
+      <ViewHeader title="Search" icon={<Search size={22} className="text-muted" />} actions={<ViewOptionsButton viewId="search" />} />
       <ViewBody>
-        <div className="sticky top-14 z-10 -mx-1 bg-bg px-1 pb-2 lg:top-0">
+        <div className="-mx-1 bg-bg px-1 pb-2 pt-3 lg:sticky lg:top-0 lg:z-10">
           <Input
             autoFocus
             type="search"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Search tasks, descriptions, comments, projects and labels"
+            placeholder="Search tasks, notes, projects, labels"
             aria-label="Search"
             enterKeyHint="search"
             className="h-11 text-[1rem]"
@@ -64,7 +64,7 @@ export function SearchView({ q }: { q: string }) {
         {deferred.trim() ? (
           shown.length ? (
             <GroupHeading title="Tasks" count={shown.length}>
-              <TaskList tasks={shown} tree={false} showProject ariaLabel="Search results" />
+              <OrganisedTaskList viewId="search" tasks={shown} tree={false} showProject ariaLabel="Search results" />
             </GroupHeading>
           ) : (
             <EmptyState icon={<Search size={26} />} title="No matching tasks" body={results.length ? 'Only completed tasks match — switch on “Include completed”.' : 'Try fewer or different words. Search matches the start of words.'} />

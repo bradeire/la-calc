@@ -3,7 +3,7 @@ import { useUi } from '@/state/ui-store';
 import { useApp, useQuery } from '../hooks';
 import { Button, EmptyState } from '../primitives';
 import { AddTaskRow, ViewBody } from '../components/common';
-import { TaskList } from '../components/TaskList';
+import { OrganisedTaskList, ViewOptionsButton } from '../components/ViewOptions';
 import { ViewHeader } from '../layout/Chrome';
 
 export function InboxView() {
@@ -18,13 +18,16 @@ export function InboxView() {
         icon={<Inbox size={22} className="text-p3" />}
         subtitle={top ? `${top} to process` : undefined}
         actions={
-          <Button size="sm" variant="ghost" onClick={() => openCapture()}>
-            <ClipboardPaste size={14} /> Capture from text
-          </Button>
+          <>
+            <ViewOptionsButton viewId="inbox" groups={['none', 'label', 'priority', 'deadline', 'scheduled', 'status']} />
+            <Button size="sm" variant="ghost" onClick={() => openCapture()}>
+              <ClipboardPaste size={14} /> Capture from text
+            </Button>
+          </>
         }
       />
       <ViewBody>
-        <TaskList tasks={tasks} reorderable ariaLabel="Inbox tasks" />
+        <OrganisedTaskList viewId="inbox" tasks={tasks} reorderable ariaLabel="Inbox tasks" />
         <AddTaskRow />
         {tasks.length === 0 && (
           <EmptyState

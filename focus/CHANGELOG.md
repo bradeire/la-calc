@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.8.0 — 2026-11-17 (sorting, grouping, easier deadlines)
+
+### Added
+- **Sort and group** (the **Sort** button in the view header) in Inbox, Today, projects (list layout), labels,
+  saved filters and search; Upcoming sorts within each day. Sort by your manual order, deadline, scheduled date,
+  date added, project, name or priority, ascending or descending (tasks without the date always last). Group by
+  project, label (a task with two labels appears under both), priority, deadline or scheduled date (Overdue, Today,
+  Tomorrow, This week, Next week, Later, No date) or status. Subtasks stay with their parent. Each view remembers
+  its choice on this device; drag-to-reorder works when the manual order is shown. In a project, grouping replaces
+  sections on screen without changing them.
+- **Deadlines are quick to change:** tap a task's deadline to reschedule it; "Schedule…" and "Change deadline…" in
+  the task menu; swiping left on a task whose only date is a deadline moves the deadline; a deadline button for
+  selected tasks. Date pickers offer "1 day / 1 week / 1 month later" relative to the current date.
+- Today → Overdue: **Reschedule…** moves every overdue date to a day you pick.
+
+### Changed
+- **Calmer task details:** Project, Priority, Scheduled and Deadline always show; Labels, Estimate, Repeat, Start
+  date, Pin to Today and Status appear only when set, or after tapping their "+" chip.
+
+### Fixed
+- Phone layout: the Upcoming title was cut off by its buttons (header buttons now wrap onto a second line); the
+  search box sat under the header; settings rows (e.g. Working hours) squeezed their labels instead of wrapping.
+- Today → Overdue → "Move to today" ignored tasks whose only overdue date was a deadline (and was greyed out when
+  all of them were).
+
 ## 0.7.5 — 2026-11-17
 
 ### Changed

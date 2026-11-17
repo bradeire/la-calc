@@ -1,7 +1,7 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as RPointerEvent } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
-  ArrowUpLeft, CalendarDays, CalendarRange, Check, Clock, Lock, ChevronRight, CircleDot, Copy, Ellipsis, FolderInput, Hourglass, ListPlus, MessageSquare,
+  ArrowUpLeft, CalendarClock, CalendarDays, CalendarRange, Check, Clock, Lock, ChevronRight, CircleDot, Copy, Ellipsis, FolderInput, Hourglass, ListPlus, MessageSquare,
   Paperclip, PencilLine, Trash2,
 } from 'lucide-react';
 import { isOpenStatus, STATUS_LABELS, TASK_STATUSES, type Label, type Priority, type Project, type Task, type TaskStatus } from '@/core/domain/types';
@@ -215,6 +215,7 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
   const [swipe, setSwipe] = useState(0);
   const swipeStart = useRef<{ x: number; y: number; active: boolean } | null>(null);
   const datePop = usePopover();
+  const deadlinePop = usePopover();
   const menu = usePopover();
   const prioPop = usePopover();
   const movePop = usePopover();
@@ -274,7 +275,11 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
     swipeStart.current = null;
     if (s?.active) {
       if (swipe > 80) complete();
-      else if (swipe < -80) datePop.show();
+      // Swipe left reschedules: the deadline when that's the task's only date, else the scheduled date.
+      else if (swipe < -80) {
+        if (task.deadline && !task.scheduledDate) deadlinePop.show();
+        else datePop.show();
+      }
     }
     setSwipe(0);
   };
@@ -402,7 +407,18 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
                 <Clock size={12} aria-hidden /> {formatTime(task.scheduledTime, ctx.prefs)}
               </span>
             )}
-            <DeadlineChip deadline={task.deadline} today={ctx.today} prefs={ctx.prefs} />
+            {task.deadline && (
+              <button
+                ref={deadlinePop.ref}
+                type="button"
+                onClick={(e) => (e.stopPropagation(), deadlinePop.toggle())}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="-mx-1 rounded px-1 hover:bg-surface-2"
+                title="Change deadline"
+              >
+                <DeadlineChip deadline={task.deadline} today={ctx.today} prefs={ctx.prefs} />
+              </button>
+            )}
             <DurationChip minutes={task.durationMinutes} />
             {ctx.blocked.has(task.id) && open && (
               <span className="inline-flex items-center gap-1 text-warn" title="Waiting on unfinished tasks">
@@ -475,10 +491,24 @@ const TaskRow = memo(function TaskRow({ node, index, ctx, hideDate, siblings, co
         time={task.scheduledTime}
         onTimeChange={(t) => act(() => app.tasks.update(task.id, { scheduledTime: t }))}
       />
+      <DatePopover
+        anchor={task.deadline ? deadlinePop.ref : menu.ref}
+        open={deadlinePop.open}
+        onClose={deadlinePop.hide}
+        title="Deadline"
+        value={task.deadline}
+        onChange={(d) => act((force) => app.tasks.update(task.id, { deadline: d }, { force }))}
+      />
       <Popover anchor={menu.ref} open={menu.open} onClose={menu.hide} label="Task actions" width={230}>
         <div role="menu" className="py-1">
           <MenuItem icon={<PencilLine size={15} />} onClick={() => (menu.hide(), openTask(task.id))} shortcut="Enter">
             Open details
+          </MenuItem>
+          <MenuItem icon={<CalendarDays size={15} />} onClick={() => (menu.hide(), datePop.show())}>
+            Schedule…
+          </MenuItem>
+          <MenuItem icon={<CalendarClock size={15} />} onClick={() => (menu.hide(), deadlinePop.show())}>
+            {task.deadline ? 'Change deadline…' : 'Add deadline…'}
           </MenuItem>
           <MenuItem icon={<PriorityFlag p={task.priority} />} onClick={() => (menu.hide(), prioPop.show())}>
             Priority

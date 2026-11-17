@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { Armchair, CalendarDays, CalendarX, Check, Inbox, Plus, Sun, Sunrise } from 'lucide-react';
-import { addDays, formatLongDate, startOfWeek, weekdayIndex, WEEKDAY_SHORT } from '@/core/dates';
+import { Armchair, CalendarDays, CalendarPlus, CalendarX, Check, Inbox, Plus, Sun, Sunrise } from 'lucide-react';
+import { addDays, addMonths, formatLongDate, startOfWeek, weekdayIndex, WEEKDAY_SHORT } from '@/core/dates';
 import { resolveDate } from '@/core/nlp/parser';
 import type { Priority } from '@/core/domain/types';
 import { useApp, useAction, useDatePrefs, useQuery, useToday } from '../hooks';
@@ -44,7 +44,15 @@ export function DatePopover({
     { label: 'Tomorrow', date: addDays(today, 1), icon: <Sunrise size={16} className="text-warn" /> },
     ...(wd < 5 ? [{ label: 'This weekend', date: addDays(today, 5 - wd), icon: <Armchair size={16} className="text-p3" /> }] : []),
     { label: 'Next week', date: addDays(startOfWeek(today, prefs.weekStartsOn), 7), icon: <CalendarDays size={16} className="text-accent" /> },
-    { label: 'No date', date: null, icon: <CalendarX size={16} /> },
+    // Push an existing date back (handy for deadlines): relative to the current value.
+    ...(value
+      ? [
+          { label: '1 day later', date: addDays(value, 1), icon: <CalendarPlus size={16} className="text-muted" /> },
+          { label: '1 week later', date: addDays(value, 7), icon: <CalendarPlus size={16} className="text-muted" /> },
+          { label: '1 month later', date: addMonths(value, 1), icon: <CalendarPlus size={16} className="text-muted" /> },
+        ]
+      : []),
+    { label: title === 'Deadline' ? 'No deadline' : 'No date', date: null, icon: <CalendarX size={16} /> },
   ];
   return (
     <Popover anchor={anchor} open={open} onClose={onClose} label={title} width={290}>

@@ -28,6 +28,8 @@ _Last updated: 2026-11-16 (session 5 — Phase 4)._
 | Project layouts: List, Board, Table, Calendar (month) | Implemented | Board/Table covered by E2E; per-project default layout persisted |
 | Project notes and attachments | Tested | E2E: add file, reload, still present |
 | Labels: CRUD, colours, unique names, Quick Add creation, label view | Tested | |
+| Sort and group per view (manual, deadline, scheduled, added, project, name, priority; group by project, label, priority, deadline, scheduled, status), saved per view on this device | Tested | 7 unit tests + E2E (desktop and Pixel 7 emulation) |
+| Quick deadline changes: tap the deadline, task menu, swipe, selected tasks, Overdue → Move to today / Reschedule… | Tested | E2E; swipe not tested on hardware |
 | Inbox, Today, Upcoming, Search, Trash views | Tested | |
 | Full-text search (FTS4: titles, descriptions, comments, project & label names) | Tested | prefix + accent-insensitive |
 | Focus mode with start/stop timer and next task | Implemented | timer logic Tested |

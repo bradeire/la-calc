@@ -15,6 +15,7 @@ import { usePopover } from '../components/pickers';
 import { PRIORITY_COLOR, ProgressRing, ProjectIcon } from '../components/meta';
 import { saveFile } from '../download';
 import { ViewHeader } from '../layout/Chrome';
+import { OrganisedTaskList, ViewOptionsButton, useTaskSorter, useViewOptions } from '../components/ViewOptions';
 import { AttachmentsSection } from '../components/TaskDetail';
 import { ProjectSummaryDialog, useAiEnabled } from '../components/AiFeatures';
 import { CalendarView } from './CalendarView';
@@ -74,6 +75,7 @@ export function ProjectView({ id }: { id: string }) {
         }
         actions={
           <>
+            {project.layout === 'list' && <ViewOptionsButton viewId={`project:${id}`} groups={['none', 'label', 'priority', 'deadline', 'scheduled', 'status']} />}
             <div className="mr-1 hidden rounded-lg border border-line p-0.5 sm:flex" role="radiogroup" aria-label="Layout">
               {LAYOUTS.map((l) => (
                 <button
@@ -298,13 +300,27 @@ function ListLayout({ project, tasks, sections }: { project: Project; tasks: Tas
   const app = useApp();
   const act = useAction();
   const [newSection, setNewSection] = useState('');
-  const unsectioned = tasks.filter((t) => !t.sectionId || !sections.some((s) => s.id === t.sectionId));
+  const viewId = `project:${project.id}`;
+  const [opts] = useViewOptions(viewId);
+  const sort = useTaskSorter(viewId);
+  const manual = opts.sort === 'manual' && opts.dir === 'asc';
+  const sorted = sort(tasks);
+  const unsectioned = sorted.filter((t) => !t.sectionId || !sections.some((s) => s.id === t.sectionId));
+  if (opts.group !== 'none') {
+    // Grouping replaces sections for display; tasks keep their sections.
+    return (
+      <>
+        <OrganisedTaskList viewId={viewId} tasks={tasks} ariaLabel={`${project.name} tasks`} />
+        <AddTaskRow defaults={{ projectId: project.id }} />
+      </>
+    );
+  }
   return (
     <>
-      <TaskList tasks={unsectioned} reorderable ariaLabel={`${project.name} tasks`} />
+      <TaskList tasks={unsectioned} reorderable={manual} ariaLabel={`${project.name} tasks`} />
       <AddTaskRow defaults={{ projectId: project.id }} />
       {sections.map((s, i) => (
-        <SectionGroup key={s.id} section={s} tasks={tasks.filter((t) => t.sectionId === s.id)} project={project} isFirst={i === 0} isLast={i === sections.length - 1} />
+        <SectionGroup key={s.id} section={s} tasks={sorted.filter((t) => t.sectionId === s.id)} reorderable={manual} project={project} isFirst={i === 0} isLast={i === sections.length - 1} />
       ))}
       <form
         className="mt-6 flex items-center gap-2"
@@ -322,7 +338,7 @@ function ListLayout({ project, tasks, sections }: { project: Project; tasks: Tas
   );
 }
 
-function SectionGroup({ section, tasks, project, isFirst, isLast }: { section: Section; tasks: Task[]; project: Project; isFirst: boolean; isLast: boolean }) {
+function SectionGroup({ section, tasks, project, isFirst, isLast, reorderable = true }: { section: Section; tasks: Task[]; project: Project; isFirst: boolean; isLast: boolean; reorderable?: boolean }) {
   const drop = useSectionDrop(section.id, project.id);
   return (
     <GroupHeading
@@ -335,7 +351,7 @@ function SectionGroup({ section, tasks, project, isFirst, isLast }: { section: S
       onDrop={drop.onDrop}
       highlight={drop.highlight}
     >
-      <TaskList tasks={tasks} reorderable ariaLabel={`Section ${section.name}`} />
+      <TaskList tasks={tasks} reorderable={reorderable} ariaLabel={`Section ${section.name}`} />
       <AddTaskRow defaults={{ projectId: project.id, sectionId: section.id }} />
     </GroupHeading>
   );
