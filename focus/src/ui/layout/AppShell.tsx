@@ -158,17 +158,6 @@ export function AppShell() {
     }
   }, [loc.raw, settings.onboarded, openQuickAdd]);
 
-  // Android share sheet (installed PWA): text arrives as ?title=&text=&url= on the start URL.
-  useEffect(() => {
-    if (!settings.onboarded) return;
-    const q = new URLSearchParams(window.location.search);
-    const shared = [q.get('title'), q.get('text'), q.get('url')].filter(Boolean).join('\n').trim();
-    if (!shared) return;
-    history.replaceState(history.state, '', window.location.pathname + window.location.hash);
-    if (shared.includes('\n') || shared.length > 200) useUi.getState().openCapture(shared);
-    else openQuickAdd({}, shared);
-  }, [settings.onboarded, openQuickAdd]);
-
   // Tap-to-add links (focus://add?text=…): pre-fill Quick Add or Capture; the user confirms.
   const app = useApp();
   const pendingLinks = useRef<string[]>([]);

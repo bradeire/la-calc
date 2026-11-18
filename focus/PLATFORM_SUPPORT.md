@@ -2,9 +2,9 @@
 
 | Platform | Priority | Code | Build | Tested | Verified on device |
 |---|---|---|---|---|---|
-| Web / PWA (Chromium) | — | ✅ | ✅ `vite build` | ✅ Playwright desktop + Pixel 7 emulation, offline reload | ❌ |
+| Browser build (tests and development only; not distributed since 0.9.0) | — | ✅ | ✅ `vite build` | ✅ Playwright desktop + Pixel 7 emulation | — |
 | Linux desktop (Tauri, WebKitGTK) | Dev only | ✅ | ✅ `.deb` release bundle (3.2 MB) | ✅ native persistence round trip under Xvfb | ❌ |
-| Windows 11 (Tauri, WebView2) | Highest | ✅ shared shell + per-user NSIS installer config | ❌ must be built on Windows | ❌ | ❌ |
+| Windows 11 (Tauri, WebView2) | Highest | ✅ shared shell + per-user NSIS installer config | ✅ NSIS installer built by GitHub Actions on every push (`.github/workflows/focus-windows.yml`) | ❌ | ❌ |
 | Android (Pixel, Tauri) | Highest | ✅ generated project in `src-tauri/gen/android` | ✅ signed release APK, arm64 (11 MB) | Emulated viewport only; APK not run (no emulator in the build container) | ❌ |
 | macOS | Compatibility | Shared | ❌ requires a Mac | ❌ | ❌ |
 | iOS / iPadOS | Compatibility | Shared | ❌ requires macOS + Xcode | ❌ | ❌ |
@@ -75,11 +75,9 @@ Native notification scheduling and voice on Android are still to be assessed on 
 - **Reminders fire while Focus is running** (in-app, plus system notifications if enabled). They cannot fire while
   the browser tab or desktop app is fully closed; missed ones are shown on the next launch. Background delivery on the
   Pixel needs the Android build (ADR-010).
-- **Browser: one tab at a time.** A second tab shows an explanation instead of risking overwrites.
 - **Drag and drop** is mouse-only; on touch, use swipe, the ⋯ menu, or the task's project/section picker.
-- **Browser storage eviction**: the PWA requests persistent storage. Back up until you move to the native app.
-- **Integrations in the browser:** webhook and AI targets must allow cross-origin requests (e.g. Ollama's
-  `OLLAMA_ORIGINS`); secrets last for the session only. The desktop app has neither limitation.
+- **No web/PWA version** (dropped in 0.9.0): Focus ships as the Android app and the Windows (and Linux) desktop app.
+  The browser build remains only for automated tests and development.
 - **Android secrets** (AI keys, webhook secrets, calendar addresses) are encrypted with the Android Keystore; iOS keeps them for the session only.
 - **Local API / Claude connector:** desktop app only. On Linux the keychain needs a Secret Service (GNOME
   Keyring or KWallet); without one the API can't store its token and shows an error.

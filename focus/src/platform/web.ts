@@ -188,30 +188,10 @@ export const webNotifications: NotificationAdapter = {
   },
   async show(n) {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
-    const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : undefined;
-    if (reg) {
-      await reg.showNotification(n.title, {
-        body: n.body,
-        tag: n.id,
-        icon: './icon-192.png',
-        data: { reminderId: n.id },
-        // Not in the TS DOM lib yet, but supported by Chromium (desktop and Android).
-        ...({ actions: [{ action: 'complete', title: 'Complete' }, { action: 'snooze', title: 'Snooze 10 min' }] } as object),
-      });
-    } else {
-      new Notification(n.title, { body: n.body, tag: n.id, icon: './icon-192.png' });
-    }
+    new Notification(n.title, { body: n.body, tag: n.id, icon: './icon-192.png' });
     return true;
   },
-  onAction(cb) {
-    if (!('serviceWorker' in navigator)) return () => {};
-    const handler = (e: MessageEvent) => {
-      const d = e.data as { type?: string; reminderId?: string; action?: string };
-      if (d?.type === 'focus-reminder' && d.reminderId) cb({ reminderId: d.reminderId, action: (d.action as 'complete' | 'snooze') || 'open' });
-    };
-    navigator.serviceWorker.addEventListener('message', handler);
-    return () => navigator.serviceWorker.removeEventListener('message', handler);
-  },
+  onAction: () => () => {},
 };
 
 

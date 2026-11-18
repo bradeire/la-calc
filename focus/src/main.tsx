@@ -125,8 +125,9 @@ async function main() {
   );
   document.getElementById('boot-splash')?.remove();
 
-  if ('serviceWorker' in navigator && import.meta.env.PROD && location.protocol.startsWith('http') && !isTauri()) {
-    navigator.serviceWorker.register('./sw.js').catch((err: unknown) => console.warn('Offline support unavailable', err));
+  // The installable web app (PWA) was dropped in 0.9.0: remove the offline cache an earlier version installed.
+  if ('serviceWorker' in navigator && !isTauri()) {
+    void navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => void r.unregister())).catch(() => {});
   }
 }
 

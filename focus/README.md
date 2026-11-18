@@ -3,9 +3,10 @@
 A local-first personal productivity app: tasks, projects, subtasks, natural-language Quick Add, recurring tasks,
 and a calm, fast interface for phone and desktop. **Your data stays on your device.** No account, no cloud, no tracking.
 
-> Status: **Phases 1–4 complete, plus encrypted sync between devices** (see [FEATURES.md](FEATURES.md)). Runs as a web app / installable PWA, and as a
-> native desktop app via Tauri (verified on Linux). Windows and Android builds must be made on those platforms —
-> see [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md). Nothing has been tested on physical devices yet.
+> Status: **Phases 1–4 complete, plus encrypted sync between devices** (see [FEATURES.md](FEATURES.md)). Ships as a
+> native app (Tauri) for **Android** (Pixel; APK built in the cloud session) and **Windows 11** (installer built by
+> GitHub Actions), plus Linux. In daily use on a Pixel; the Windows app is new. The web/PWA version was dropped in
+> 0.9.0 — the browser build is kept only for automated tests and development. See [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md).
 
 ## Quick start
 
@@ -23,8 +24,8 @@ npm run desktop:dev    # native app (needs Rust; see PLATFORM_SUPPORT.md)
 npm run desktop:build  # native installer for the current OS
 ```
 
-The production build is static files: host `dist/` on any HTTPS server, open it in Chrome on Android or
-Edge/Chrome on Windows, and choose **Install**. It then works offline.
+`npm run dev` / `npm run build` produce the browser build used by the tests; it is not a supported way to use Focus.
+Install the Android APK or the Windows installer instead (see [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md)).
 
 ## Using Focus
 
@@ -51,6 +52,6 @@ Edge/Chrome on Windows, and choose **Install**. It then works offline.
 
 ## Upgrading
 
-Data lives in IndexedDB and survives app updates. On start-up Focus checks database integrity and, before any
+Data lives in a SQLite file in the app's data folder and survives app updates. On start-up Focus checks database integrity and, before any
 schema migration, stores a snapshot of the previous database. It refuses to open a database written by a newer
 version rather than modify it.

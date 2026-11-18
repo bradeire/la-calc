@@ -47,7 +47,7 @@ _Last updated: 2026-11-16 (session 5 — Phase 4)._
 | Onboarding: empty / demo data / import; preferences | Tested | |
 | Sample data load and safe removal (user tasks rescued) | Tested | |
 | JSON backup (incl. attachments) and SQLite export, verified restore | Tested | full backup suite → Phase 4 |
-| PWA: manifest, icons, offline service worker | Tested | E2E offline reload (found and fixed a cache-matching bug) |
+| ~~PWA: manifest, icons, offline service worker~~ | Removed in 0.9.0 | Focus ships as native apps only |
 | Responsive mobile + desktop layouts, dark mode | Implemented | screenshots reviewed at 1440×900 and Pixel 7 |
 | Accessibility (WCAG 2.1 AA automated audit) | Tested | axe-core on 9 screens + task detail, light & dark, desktop & Pixel; manual screen-reader test not yet done |
 | Large lists (virtualised over 150 rows) | Tested | 5,000-task Inbox: 0.2 s render; 20,000-task query benchmarks |
@@ -93,7 +93,7 @@ _Last updated: 2026-11-16 (session 5 — Phase 4)._
 | Webhooks: configurable, HMAC-SHA256 signed, minimal payload, test button; secrets never in the database | Tested | E2E with intercepted receiver |
 | Home Assistant: outgoing webhooks documented with YAML | Implemented | inbound (HA → Focus) needs the Phase 4 local API |
 | Capture from pasted email / notes / .txt .md .eml .html; suggestions confirmed before creation | Tested | PDF/Word not supported |
-| Android share-sheet target (installed PWA) | Implemented | not tested on hardware |
+| Android share-sheet target (native app: Share → Focus opens Capture) | Implemented | not tested on hardware |
 | Tap-to-add links `focus://add` / `focus://capture` (pre-fill only, confirm to create); Settings instructions for Claude, through the relay's `/open` page when sync is set up | Tested (browser flow, parser, relay page in Chromium) | Claude's app doesn't make `focus://` tappable (seen on the Pixel); the relay-page route is not yet tried on hardware |
 | Android "Share → Focus" for text (Claude, Gmail, Outlook, Teams…) opens Capture | Implemented | in APK manifest; not tried on hardware |
 | Native HTTP and keychain commands (Tauri) | Tested (Rust unit tests, compiled) | keychain not exercised on Windows/macOS hardware |

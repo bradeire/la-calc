@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 — 2026-11-18
+
+### Removed
+- **The web / installable PWA version.** Focus now ships only as native apps: Android and Windows (and Linux). The
+  service worker (offline cache), web app manifest, browser share target and service-worker notification actions are
+  gone; a browser that installed an earlier version has its offline cache unregistered on next visit. The browser
+  build remains for automated tests and development only, and no web zip is produced.
+
 ## 0.8.1 — 2026-11-17
 
 ### Fixed

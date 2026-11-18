@@ -1,24 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { quickAdd, startFresh, waitForSave } from './helpers';
-
-test('works offline after the first visit', async ({ page, context }, info) => {
-  test.skip(info.project.name !== 'desktop', 'service worker behaviour is the same on both');
-  await startFresh(page);
-  const input = await quickAdd(page, 'Offline proof');
-  await input.press('Enter');
-  await waitForSave(page);
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.ready;
-  });
-  await page.waitForFunction(() => !!navigator.serviceWorker.controller);
-  await context.setOffline(true);
-  await page.reload();
-  await expect(page.getByRole('listitem', { name: 'Offline proof' })).toBeVisible();
-  await page.goto('/#/inbox');
-  await expect(page.getByRole('heading', { name: 'Inbox', level: 1 })).toBeVisible();
-  await context.setOffline(false);
-});
+import { startFresh } from './helpers';
 
 const pages = ['/#/today', '/#/inbox', '/#/upcoming', '/#/calendar', '/#/projects', '/#/labels', '/#/search', '/#/settings', '/#/trash', '/#/filters', '/#/filter/new', '/#/automations', '/#/automation/new', '/#/insights', '/#/time'];
 
