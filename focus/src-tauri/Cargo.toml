@@ -1,0 +1,48 @@
+[package]
+name = "focus"
+version = "0.9.0"
+description = "Focus – local-first productivity"
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+name = "focus_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-notification = "=2.7.0"
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+tauri-plugin-deep-link = "=2.6.3"
+# Background sync engine (Rust port of src/services/sync-service.ts; see src/bgsync.rs).
+rusqlite = { version = "0.32", features = ["bundled"] }
+aes-gcm = "0.10"
+hkdf = "0.12"
+sha2 = "0.10"
+flate2 = "1"
+base64 = "0.22"
+
+[target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = { version = "2.5", features = ["deep-link"] }
+keyring = "4.2"
+# Local API (Phase 4): desktop only, off by default.
+tiny_http = "0.12"
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21"
+# Android: verify TLS against Mozilla's roots (reqwest's platform verifier needs JVM set-up there).
+webpki-root-certs = "1"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

@@ -1,0 +1,52 @@
+import type { DatabaseDriver } from './db/driver';
+import { ActivityRepository, AttachmentRepository, CommentRepository, ReminderRepository, TimeEntryRepository } from './repositories/content';
+import { DependencyRepository } from './repositories/dependencies';
+import { SavedFilterRepository } from './repositories/filters';
+import { AutomationRepository } from './repositories/automations';
+import { CalendarRepository } from './repositories/calendars';
+import { IntegrationRepository } from './repositories/integrations';
+import { LabelRepository } from './repositories/labels';
+import { ProjectRepository } from './repositories/projects';
+import { SettingsRepository } from './repositories/settings';
+import { TaskRepository } from './repositories/tasks';
+import { TemplateRepository } from './repositories/templates';
+
+export interface Repositories {
+  db: DatabaseDriver;
+  tasks: TaskRepository;
+  projects: ProjectRepository;
+  labels: LabelRepository;
+  comments: CommentRepository;
+  attachments: AttachmentRepository;
+  reminders: ReminderRepository;
+  activity: ActivityRepository;
+  time: TimeEntryRepository;
+  settings: SettingsRepository;
+  dependencies: DependencyRepository;
+  templates: TemplateRepository;
+  filters: SavedFilterRepository;
+  automations: AutomationRepository;
+  integrations: IntegrationRepository;
+  calendars: CalendarRepository;
+}
+
+export function createRepositories(db: DatabaseDriver): Repositories {
+  return {
+    db,
+    tasks: new TaskRepository(db),
+    projects: new ProjectRepository(db),
+    labels: new LabelRepository(db),
+    comments: new CommentRepository(db),
+    attachments: new AttachmentRepository(db),
+    reminders: new ReminderRepository(db),
+    activity: new ActivityRepository(db),
+    time: new TimeEntryRepository(db),
+    settings: new SettingsRepository(db),
+    dependencies: new DependencyRepository(db),
+    templates: new TemplateRepository(db),
+    filters: new SavedFilterRepository(db),
+    automations: new AutomationRepository(db),
+    integrations: new IntegrationRepository(db),
+    calendars: new CalendarRepository(db),
+  };
+}
