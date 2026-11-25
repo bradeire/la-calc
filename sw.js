@@ -1,6 +1,6 @@
 // Bump CACHE on every deploy that changes cached assets. The activate handler
 // deletes all other caches, so a new version fully replaces the old one.
-const CACHE = 'la-calc-v18';
+const CACHE = 'la-calc-v19';
 
 // Precached so the app works offline from first install. index.html is here as
 // the OFFLINE FALLBACK only — navigations are network-first (see fetch), so an
