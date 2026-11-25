@@ -7,12 +7,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#111827">
 <title>LASTCalc</title>
-<!-- Privacy-friendly analytics by Plausible -->
-<script async src="https://plausible.io/js/pa-912VsUXsJtskHg5oyFYG4.js"></script>
-<script>
-  window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
-  plausible.init()
-</script>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -1596,7 +1590,6 @@ function showTab(t, btn) {
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   btn.classList.add('active');
-  plausible('Tab Switch', {props: {tab: t}});
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2001,7 +1994,7 @@ function syncRopiToggle(){
 }
 const DEF_CONCS = {lido_p:1, lido_a2:1, lido_a4:1, ropi:0.75};
 function defConc(d){ return DEF_CONCS[d.id] ?? d.concs[0]; }
-function addDrug(prior=false){const d=DRUGS[0];drugs.push({id:uid++,did:d.id,conc:defConc(d),vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();plausible('Drug Added', {props:{prior:prior?'yes':'no'}});}
+function addDrug(prior=false){const d=DRUGS[0];drugs.push({id:uid++,did:d.id,conc:defConc(d),vol:0,prior:!!prior});renderDrugs();syncRopiToggle();calc();}
 function rmDrug(id){drugs=drugs.filter(e=>e.id!==id);renderDrugs();syncRopiToggle();calc();}
 function clearDrugs(){drugs=[];renderDrugs();syncRopiToggle();calc();}
 function onDrug(id,did){const e=drugs.find(x=>x.id===id);if(!e)return;const d=DRUGS.find(x=>x.id===did);e.did=did;e.conc=defConc(d);renderDrugs();syncRopiToggle();calc();}
@@ -2086,7 +2079,6 @@ function onBlockChange(){
   noteEl.style.display = 'block';
   noteEl.innerHTML = `<strong>Suggested:</strong> ${b.suggest}<br><span style="color:var(--sub)">${b.note}</span>`;
   updateBlockDur(v);
-  plausible('Block Selected', {props: {block: v}});
 }
 
 function updateBlockDur(v) {
@@ -3325,7 +3317,6 @@ function onWorkingsBgClick(e) { if (e.target === document.getElementById('workin
 
 // ── PRINT/PDF REPORT ───────────────────────────────────────────────────────
 function doPrint(suppressPrint = false) {
-  plausible('Print Report');
   const wt = getWt();
   const eff = calcEffectiveWt();
   const now = new Date();

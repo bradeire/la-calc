@@ -1,6 +1,6 @@
 // Bump CACHE on every deploy that changes cached assets. The activate handler
 // deletes all other caches, so a new version fully replaces the old one.
-const CACHE = 'la-calc-v18';
+const CACHE = 'la-calc-v20';
 
 // Precached so the app works offline from first install. index.html is here as
 // the OFFLINE FALLBACK only — navigations are network-first (see fetch), so an
@@ -36,7 +36,7 @@ self.addEventListener('message', e => {
 self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET') return;
-  // Only handle same-origin (skip Google Fonts, Plausible, etc.).
+  // Only handle same-origin (skip Google Fonts etc.).
   if (!req.url.startsWith(self.location.origin)) return;
 
   const isNavigation =
